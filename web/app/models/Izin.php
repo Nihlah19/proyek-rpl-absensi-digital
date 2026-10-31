@@ -51,11 +51,27 @@ class Izin extends Model {
     }
 
     public function getDaftarPersetujuanKepsek() {
-        // Kepsek melihat pengajuan dari semua guru
-        $query = "SELECT pi.*, u.name as nama_guru
+        // Kepsek melihat pengajuan dari semua guru dan wali kelas
+        $query = "SELECT pi.*, u.name as nama_guru, g.nip
                   FROM pengajuan_izin pi
                   JOIN users u ON pi.user_id = u.id
-                  WHERE u.role = 'guru'
+                  LEFT JOIN guru g ON u.id = g.user_id
+                  WHERE u.role IN ('guru', 'wali_kelas', 'walikelas')
+                  ORDER BY (pi.status = 'pending') DESC, pi.created_at DESC";
+        $this->db->query($query);
+        return $this->db->resultSet();
+    }
+
+    public function getAllPersetujuan() {
+        // Admin melihat semua pengajuan (guru dan siswa)
+        $query = "SELECT pi.*, 
+                         IF(u.role = 'siswa', u.name, NULL) as nama_siswa,
+                         IF(u.role != 'siswa', u.name, NULL) as nama_guru,
+                         k.nama_kelas
+                  FROM pengajuan_izin pi
+                  JOIN users u ON pi.user_id = u.id
+                  LEFT JOIN siswa s ON u.id = s.user_id
+                  LEFT JOIN kelas k ON s.kelas_id = k.id
                   ORDER BY pi.created_at DESC";
         $this->db->query($query);
         return $this->db->resultSet();

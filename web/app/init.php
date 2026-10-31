@@ -1,4 +1,21 @@
 <?php
+// Konfigurasi cookie sesi sebelum session_start()
+// agar kompatibel dengan ngrok (HTTPS) maupun localhost (HTTP).
+if (!session_id()) {
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+               || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',           // Kosong = gunakan domain host aktif secara otomatis
+        'secure'   => $isHttps,     // Wajib true saat HTTPS (ngrok)
+        'httponly' => true,
+        'samesite' => $isHttps ? 'None' : 'Lax', // None diperlukan agar cookie dikirim via ngrok
+    ]);
+    session_start();
+}
+
 // Load Config
 require_once 'config/config.php';
 
@@ -7,7 +24,10 @@ require_once 'core/App.php';
 require_once 'core/Controller.php';
 require_once 'core/Database.php';
 require_once 'core/Model.php';
+require_once 'models/AppSetting.php';
 require_once 'core/TelegramHelper.php';
+require_once 'core/NotificationHelper.php';
+require_once 'core/WhatsAppHelper.php';
 
 // Load Helpers
 require_once 'helpers/SessionHelper.php';
@@ -15,23 +35,37 @@ require_once 'helpers/AuthHelper.php';
 require_once 'helpers/CsrfHelper.php';
 require_once 'helpers/ValidationHelper.php';
 require_once 'helpers/Flasher.php';
+require_once 'helpers/BadgeHelper.php';
 
 // Default Error Handler
-set_exception_handler(function($e) {
-    // Log error to storage/logs/error.log
+set_exception_handler(function ($e) {
+    // Selalu tulis ke file log kustom
     $logFile = __DIR__ . '/../storage/logs/error.log';
-    $message = date('[Y-m-d H:i:s]') . " " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine() . "\n";
-    error_log($message, 3, $logFile);
-    
-    // Redirect to 500 error page
-    if ($_ENV['APP_ENV'] !== 'development') {
-        header('Location: ' . BASEURL . '/error/serverError');
-        exit;
+    $logMsg = '[' . date('Y-m-d H:i:s') . '] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine() . PHP_EOL;
+    @file_put_contents($logFile, $logMsg, FILE_APPEND);
+    error_log($e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+
+    if (defined('APP_ENV') && APP_ENV === 'development') {
+        echo "<div style='border:1px solid red; padding:10px; margin:10px; font-family:monospace; background:#fff0f0;'>";
+        echo "<h4>Uncaught Exception</h4>";
+        echo "<strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "<br>";
+        echo "<strong>File:</strong> " . htmlspecialchars($e->getFile()) . " (Line " . $e->getLine() . ")<br>";
+        echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+        echo "</div>";
     } else {
-        echo "<h1>Fatal Error</h1>";
-        echo "<p><strong>Message:</strong> " . $e->getMessage() . "</p>";
-        echo "<p><strong>File:</strong> " . $e->getFile() . " on line " . $e->getLine() . "</p>";
-        echo "<pre>" . $e->getTraceAsString() . "</pre>";
-        exit;
+        require_once '../app/controllers/ErrorController.php';
+        $err = new ErrorController();
+        $err->serverError();
+    }
+    exit;
+});
+
+// Tangkap PHP fatal error juga
+register_shutdown_function(function () {
+    $lastError = error_get_last();
+    if ($lastError && in_array($lastError['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        $logFile = __DIR__ . '/../storage/logs/error.log';
+        $logMsg = '[' . date('Y-m-d H:i:s') . '] FATAL: ' . $lastError['message'] . ' in ' . $lastError['file'] . ':' . $lastError['line'] . PHP_EOL;
+        @file_put_contents($logFile, $logMsg, FILE_APPEND);
     }
 });

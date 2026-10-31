@@ -63,6 +63,7 @@ class JadwalController extends Controller {
         $data['judul'] = 'Kelola Jadwal Guru';
         $data['jadwal'] = $this->model('JadwalGuru')->getJadwalByGuru($guru_id);
         $data['guru_id'] = $guru_id;
+        $data['guru'] = $this->model('JadwalGuru')->getGuruById($guru_id);
 
         $this->view('templates/header', $data);
         $this->view('jadwal/guru_detail', $data);
@@ -79,6 +80,8 @@ class JadwalController extends Controller {
             exit;
         }
 
+        $data['guru'] = $this->model('JadwalGuru')->getGuruById($data['jadwal']->guru_id);
+
         $this->view('templates/header', $data);
         $this->view('jadwal/guru_edit', $data);
         $this->view('templates/footer');
@@ -92,13 +95,19 @@ class JadwalController extends Controller {
                 exit;
             }
 
-            $guru_id = $_POST['guru_id'];
-            if ($this->model('JadwalGuru')->update($_POST) >= 0) { // Using >= 0 because it might not change any row but is still successful
+            $guru_id = (int)($_POST['guru_id'] ?? 0);
+            if ($guru_id <= 0) {
+                Flasher::setFlash('gagal', 'Data guru tidak valid.', 'danger');
+                header('Location: ' . BASEURL . '/jadwal/guru');
+                exit;
+            }
+
+            if ($this->model('JadwalGuru')->update($_POST) > 0) {
                 Flasher::setFlash('berhasil', 'Jadwal guru berhasil diubah.', 'success');
             } else {
                 Flasher::setFlash('gagal', 'Gagal mengubah jadwal.', 'danger');
             }
-            
+
             header('Location: ' . BASEURL . '/jadwal/detail_guru/' . $guru_id);
             exit;
         }

@@ -42,6 +42,17 @@ class AuthController extends Controller {
                 SessionHelper::set('username', $user->username);
                 SessionHelper::set('name', $user->name);
                 SessionHelper::set('role', $user->role);
+                SessionHelper::set('avatar', $user->avatar ?? null);
+                
+                if ($user->role === 'wali_kelas' || $user->role === 'walikelas') {
+                    $db = new Database();
+                    $db->query("SELECT class_code FROM kelas WHERE wali_kelas_id = :user_id");
+                    $db->bind(':user_id', $user->id);
+                    $kelas = $db->single();
+                    if ($kelas) {
+                        SessionHelper::set('class_code', $kelas->class_code);
+                    }
+                }
 
                 $this->redirectBasedOnRole($user->role);
             } else {
@@ -73,6 +84,7 @@ class AuthController extends Controller {
             case 'kepsek':
                 header('Location: ' . BASEURL . '/dashboard/kepala_sekolah');
                 break;
+            case 'wali_kelas':
             case 'walikelas':
                 header('Location: ' . BASEURL . '/dashboard/wali_kelas');
                 break;

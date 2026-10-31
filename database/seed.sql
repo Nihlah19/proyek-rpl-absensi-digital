@@ -6,14 +6,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 INSERT INTO users (id, username, password, name, role) VALUES 
 (1, 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', 'admin'),
 (2, 'kepsek', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Bapak Kepsek', 'kepsek'),
-(3, 'wali1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Ibu Wali Kelas', 'walikelas'),
+(3, 'walitkj10', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Ibu Wali Kelas', 'wali_kelas'),
 (4, 'guru1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Pak Guru', 'guru'),
 (5, 'siswa1', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Siswa Pertama', 'siswa'),
 (6, 'siswa2', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Siswa Kedua', 'siswa');
 
 -- 2. Seed Kelas
-INSERT INTO kelas (id, nama_kelas, wali_kelas_id) VALUES 
-(1, 'X RPL 1', 3);
+INSERT INTO kelas (id, class_code, nama_kelas, wali_kelas_id) VALUES 
+(1, '10tkj', '10 TKJ', 3);
 
 -- 3. Seed Siswa
 INSERT INTO siswa (user_id, kelas_id, nis, rfid_uid) VALUES 

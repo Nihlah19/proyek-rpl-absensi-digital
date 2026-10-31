@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline — SMK NU Wargabinangun</title>
+    <meta name="theme-color" content="#0F7A4A">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 50%, #E2E8F0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            color: #1E293B;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 28px;
+            box-shadow: 0 20px 40px -15px rgba(15, 122, 74, 0.15);
+            max-width: 420px;
+            width: 100%;
+            padding: 40px 32px;
+            text-align: center;
+        }
+        .logo-wrap {
+            width: 88px;
+            height: 88px;
+            margin: 0 auto 24px;
+            border-radius: 24px;
+            background: #F0FDF4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #DCFCE7;
+        }
+        .logo-wrap img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #FEF2F2;
+            color: #DC2626;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-bottom: 16px;
+            border: 1px solid #FEE2E2;
+        }
+        .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #DC2626;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0F172A;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: #64748B;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: #0F7A4A;
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 14px 24px;
+            border-radius: 16px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(15, 122, 74, 0.25);
+        }
+        .btn:hover {
+            background: #0D683F;
+            transform: translateY(-1px);
+        }
+        .footer-note {
+            margin-top: 24px;
+            font-size: 12px;
+            color: #94A3B8;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo-wrap">
+            <img src="assets/img/logo.png?v=3" alt="SMK NU Wargabinangun" onerror="this.onerror=null; this.outerHTML='<svg width=\'44\' height=\'44\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'#0F7A4A\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><line x1=\'1\' y1=\'1\' x2=\'23\' y2=\'23\'></line><path d=\'M16.72 11.06A10.94 10.94 0 0 1 19 12.55\'></path><path d=\'M5 12.55a10.94 10.94 0 0 1 5.17-2.39\'></path><path d=\'M10.71 5.05A16 16 0 0 1 22.58 9\'></path><path d=\'M1.42 9a15.91 15.91 0 0 1 4.7-2.88\'></path><path d=\'M8.53 16.11a6 6 0 0 1 6.95 0\'></path><line x1=\'12\' y1=\'20\' x2=\'12.01\' y2=\'20\'></line></svg>';">
+        </div>
+        <div class="badge">
+            <span class="badge-dot"></span>
+            Mode Offline
+        </div>
+        <h1>Koneksi Terputus</h1>
+        <p>Aplikasi tidak dapat terhubung ke server. Pastikan perangkat Anda terhubung ke jaringan internet atau Wi-Fi sekolah.</p>
+        <button class="btn" onclick="window.location.reload()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            Coba Sambungkan Lagi
+        </button>
+        <div class="footer-note">Halaman akan otomatis dimuat ulang begitu koneksi kembali aktif.</div>
+    </div>
+
+    <script>
+        window.addEventListener('online', function() {
+            window.location.reload();
+        });
+    </script>
+</body>
+</html>

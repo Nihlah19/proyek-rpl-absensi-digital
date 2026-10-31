@@ -1,0 +1,13 @@
+{
+  "name": "smk-absensi-rfid",
+  "version": "1.0.0",
+  "description": "Sistem Absensi RFID SMK - PHP Native MVC",
+  "private": true,
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./src/input.css -o ./web/public/assets/css/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/input.css -o ./web/public/assets/css/tailwind.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

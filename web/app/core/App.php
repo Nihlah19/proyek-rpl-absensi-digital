@@ -9,7 +9,8 @@ class App {
 
         // Cari Controller
         if (isset($url[0])) {
-            $controllerName = ucfirst($url[0]) . 'Controller';
+            $formattedUrl = str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $url[0])));
+            $controllerName = $formattedUrl . 'Controller';
             if (file_exists('../app/controllers/' . $controllerName . '.php')) {
                 $this->controller = $controllerName;
                 unset($url[0]);

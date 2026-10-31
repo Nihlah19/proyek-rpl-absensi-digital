@@ -10,7 +10,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    role ENUM('admin', 'kepsek', 'walikelas', 'guru', 'siswa') NOT NULL,
+    role ENUM('admin', 'kepsek', 'wali_kelas', 'guru', 'siswa') NOT NULL,
     telegram_chat_id VARCHAR(50) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -19,6 +19,7 @@ CREATE TABLE users (
 DROP TABLE IF EXISTS kelas;
 CREATE TABLE kelas (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    class_code VARCHAR(20) NOT NULL UNIQUE,
     nama_kelas VARCHAR(50) NOT NULL,
     wali_kelas_id INT NULL,
     telegram_chat_id VARCHAR(50) NULL,
@@ -78,7 +79,8 @@ CREATE TABLE absensi_siswa (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (siswa_id) REFERENCES siswa(id) ON DELETE CASCADE,
     FOREIGN KEY (source_device_id) REFERENCES iot_devices(id) ON DELETE SET NULL,
-    UNIQUE KEY (siswa_id, tanggal) -- Satu siswa hanya boleh mempunyai satu absensi per tanggal
+    UNIQUE KEY (siswa_id, tanggal), -- Satu siswa hanya boleh mempunyai satu absensi per tanggal
+    KEY idx_absensi_siswa_tgl_status (tanggal, status)
 );
 
 -- 7. Tabel absensi_guru
@@ -95,7 +97,8 @@ CREATE TABLE absensi_guru (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (guru_id) REFERENCES guru(id) ON DELETE CASCADE,
     FOREIGN KEY (source_device_id) REFERENCES iot_devices(id) ON DELETE SET NULL,
-    UNIQUE KEY (guru_id, tanggal) -- Satu guru hanya boleh mempunyai satu absensi per tanggal
+    UNIQUE KEY (guru_id, tanggal), -- Satu guru hanya boleh mempunyai satu absensi per tanggal
+    KEY idx_absensi_guru_tgl_status (tanggal, status)
 );
 
 -- 8. Tabel jadwal_siswa
@@ -192,3 +195,17 @@ CREATE TABLE chat_history (
 );
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Tabel log error absensi
+CREATE TABLE IF NOT EXISTS log_error_absensi (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id VARCHAR(50) NOT NULL,
+    waktu TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sumber ENUM('scan_kamera', 'scan_manual', 'backend', 'client') NOT NULL,
+    barcode_input VARCHAR(255) NULL,
+    jenis_error VARCHAR(100) NOT NULL,
+    pesan_error TEXT NOT NULL,
+    user_agent TEXT NULL,
+    ip_address VARCHAR(45) NULL
+);
+

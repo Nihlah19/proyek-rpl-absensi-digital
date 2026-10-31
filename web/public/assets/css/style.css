@@ -1,14 +1,18 @@
-/* Custom Styles */
-body {
-    font-size: .875rem;
-}
+/* ─────────────────────────────────────────────────────────────
+   Custom Styles — Tailwind ships all utility classes.
+   Hanya tambahan khusus yang tidak bisa dinyatakan via utility.
+   ───────────────────────────────────────────────────────────── */
 
-.sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 100;
-    padding: 48px 0 0;
-    box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+/* Scrollbar kustom (sudah di header.php juga, ini cadangan) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* Smooth scroll (jika belum di HTML) */
+html { scroll-behavior: smooth; }
+
+/* Sidebar: jalur aksesibilitas — hanya jika dipakai di luar header */
+.sidebar-transition {
+    transition: transform 0.3s ease;
 }

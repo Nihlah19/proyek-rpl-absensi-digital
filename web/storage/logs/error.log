@@ -1,6 +1,0 @@
-[2026-08-29 09:26:46] Class "AbsensiMonitor" not found in D:\xampp\htdocs\AbsensiRFID\web\app\controllers\DashboardController.php on line 12
-[2026-09-01 12:56:09] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'absensi_rfid.jadwal_guru' doesn't exist in D:\xampp\htdocs\AbsensiRFID\web\app\core\Database.php on line 50
-[2026-09-01 12:58:04] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'absensi_rfid.jadwal_siswa' doesn't exist in D:\xampp\htdocs\AbsensiRFID\web\app\core\Database.php on line 50
-[2026-09-01 12:58:06] SQLSTATE[42S02]: Base table or view not found: 1146 Table 'absensi_rfid.jadwal_siswa' doesn't exist in D:\xampp\htdocs\AbsensiRFID\web\app\core\Database.php on line 50
-[2026-09-01 12:58:50] Class "AbsensiMonitor" not found in D:\xampp\htdocs\AbsensiRFID\tests\JadwalGuruTest.php on line 35
-[2026-09-01 12:59:23] SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'test_guru' for key 'username' in D:\xampp\htdocs\AbsensiRFID\web\app\core\Database.php on line 50

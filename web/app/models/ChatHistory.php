@@ -14,4 +14,10 @@ class ChatHistory extends Model {
         $this->db->bind(':limit', $limit);
         return $this->db->resultSet();
     }
+
+    public function clearHistory($userId) {
+        $this->db->query("DELETE FROM chat_history WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->execute();
+    }
 }

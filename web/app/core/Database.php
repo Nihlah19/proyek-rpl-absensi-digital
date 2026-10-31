@@ -13,13 +13,16 @@ class Database {
         
         $option = [
             PDO::ATTR_PERSISTENT => true,
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'"
         ];
 
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $option);
+            $this->dbh->exec("SET time_zone = '+07:00'");
         } catch (PDOException $e) {
-            die("Database Connection Error: " . $e->getMessage());
+            error_log("Database Error: " . $e->getMessage());
+            die("Terjadi kesalahan pada koneksi database. Silakan hubungi administrator.");
         }
     }
 
@@ -47,7 +50,14 @@ class Database {
     }
 
     public function execute() {
-        return $this->stmt->execute();
+        try {
+            return $this->stmt->execute();
+        } catch (PDOException $e) {
+            $logFile = dirname(__DIR__) . '/storage/logs/error.log';
+            $msg = '[' . date('Y-m-d H:i:s') . '] ' . $e->getMessage() . PHP_EOL;
+            @file_put_contents($logFile, $msg, FILE_APPEND);
+            throw $e; // re-throw agar exception handler utama menangkap
+        }
     }
 
     public function resultSet() {
@@ -62,5 +72,9 @@ class Database {
 
     public function rowCount() {
         return $this->stmt->rowCount();
+    }
+
+    public function lastInsertId() {
+        return $this->dbh->lastInsertId();
     }
 }

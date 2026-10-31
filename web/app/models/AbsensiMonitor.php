@@ -19,8 +19,10 @@ class AbsensiMonitor extends Model {
                 SUM(CASE WHEN ab.status = 'terlambat' THEN 1 ELSE 0 END)   AS terlambat,
                 SUM(CASE WHEN ab.status = 'izin'     THEN 1 ELSE 0 END)    AS izin,
                 SUM(CASE WHEN ab.status = 'sakit'    THEN 1 ELSE 0 END)    AS sakit,
-                SUM(CASE WHEN ab.status = 'alfa' OR ab.id IS NULL THEN 1 ELSE 0 END) AS alfa
+                SUM(CASE WHEN ab.status = 'alfa' OR (ab.id IS NULL AND k.status = 'aktif') THEN 1 ELSE 0 END) AS alfa,
+                SUM(CASE WHEN ab.status = 'pkl' OR (ab.id IS NULL AND k.status = 'pkl') THEN 1 ELSE 0 END) AS pkl
             FROM siswa s
+            JOIN kelas k ON s.kelas_id = k.id
             LEFT JOIN absensi_siswa ab ON ab.siswa_id = s.id AND ab.tanggal = :today
         ");
         $this->db->bind(':today', $today);
@@ -35,33 +37,104 @@ class AbsensiMonitor extends Model {
 
         $this->db->query("
             SELECT
-                COUNT(DISTINCT g.id)                                        AS total_guru,
+                COUNT(DISTINCT u.id)                                        AS total_guru,
                 SUM(CASE WHEN ab.status = 'hadir'    THEN 1 ELSE 0 END)    AS hadir,
                 SUM(CASE WHEN ab.status = 'terlambat' THEN 1 ELSE 0 END)   AS terlambat,
                 SUM(CASE WHEN ab.status = 'izin'     THEN 1 ELSE 0 END)    AS izin,
                 SUM(CASE WHEN ab.status = 'sakit'    THEN 1 ELSE 0 END)    AS sakit,
                 SUM(CASE WHEN ab.status = 'alfa' OR (ab.id IS NULL AND jg.is_active = 1) THEN 1 ELSE 0 END) AS alfa
-            FROM guru g
+            FROM users u
+            LEFT JOIN guru g ON u.id = g.user_id
             LEFT JOIN absensi_guru ab ON ab.guru_id = g.id AND ab.tanggal = :today
             LEFT JOIN jadwal_guru jg ON jg.guru_id = g.id AND jg.hari = :hari_indo
+            WHERE u.role IN ('guru', 'wali_kelas', 'walikelas')
         ");
         $this->db->bind(':today', $today);
         $this->db->bind(':hari_indo', $hari_indo);
         return $this->db->single();
     }
 
+    public function getTrendKehadiran7Hari() {
+        $trend = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $displayDate = date('d M', strtotime($date));
+
+            // Siswa hadir + terlambat + pkl
+            $this->db->query("SELECT COUNT(*) as jml FROM absensi_siswa WHERE tanggal = :tgl AND status IN ('hadir', 'terlambat', 'pkl')");
+            $this->db->bind(':tgl', $date);
+            $siswaCount = (int)($this->db->single()->jml ?? 0);
+
+            // Guru hadir + terlambat
+            $this->db->query("SELECT COUNT(*) as jml FROM absensi_guru WHERE tanggal = :tgl AND status IN ('hadir', 'terlambat')");
+            $this->db->bind(':tgl', $date);
+            $guruCount = (int)($this->db->single()->jml ?? 0);
+
+            $trend[] = [
+                'tanggal' => $date,
+                'label'   => $displayDate,
+                'siswa'   => $siswaCount,
+                'guru'    => $guruCount
+            ];
+        }
+        return $trend;
+    }
+
+    public function getStatsKehadiranPerKelasHariIni() {
+        $today = date('Y-m-d');
+        $this->db->query("
+            SELECT 
+                k.id,
+                k.nama_kelas,
+                COUNT(DISTINCT s.id) as total_siswa,
+                SUM(CASE WHEN ab.status IN ('hadir', 'terlambat', 'pkl') THEN 1 ELSE 0 END) as hadir_count,
+                SUM(CASE WHEN ab.status IN ('izin', 'sakit') THEN 1 ELSE 0 END) as izin_count,
+                SUM(CASE WHEN ab.status = 'alfa' OR (ab.id IS NULL AND k.status = 'aktif') THEN 1 ELSE 0 END) as alfa_count
+            FROM kelas k
+            LEFT JOIN siswa s ON s.kelas_id = k.id
+            LEFT JOIN absensi_siswa ab ON ab.siswa_id = s.id AND ab.tanggal = :today
+            GROUP BY k.id, k.nama_kelas
+            ORDER BY k.nama_kelas ASC
+        ");
+        $this->db->bind(':today', $today);
+        return $this->db->resultSet();
+    }
+
     public function getStatusIotDevices() {
+        $now = date('Y-m-d H:i:s');
         $this->db->query("
             SELECT
-                device_code, device_name, device_type, location, status, last_seen,
+                id, device_code, device_name, device_type, location, ip_address, status, last_seen, wifi_ssid,
+                pending_host, pending_ssid,
                 CASE
                     WHEN last_seen IS NULL THEN 'offline'
-                    WHEN last_seen >= DATE_SUB(NOW(), INTERVAL 10 MINUTE) THEN 'online'
+                    WHEN last_seen >= DATE_SUB(:now, INTERVAL 5 MINUTE) THEN 'online'
                     ELSE 'offline'
                 END AS iot_status
             FROM iot_devices
             ORDER BY device_type, device_name
         ");
+        $this->db->bind(':now', $now);
+        return $this->db->resultSet();
+    }
+
+    // =========================================================================
+    // ADMIN — Daftar Izin & Pulang Cepat Hari Ini
+    // =========================================================================
+    public function getSiswaIzinPulangCepatHariIni() {
+        $today = date('Y-m-d');
+        $this->db->query("
+            SELECT ab.id, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan, 
+                   s.nis, u.name as nama_siswa, k.nama_kelas
+            FROM absensi_siswa ab
+            JOIN siswa s ON ab.siswa_id = s.id
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            WHERE ab.tanggal = :today
+              AND ab.status IN ('izin', 'sakit', 'pulang_cepat')
+            ORDER BY ab.id DESC
+        ");
+        $this->db->bind(':today', $today);
         return $this->db->resultSet();
     }
 
@@ -71,7 +144,7 @@ class AbsensiMonitor extends Model {
 
     /** Ambil kelas_id yang diasuh oleh wali_kelas_id tertentu */
     public function getKelasWali($wali_kelas_id) {
-        $this->db->query("SELECT id, nama_kelas FROM kelas WHERE wali_kelas_id = :wid");
+        $this->db->query("SELECT id, class_code, nama_kelas FROM kelas WHERE wali_kelas_id = :wid");
         $this->db->bind(':wid', $wali_kelas_id);
         return $this->db->single();
     }
@@ -85,8 +158,10 @@ class AbsensiMonitor extends Model {
                 SUM(CASE WHEN ab.status = 'terlambat' THEN 1 ELSE 0 END)   AS terlambat,
                 SUM(CASE WHEN ab.status = 'izin'     THEN 1 ELSE 0 END)    AS izin,
                 SUM(CASE WHEN ab.status = 'sakit'    THEN 1 ELSE 0 END)    AS sakit,
-                SUM(CASE WHEN ab.status = 'alfa' OR ab.id IS NULL THEN 1 ELSE 0 END) AS alfa
+                SUM(CASE WHEN ab.status = 'alfa' OR (ab.id IS NULL AND k.status = 'aktif') THEN 1 ELSE 0 END) AS alfa,
+                SUM(CASE WHEN ab.status = 'pkl' OR (ab.id IS NULL AND k.status = 'pkl') THEN 1 ELSE 0 END) AS pkl
             FROM siswa s
+            JOIN kelas k ON s.kelas_id = k.id
             LEFT JOIN absensi_siswa ab ON ab.siswa_id = s.id AND ab.tanggal = :today
             WHERE s.kelas_id = :kelas_id
         ");
@@ -130,6 +205,7 @@ class AbsensiMonitor extends Model {
             JOIN users u  ON u.id = g.user_id
             WHERE ab.status = 'terlambat'
               AND DATE_FORMAT(ab.tanggal, '%Y-%m') = :bulan
+              AND u.role IN ('guru', 'wali_kelas', 'walikelas')
             GROUP BY g.id, u.name
             ORDER BY jumlah_terlambat DESC
             LIMIT :lim
@@ -230,7 +306,7 @@ class AbsensiMonitor extends Model {
         if ($status) $where .= " AND ab.status = :status";
 
         $this->db->query("
-            SELECT ab.tanggal, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan
+            SELECT ab.id, ab.tanggal, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan, ab.foto_masuk, ab.foto_pulang, ab.jarak_meter
             FROM absensi_siswa ab
             $where
             ORDER BY ab.tanggal DESC
@@ -260,6 +336,25 @@ class AbsensiMonitor extends Model {
         return (int)($r->total ?? 0);
     }
 
+    public function cekPulangCepatSiswa($siswa_id) {
+        $today = date('Y-m-d');
+        $this->db->query("
+            SELECT id, jam_pengajuan as jam_pulang, jam_pulang_jadwal as jadwal_pulang
+            FROM pengajuan_pulang_cepat
+            WHERE siswa_id = :sid 
+              AND tanggal = :today
+              AND status = 'DRAFT'
+        ");
+        $this->db->bind(':sid', $siswa_id);
+        $this->db->bind(':today', $today);
+        return $this->db->single();
+    }
+
+    public function buatPermohonanPulangCepat($siswa_id, $absensi_id, $kategori, $detail) {
+        // Obsolete. Kept to avoid breaking interface, but we won't use it.
+        return false;
+    }
+
     // =========================================================================
     // Helper — ambil guru_id / siswa_id dari user_id
     // =========================================================================
@@ -276,5 +371,71 @@ class AbsensiMonitor extends Model {
         $this->db->bind(':uid', $user_id);
         $r = $this->db->single();
         return $r ? (int)$r->id : null;
+    }
+
+    /** Statistik kehadiran bulanan guru */
+    public function getStatsBulananGuru($guru_id, $bulan = null) {
+        $bulan = $bulan ?? date('Y-m');
+        $this->db->query("
+            SELECT
+                COUNT(id) AS total_presensi,
+                SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) AS hadir,
+                SUM(CASE WHEN status = 'terlambat' THEN 1 ELSE 0 END) AS terlambat,
+                SUM(CASE WHEN status IN ('izin', 'sakit') THEN 1 ELSE 0 END) AS izin_sakit,
+                SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) AS alfa
+            FROM absensi_guru
+            WHERE guru_id = :gid AND DATE_FORMAT(tanggal, '%Y-%m') = :bln
+        ");
+        $this->db->bind(':gid', $guru_id);
+        $this->db->bind(':bln', $bulan);
+        return $this->db->single();
+    }
+
+    /** Statistik kehadiran bulanan siswa */
+    public function getStatsBulananSiswa($siswa_id, $bulan = null) {
+        $bulan = $bulan ?? date('Y-m');
+        $this->db->query("
+            SELECT
+                COUNT(id) AS total_presensi,
+                SUM(CASE WHEN status = 'hadir' THEN 1 ELSE 0 END) AS hadir,
+                SUM(CASE WHEN status = 'terlambat' THEN 1 ELSE 0 END) AS terlambat,
+                SUM(CASE WHEN status IN ('izin', 'sakit') THEN 1 ELSE 0 END) AS izin_sakit,
+                SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) AS alfa,
+                SUM(CASE WHEN status = 'pkl' THEN 1 ELSE 0 END) AS pkl
+            FROM absensi_siswa
+            WHERE siswa_id = :sid AND DATE_FORMAT(tanggal, '%Y-%m') = :bln
+        ");
+        $this->db->bind(':sid', $siswa_id);
+        $this->db->bind(':bln', $bulan);
+        return $this->db->single();
+    }
+
+    /** Jadwal kerja operasional guru hari ini */
+    public function getJadwalHariIniGuru($guru_id) {
+        $hari_ini = date('l');
+        $hari_indo_map = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        $hari_indo = $hari_indo_map[$hari_ini] ?? 'Senin';
+
+        $this->db->query("SELECT * FROM jadwal_guru WHERE guru_id = :gid AND hari = :hari LIMIT 1");
+        $this->db->bind(':gid', $guru_id);
+        $this->db->bind(':hari', $hari_indo);
+        return $this->db->single();
+    }
+
+    /** Jadwal operasional sekolah untuk siswa hari ini */
+    public function getJadwalHariIniSiswa() {
+        $hari_ini = date('l');
+        $hari_indo_map = [
+            'Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa',
+            'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'
+        ];
+        $hari_indo = $hari_indo_map[$hari_ini] ?? 'Senin';
+
+        $this->db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari LIMIT 1");
+        $this->db->bind(':hari', $hari_indo);
+        return $this->db->single();
     }
 }
