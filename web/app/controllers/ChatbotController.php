@@ -46,9 +46,9 @@ class ChatbotController extends Controller {
                 // ── 3. Sapaan ringan & Pertanyaan Identitas (hemat kuota) ──
                 $lowerMsg = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s]/u', '', $message)));
                 $greetings = [
-                    'halo','hai','hi','hey','pagi','selamat pagi','siang','selamat siang',
-                    'sore','selamat sore','malam','selamat malam','apa kabar',
-                    'assalamualaikum','assalammualaikum','ping','tes','test','oy','oi'
+                    'halo','hallo','haloo','halooo','hai','haii','hi','hey','heyy','pagi','selamat pagi','siang','selamat siang',
+                    'sore','selamat sore','malam','selamat malam','apa kabar','kabar','halo min','halo bot',
+                    'assalamualaikum','assalammualaikum','assalamu\'alaikum','salam','ping','p','tes','test','oy','oi'
                 ];
                 $identityPhrases = [
                     'kamu siapa', 'siapa kamu', 'siapa anda', 'anda siapa', 'kamu siapa sih',
@@ -61,7 +61,23 @@ class ChatbotController extends Controller {
                               preg_match('/\bsiapa\s+(kamu|anda|bot|ai)\b/i', $message) ||
                               preg_match('/\b(nama|identitas|fungsi)\s+(kamu|anda|bot)\b/i', $message);
 
-                if (in_array($lowerMsg, $greetings)) {
+                // Evaluasi hitungan matematika sederhana (misal: 1+1 berapa, 5*10, dsb)
+                $mathClean = preg_replace('/\s+(berapa|hasilnya|sama dengan|itu berapa|\?)/i', '', trim($message));
+                if (preg_match('/^(\d+(?:\.\d+)?)\s*([\+\-\*/xX:])\s*(\d+(?:\.\d+)?)$/i', $mathClean, $mMath)) {
+                    $num1 = (float)$mMath[1];
+                    $operator = strtolower($mMath[2]);
+                    $num2 = (float)$mMath[3];
+                    $calcRes = match($operator) {
+                        '+' => $num1 + $num2,
+                        '-' => $num1 - $num2,
+                        '*', 'x' => $num1 * $num2,
+                        '/', ':' => ($num2 != 0 ? round($num1 / $num2, 4) : 'tidak terdefinisi (pembagian dengan nol)'),
+                        default => null
+                    };
+                    if ($calcRes !== null) {
+                        $botResponse = "Hasil dari **{$mMath[1]} {$operator} {$mMath[3]}** adalah **{$calcRes}**.";
+                    }
+                } elseif (in_array($lowerMsg, $greetings)) {
                     $nama = $_SESSION['name'] ?? 'Pengguna';
                     $roleLabel = match($userRole) {
                         'siswa'      => 'Siswa',
@@ -94,7 +110,7 @@ class ChatbotController extends Controller {
                         if ($_SESSION[$sessionKey] >= 20) {
                             $botResponse = "Maaf, Anda telah mencapai batas harian pertanyaan AI. Silakan coba lagi besok.";
                         } else {
-                            $botResponse = $this->callGeminiApi($message, $userRole, $userId);
+                            $botResponse = $this->callAiApi($message, $userRole, $userId);
                             if ($botResponse !== "Maaf, sistem AI sedang mengalami gangguan. Silakan coba lagi nanti.") {
                                 $_SESSION[$sessionKey]++;
                             }
@@ -1180,8 +1196,35 @@ class ChatbotController extends Controller {
                 }
             }
 
+            // Spesifik: Berapa jumlah / total guru
+            if (preg_match('/(jumlah\s+guru|total\s+guru|ada\s+berapa\s+guru|berapa\s+guru|banyaknya\s+guru|guru\s+ada\s+berapa)/i', $lower)) {
+                $db->query("SELECT COUNT(*) as total FROM guru");
+                $totGuru = $db->single()->total ?? 0;
+                $db->query("SELECT COUNT(*) as hadir FROM absensi_guru WHERE tanggal = :tgl");
+                $db->bind(':tgl', $today);
+                $hadirGuru = $db->single()->hadir ?? 0;
+                return "Saat ini terdapat **{$totGuru} guru** yang terdaftar di SMK NU Wargabinangun.\n\nHari ini ({$hariIni}, " . date('d/m/Y') . "), tercatat **{$hadirGuru} guru** telah hadir.";
+            }
+
+            // Spesifik: Berapa jumlah / total siswa
+            if (preg_match('/(jumlah\s+siswa|total\s+siswa|ada\s+berapa\s+siswa|berapa\s+siswa|banyaknya\s+siswa|siswa\s+ada\s+berapa)/i', $lower)) {
+                $db->query("SELECT COUNT(*) as total FROM siswa");
+                $totSiswa = $db->single()->total ?? 0;
+                $db->query("SELECT COUNT(*) as hadir FROM absensi_siswa WHERE tanggal = :tgl");
+                $db->bind(':tgl', $today);
+                $hadirSiswa = $db->single()->hadir ?? 0;
+                return "Saat ini terdapat **{$totSiswa} siswa** yang terdaftar di SMK NU Wargabinangun.\n\nHari ini ({$hariIni}, " . date('d/m/Y') . "), tercatat **{$hadirSiswa} siswa** telah hadir.";
+            }
+
+            // Spesifik: Berapa jumlah kelas
+            if (preg_match('/(jumlah\s+kelas|total\s+kelas|ada\s+berapa\s+kelas|berapa\s+kelas)/i', $lower)) {
+                $db->query("SELECT COUNT(*) as total FROM kelas");
+                $totKelas = $db->single()->total ?? 0;
+                return "SMK NU Wargabinangun memiliki total **{$totKelas} kelas** aktif (Jurusan TKJ, TKR, dan TSM).";
+            }
+
             // D. Rekap & Statistik Keseluruhan Sekolah
-            if (preg_match('/(rekap|statistik|total|ringkasan|semua data|berapa jumlah)/i', $lower)) {
+            if (preg_match('/(rekap|statistik|ringkasan|semua data|rekapitulasi|laporan hari ini)/i', $lower)) {
                 $db->query("SELECT COUNT(*) as total FROM siswa"); $totSiswa = $db->single()->total ?? 0;
                 $db->query("SELECT COUNT(*) as total FROM guru");  $totGuru  = $db->single()->total ?? 0;
                 $db->query("SELECT COUNT(*) as total FROM kelas"); $totKelas = $db->single()->total ?? 0;
@@ -2244,12 +2287,26 @@ class ChatbotController extends Controller {
     // =========================================================
     // GEMINI API — DENGAN RBAC DATABASE SYNC
     // =========================================================
+        // =========================================================
+    // MULTI-PROVIDER AI ENGINE (GROQ, xAI GROK & GOOGLE GEMINI)
+    // =========================================================
     private function callGeminiApi($message, $role, $userId) {
-        $dbApiKey = class_exists('AppSetting') ? AppSetting::get('gemini_api_key') : null;
-        $apiKey   = !empty($dbApiKey) ? $dbApiKey : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
+        return $this->callAiApi($message, $role, $userId);
+    }
+
+    private function callAiApi($message, $role, $userId) {
+        $aiConf   = class_exists('AppSetting') ? AppSetting::getAiConfig() : ['api_key' => '', 'model' => 'llama-3.3-70b-versatile', 'provider' => 'groq'];
+        $apiKey   = !empty($aiConf['api_key']) ? $aiConf['api_key'] : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
+        $provider = !empty($aiConf['provider']) ? $aiConf['provider'] : 'groq';
+        $model    = !empty($aiConf['model']) ? $aiConf['model'] : ($provider === 'gemini' ? 'gemini-2.5-flash' : 'llama-3.3-70b-versatile');
+
+        // Fallback jika API Key belum diisi
         if (empty($apiKey)) {
-            error_log('[Chatbot] GEMINI_API_KEY tidak ditemukan.');
-            return "Maaf, sistem AI sedang mengalami gangguan. Silakan coba lagi nanti.";
+            $localFallback = $this->handleLocalDatabaseQuery($message, $userId, $role);
+            if ($localFallback !== false) {
+                return $localFallback;
+            }
+            return "Halo! Kunci API AI (Groq / Grok / Gemini) belum dikonfigurasi oleh Administrator pada Pengaturan AI.\n\nNamun saya tetap dapat membantu Anda melihat data kehadiran hari ini, daftar guru/siswa, jadwal sekolah, dan panduan fitur sistem absensi. Silakan tanyakan data yang ingin Anda ketahui!";
         }
 
         $db = new Database();
@@ -2261,105 +2318,117 @@ class ChatbotController extends Controller {
 
         $systemInstruction =
             "Anda adalah Asisten AI Resmi Sistem Absensi SMK NU Wargabinangun.\n\n" .
-            "INFORMASI SISTEM & 5 AKTOR SESI LOGIN:\n" .
-            "Sistem Absensi SMK NU Wargabinangun memiliki 5 aktor sesi login (roles) resmi:\n" .
-            "1. Administrator (Admin): Superuser pengelola seluruh master data (siswa, guru, kelas, jadwal absensi), kartu RFID, konfigurasi perangkat IoT scanner, dan integrasi notifikasi Telegram.\n" .
-            "2. Kepala Sekolah (Kepsek): Akses monitoring eksekutif kehadiran guru & siswa secara real-time, statistik kehadiran, dan approval permohonan izin/cuti dinas guru.\n" .
-            "3. Wali Kelas: Mengelola kehadiran siswa di kelas binaannya, approval izin/sakit siswa binaan, permohonan pulang cepat, serta jadwal presensi mengajar pribadi.\n" .
-            "4. Guru (Guru Mata Pelajaran): Scan presensi masuk/pulang lewat barcode ID monitor guru, melihat jadwal mengajar mingguan, riwayat kehadiran pribadi, dan pengajuan izin ke Kepsek.\n" .
-            "5. Siswa: Absensi tap kartu RFID di gerbang sekolah, cek jadwal sekolah, riwayat presensi pribadi, dan pengajuan izin sakit / surat izin pulang cepat online.\n\n" .
-            "ATURAN UTAMA RESPON (HEMAT TOKEN & TERTATA RAPI):\n" .
-            "1. FORMAT RESPON WAJIB SANGAT RINGKAS, PADAT, & TO THE POINT: Langsung jawab ke inti data yang diminta tanpa salam pembuka, pengantar panjang, atau basa-basi (hemat token).\n" .
-            "2. JIKA DITANYA DATA PRESENSI / IZIN / SAKIT TANGGAL TERTENTU: Gunakan data faktual pada blok 'DATA SINKRONISASI TANGGAL SPESIFIK'. Sebutkan nama siswa, kelas, status, dan keterangannya secara ringkas. Jika tidak ada yang izin/sakit, berikan keterangan 1 baris yang jelas.\n" .
-            "3. ATURAN PENYAJIAN DAFTAR (LIST):\n" .
-            "   - Format padat 1 baris per item dengan format: '1. **Nama** — Keterangan/Info'.\n" .
-            "   - DILARANG KERAS membuat baris kosong ganda (double blank lines) di antara baris item daftar.\n" .
-            "   - Jangan cantumkan label atau field yang bernilai kosong atau strip (misal: JANGAN tulis 'Mapel: -' atau 'NIP: '). Tuliskan hanya info yang ada.\n" .
-            "   - Gunakan format markdown yang rapi: nomor urut (1., 2.) atau tanda strip (-), serta **teks tebal** untuk nama atau istilah kunci.\n" .
-            "   - Jika data sangat panjang (lebih dari 25-30 item), sajikan secara padat atau berikan ringkasan kelompok/kategori yang efisien agar hemat token dan tidak terpotong.\n" .
-            "3. PANDUAN KENDALA TEKNIS: Jika ditanya solusi gagal absen QR: 1) Pastikan pencahayaan cukup dan kamera bersih. 2) Allow izin kamera & reload halaman. 3) Posisikan QR 10-15 cm. 4) Hubungi admin jika QR belum terdaftar.\n" .
-            "4. MODE BACA SAJA (READ-ONLY): Anda hanya memiliki hak membaca data. Tolak tegas segala permintaan untuk menambah, mengubah, atau menghapus data database.\n" .
-            "5. PENEGAKAN HAK AKSES PERAN PENGGUNA (RBAC):\n" .
+            "INFORMASI SISTEM & AKTOR RESMI:\n" .
+            "Sistem Presensi SMK NU Wargabinangun mengelola absensi RFID siswa, QR Code guru, presensi mandiri GPS/kamera PKL, dan notifikasi Telegram.\n" .
+            "PENEGAKAN HAK AKSES PERAN PENGGUNA (RBAC):\n" .
             "{$roleInstruction}\n\n" .
-            "6. LARANGAN CODING & TUGAS SEKOLAH (MUTLAK):\n" .
-            "- DILARANG KERAS membuatkan kode program (coding/scripting) dalam bahasa pemrograman apa pun untuk role mana pun.\n" .
-            "- JIKA diminta membuat koding: Tolak secara sopan dan tegas bahwa AI sekolah tidak melayani pembuatan koding demi mendorong kemandirian belajar siswa.\n" .
-            "- DILARANG KERAS mengerjakan tugas sekolah, PR, atau soal ujian siswa (matematika, sains, bahasa, dsb). Tolak secara edukatif.\n" .
-            "- Anda BISA dan DIIZINKAN menjawab informasi sistem absensi, pertanyaan umum seputar sekolah, cara kerja teknologi RFID/IoT, dan panduan fitur sistem.\n\n" .
-            "7. DILARANG KERAS MENGGUNAKAN EMOJI ATAU IKON STIKER (MUTLAK):\n" .
-            "- DILARANG KERAS menggunakan emoji atau ikon stiker visual apa pun (seperti 👨‍🏫, 🏫, 🤖, 👋, 😊, 📌, ⚠️, ✅, ❌, 🔍, 📅, 📊, 💳, 📝, dsb).\n" .
-            "- Gunakan format teks standar yang bersih, formal, dan rapi (misal: [Hadir], [Terlambat], [Tepat Waktu], [Online], [Disetujui]).\n\n" .
-            "8. INTEGRASI & SINKRONISASI JADWAL SISWA & JADWAL GURU:\n" .
-            "- Jadwal Siswa (dari tabel `jadwal_siswa`) dan Jadwal Mengajar Guru (dari tabel `jadwal_guru`) saling terintegrasi dalam database sistem absensi sekolah.\n" .
-            "- Jadwal siswa mengatur gerbang absensi RFID (jam buka absensi, jam masuk resmi, batas toleransi terlambat, jam kepulangan siswa).\n" .
-            "- Jadwal guru mengatur jam Kegiatan Belajar Mengajar (KBM) guru: dimulai dari jam masuk mengajar paling awal hingga jam pulang paling akhir, serta rincian jam mengajar per guru.\n" .
-            "- Jika pengguna bertanya waktu masuk dan pulang jadwal guru pada hari tertentu (misal: Senin): WAJIB sebutkan waktu masuk dan pulang guru dimulai dari jam berapa sampai berapa (rentang jam paling awal s/d paling akhir) dan sinkronisasinya dengan jam masuk/pulang siswa sebelum merincikan daftar guru yang mengajar.\n\n" .
-            "DATA SINKRONISASI DATABASE:\n" .
+            "ATURAN RESPON:\n" .
+            "1. Jawablah secara langsung, sopan, ringkas, faktual, dan akurat berdasarkan DATA SINKRONISASI DATABASE di bawah.\n" .
+            "2. Jangan gunakan format bertele-tele atau salam pembuka berlebihan.\n" .
+            "3. Jika ditanya hitungan, matematika, pengetahuan umum atau teknologi di luar database, jawablah secara edukatif dan jelas.\n" .
+            "4. DILARANG membuatkan kode program (coding/programming) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n\n" .
+            "DATA SINKRONISASI DATABASE SEKOLAH:\n" .
             "{$contextText}\n";
 
-        $chosenModel     = class_exists('AppSetting') ? AppSetting::get('gemini_model', 'gemini-2.5-flash') : 'gemini-2.5-flash';
-        $fallbackModels  = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-2.5-pro'];
-        $candidateModels = array_values(array_unique(array_filter(array_merge([$chosenModel], $fallbackModels))));
-        $payload = [
-            'system_instruction' => ['parts' => [['text' => $systemInstruction]]],
-            'contents'           => [['role' => 'user', 'parts' => [['text' => $message]]]],
-            'generationConfig'   => [
-                'temperature'     => 0.3,
-                'maxOutputTokens' => 2048,
-            ],
-        ];
+        // ── A. PROVIDER: GROQ atau xAI GROK (Format OpenAI Compatible) ──
+        if ($provider === 'groq' || $provider === 'grok') {
+            $endpoint = ($provider === 'groq') 
+                ? 'https://api.groq.com/openai/v1/chat/completions' 
+                : 'https://api.x.ai/v1/chat/completions';
 
-        foreach ($candidateModels as $candidateModel) {
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/{$candidateModel}:generateContent?key={$apiKey}";
-            $ch  = curl_init($url);
-            curl_setopt_array($ch, [
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_POST           => true,
-                CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
-                CURLOPT_POSTFIELDS     => json_encode($payload),
-                CURLOPT_TIMEOUT        => 20,
-                CURLOPT_CONNECTTIMEOUT => 6,
-                CURLOPT_SSL_VERIFYPEER => false,
-            ]);
+            $candidateModels = ($provider === 'groq')
+                ? array_values(array_unique([$model, 'llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768']))
+                : array_values(array_unique([$model, 'grok-2-latest', 'grok-beta']));
 
-            $response  = curl_exec($ch);
-            $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlError = curl_error($ch);
-            curl_close($ch);
+            foreach ($candidateModels as $cModel) {
+                $payload = [
+                    'model'       => $cModel,
+                    'messages'    => [
+                        ['role' => 'system', 'content' => $systemInstruction],
+                        ['role' => 'user',   'content' => $message]
+                    ],
+                    'temperature' => 0.4,
+                    'max_tokens'  => 1200
+                ];
 
-            if ($curlError) {
-                error_log("[Chatbot] Model {$candidateModel} cURL error: {$curlError}");
-                continue;
-            }
+                $ch = curl_init($endpoint);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POST           => true,
+                    CURLOPT_HTTPHEADER     => [
+                        'Authorization: Bearer ' . trim($apiKey),
+                        'Content-Type: application/json'
+                    ],
+                    CURLOPT_POSTFIELDS     => json_encode($payload),
+                    CURLOPT_TIMEOUT        => 20,
+                    CURLOPT_CONNECTTIMEOUT => 6,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                ]);
 
-            if ($httpCode === 200) {
-                $data   = json_decode($response, true);
-                $text   = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-                $finish = $data['candidates'][0]['finishReason'] ?? null;
+                $response  = curl_exec($ch);
+                $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
 
-                if ($text !== null) {
-                    $result = trim($text);
-                    if ($finish === 'MAX_TOKENS') {
-                        $result .= "\n\n_(Catatan: Respon mencapai batas panjang teks. Silakan tanyakan data spesifik yang ingin dilihat lebih lanjut)._";
+                if (!$curlError && $httpCode === 200) {
+                    $jsonRes = json_decode($response, true);
+                    $reply = $jsonRes['choices'][0]['message']['content'] ?? null;
+                    if (!empty($reply)) {
+                        return trim($reply);
                     }
-                    return $result;
+                } else {
+                    error_log("[Chatbot {$provider}] Model {$cModel} HTTP {$httpCode}: " . substr($response, 0, 250));
                 }
-
-                if ($finish && $finish !== 'STOP') {
-                    return "Maaf, pertanyaan Anda tidak dapat diproses. Silakan ulangi dengan kata berbeda.";
-                }
-            } else {
-                error_log("[Chatbot] Model {$candidateModel} HTTP {$httpCode}: " . substr($response, 0, 300));
             }
         }
 
-        // Jika semua remote model gagal, coba fallback cerdas dari database lokal
+        // ── B. PROVIDER: GOOGLE GEMINI ──
+        if ($provider === 'gemini' || empty($provider)) {
+            $candidateModels = array_values(array_unique([$model, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']));
+            $payload = [
+                'system_instruction' => ['parts' => [['text' => $systemInstruction]]],
+                'contents'           => [['role' => 'user', 'parts' => [['text' => $message]]]],
+                'generationConfig'   => [
+                    'temperature'     => 0.4,
+                    'maxOutputTokens' => 1500,
+                ],
+            ];
+
+            foreach ($candidateModels as $cModel) {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/{$cModel}:generateContent?key={$apiKey}";
+                $ch  = curl_init($url);
+                curl_setopt_array($ch, [
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POST           => true,
+                    CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+                    CURLOPT_POSTFIELDS     => json_encode($payload),
+                    CURLOPT_TIMEOUT        => 20,
+                    CURLOPT_CONNECTTIMEOUT => 6,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                ]);
+
+                $response  = curl_exec($ch);
+                $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
+
+                if (!$curlError && $httpCode === 200) {
+                    $data = json_decode($response, true);
+                    $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+                    if ($text !== null) {
+                        return trim($text);
+                    }
+                }
+            }
+        }
+
+        // Jika semua remote provider gagal, coba jawab dari database lokal
         $localFallback = $this->handleLocalDatabaseQuery($message, $userId, $role);
         if ($localFallback !== false) {
             return $localFallback;
         }
 
-        return "Maaf, sistem AI sedang mengalami gangguan. Silakan coba lagi nanti.";
+        return "Maaf, koneksi ke server AI (" . strtoupper($provider) . ") sedang mengalami antrean padat. Anda tetap dapat menanyakan data kehadiran, absensi PKL, dan informasi sekolah lainnya!";
     }
 
     // =========================================================

@@ -595,14 +595,24 @@ class DashboardController extends Controller {
         exit;
     }
 
+    public function fetch_ai_models() {
+        AuthHelper::checkRole(['admin']);
+        header('Content-Type: application/json');
+        $apiKey   = trim($_POST['api_key'] ?? '');
+        $provider = trim($_POST['provider'] ?? 'auto');
+        $res = AppSetting::fetchAiModels($provider, $apiKey);
+        echo json_encode($res);
+        exit;
+    }
+
     public function save_ai_config() {
         AuthHelper::checkRole(['admin']);
         header('Content-Type: application/json');
-        $apiKey = trim($_POST['api_key'] ?? '');
-        $model  = trim($_POST['model'] ?? 'gemini-2.5-flash');
-        $res = AppSetting::saveAiConfig($apiKey, $model);
+        $apiKey   = trim($_POST['api_key'] ?? '');
+        $model    = trim($_POST['model'] ?? '');
+        $provider = trim($_POST['provider'] ?? 'auto');
+        $res = AppSetting::saveAiConfig($apiKey, $model, $provider);
         echo json_encode($res);
         exit;
     }
 }
-

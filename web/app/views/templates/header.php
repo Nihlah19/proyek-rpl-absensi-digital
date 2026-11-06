@@ -1261,12 +1261,12 @@ function downloadHeaderQr() {
                             <?php if ($isStudentPkl): ?>
                             <li>
                                 <a href="<?= BASEURL; ?>/absensi/pkl"
-                                   class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklActive ? 'text-indigo-700 dark:text-indigo-300 font-semibold bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200/80 dark:border-indigo-800/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
+                                   class="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200/80 dark:border-emerald-800/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <div class="flex items-center gap-2.5 truncate">
                                         <i class="fa-solid fa-camera-retro text-xs w-4 text-center shrink-0 <?= $isPklActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-indigo-500' ?>"></i>
-                                        <span class="truncate font-semibold text-indigo-900 dark:text-indigo-200">Presensi PKL</span>
+                                        <span class="truncate font-semibold text-emerald-900 dark:text-emerald-200">Presensi PKL</span>
                                     </div>
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-indigo-100 dark:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300">
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300">
                                         PKL
                                     </span>
                                 </a>

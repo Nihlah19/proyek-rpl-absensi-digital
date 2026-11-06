@@ -236,6 +236,20 @@ class AbsensiController extends Controller {
                 // Notifikasi otomatis Telegram khusus PKL (hanya setelah berhasil disimpan ke DB)
                 TelegramHelper::sendPklNotification($siswaData, $tempatPklNama, 'Datang', $nowTime, $today, $jarakMeter);
 
+                // Notifikasi Web In-App (Konfirmasi Siswa & Guru Pembimbing PKL)
+                NotificationHelper::send($userId, 'Presensi Datang PKL Berhasil', "Presensi datang Anda di {$tempatPklNama} tercatat pukul {$nowTime} WIB.", 'pkl_masuk', 'absensi/pkl');
+                $pembimbing = $pklModel->getPembimbingByKelasId($siswaData->kelas_id);
+                if ($pembimbing && !empty($pembimbing->user_id)) {
+                    NotificationHelper::send((int)$pembimbing->user_id, 'Presensi PKL Datang: ' . $siswaData->name, "{$siswaData->name} ({$siswaData->nama_kelas}) telah presensi datang di {$tempatPklNama} pukul {$nowTime} WIB (Jarak GPS: {$jarakMeter}m).", 'pkl_masuk', 'pkl/monitoring?kelas_id=' . $siswaData->kelas_id);
+                }
+
+                // Notifikasi Web In-App (Konfirmasi Siswa & Guru Pembimbing PKL)
+                NotificationHelper::send($userId, 'Presensi Datang PKL Berhasil', "Presensi datang Anda di {$tempatPklNama} tercatat pukul {$nowTime} WIB.", 'pkl_masuk', 'absensi/pkl');
+                $pembimbing = $pklModel->getPembimbingByKelasId($siswaData->kelas_id);
+                if ($pembimbing && !empty($pembimbing->user_id)) {
+                    NotificationHelper::send((int)$pembimbing->user_id, 'Presensi PKL Datang: ' . $siswaData->name, "{$siswaData->name} ({$siswaData->nama_kelas}) telah presensi datang di {$tempatPklNama} pukul {$nowTime} WIB (Jarak GPS: {$jarakMeter}m).", 'pkl_masuk', 'pkl/monitoring?kelas_id=' . $siswaData->kelas_id);
+                }
+
                 echo json_encode([
                     'success' => true,
                     'type'    => 'masuk',
@@ -256,6 +270,20 @@ class AbsensiController extends Controller {
             if ($saved) {
                 // Notifikasi otomatis Telegram khusus PKL (hanya setelah berhasil disimpan ke DB)
                 TelegramHelper::sendPklNotification($siswaData, $tempatPklNama, 'Pulang', $nowTime, $today, $jarakMeter);
+
+                // Notifikasi Web In-App (Konfirmasi Siswa & Guru Pembimbing PKL)
+                NotificationHelper::send($userId, 'Presensi Pulang PKL Berhasil', "Presensi pulang Anda di {$tempatPklNama} tercatat pukul {$nowTime} WIB.", 'pkl_pulang', 'absensi/pkl');
+                $pembimbing = $pklModel->getPembimbingByKelasId($siswaData->kelas_id);
+                if ($pembimbing && !empty($pembimbing->user_id)) {
+                    NotificationHelper::send((int)$pembimbing->user_id, 'Presensi PKL Pulang: ' . $siswaData->name, "{$siswaData->name} ({$siswaData->nama_kelas}) telah presensi pulang di {$tempatPklNama} pukul {$nowTime} WIB.", 'pkl_pulang', 'pkl/monitoring?kelas_id=' . $siswaData->kelas_id);
+                }
+
+                // Notifikasi Web In-App (Konfirmasi Siswa & Guru Pembimbing PKL)
+                NotificationHelper::send($userId, 'Presensi Pulang PKL Berhasil', "Presensi pulang Anda di {$tempatPklNama} tercatat pukul {$nowTime} WIB.", 'pkl_pulang', 'absensi/pkl');
+                $pembimbing = $pklModel->getPembimbingByKelasId($siswaData->kelas_id);
+                if ($pembimbing && !empty($pembimbing->user_id)) {
+                    NotificationHelper::send((int)$pembimbing->user_id, 'Presensi PKL Pulang: ' . $siswaData->name, "{$siswaData->name} ({$siswaData->nama_kelas}) telah presensi pulang di {$tempatPklNama} pukul {$nowTime} WIB.", 'pkl_pulang', 'pkl/monitoring?kelas_id=' . $siswaData->kelas_id);
+                }
 
                 echo json_encode([
                     'success' => true,

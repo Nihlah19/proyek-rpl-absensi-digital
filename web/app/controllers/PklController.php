@@ -467,4 +467,11 @@ class PklController extends Controller {
         $this->view('pkl/monitoring', $data);
         $this->view('templates/footer');
     }
+
+    /**
+     * Alias route: Log Data Presensi PKL
+     */
+    public function log() {
+        $this->monitoring();
+    }
 }

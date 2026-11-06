@@ -38,8 +38,8 @@
             <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600"><?= $data['totalSet'] ?? 0 ?><span class="text-base text-slate-400">/9</span></div>
             <div class="text-[11px] text-slate-500 font-semibold mt-1">👤 ID Wali Kelas Terisi</div>
         </div>
-        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 text-center hover:border-indigo-200 transition-colors">
-            <div class="text-2xl sm:text-3xl font-extrabold text-indigo-600"><?= $data['totalSetPkl'] ?? 0 ?><span class="text-base text-slate-400">/9</span></div>
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 text-center hover:border-emerald-200 transition-colors">
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600"><?= $data['totalSetPkl'] ?? 0 ?><span class="text-base text-slate-400">/9</span></div>
             <div class="text-[11px] text-slate-500 font-semibold mt-1">💼 ID Pembimbing PKL</div>
         </div>
         <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-4 text-center hover:border-green-200 transition-colors">
@@ -55,7 +55,7 @@
     <!-- ── ACTION BAR (Simpan & Test Semua) ─────────────────────────────── -->
     <div class="bg-white rounded-2xl border border-slate-100 shadow-xs p-5 relative overflow-hidden">
         <!-- Accent line atas -->
-        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-indigo-400 to-emerald-600 rounded-t-2xl"></div>
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-700 rounded-t-2xl"></div>
         <form method="POST" id="formSaveAll">
             <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div class="flex-1">
@@ -171,7 +171,7 @@
                     <div>
                         <label class="block text-[11px] font-bold text-indigo-900 mb-1 flex items-center justify-between">
                             <span><i class="fa-solid fa-user-tie text-indigo-500 mr-1"></i> ID Telegram Pembimbing PKL</span>
-                            <span class="text-[10px] font-bold text-indigo-600">Presensi PKL</span>
+                            <span class="text-[10px] font-bold text-emerald-600">Presensi PKL</span>
                         </label>
                         <div class="flex items-center bg-indigo-50/40 border border-indigo-200 rounded-xl overflow-hidden focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
                             <input

@@ -259,7 +259,7 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                                                 <div>Lng: <span class="font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($kel->longitude) ?></span></div>
                                                 <?php if (!empty($kel->pembimbing_guru_nama)): ?>
                                                     <div class="font-sans text-[11px] text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-800 mt-1">
-                                                        <i class="fa-solid fa-chalkboard-user text-indigo-600 dark:text-indigo-400 mr-1"></i>
+                                                        <i class="fa-solid fa-chalkboard-user text-emerald-600 dark:text-emerald-400 mr-1"></i>
                                                         Guru Pembimbing: <strong><?= htmlspecialchars($kel->pembimbing_guru_nama) ?></strong>
                                                     </div>
                                                 <?php endif; ?>
@@ -750,7 +750,7 @@ function parseGmapsLink(val) {
     // 6. Jika berupa shortlink (maps.app.goo.gl / goo.gl / bit.ly), selesaikan via backend
     if (val.includes('goo.gl') || val.includes('maps.app') || val.includes('bit.ly')) {
         if (statusEl) {
-            statusEl.className = 'mt-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5';
+            statusEl.className = 'mt-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5';
             statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Mendeteksi titik koordinat dari link short Google Maps...</span>`;
             statusEl.classList.remove('hidden');
         }

@@ -383,7 +383,7 @@
                 <div class="cw-title">SMK Assistant</div>
                 <div class="cw-status">
                     <span class="cw-status-dot"></span>
-                    AI aktif &bull; Gemini
+                    AI Chatbot Aktif
                 </div>
             </div>
         </div>
