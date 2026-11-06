@@ -111,15 +111,26 @@ class DashboardController extends Controller {
         $riwayatGuru    = $guruId ? $this->monitor->getRiwayatGuru($guruId, '', '', '', '', 0, 5) : [];
         $jadwalHariIni  = $guruId ? $this->monitor->getJadwalHariIniGuru($guruId) : null;
 
+        // Data Pembimbing PKL (Pengaturan & Log Riwayat Presensi PKL)
+        $isPembimbingPkl = false;
+        $pklDashboard    = null;
+        $pklModel        = $this->model('Pkl');
+        if ($pklModel->isUserPembimbingPkl($userId)) {
+            $isPembimbingPkl = true;
+            $pklDashboard    = $pklModel->getDashboardPembimbingData($userId);
+        }
+
         $data = [
-            'judul'          => 'Dashboard Guru',
-            'absensiHariIni' => $guruId ? $this->monitor->getAbsensiGuruHariIni($guruId) : null,
-            'guru'           => $guruData,
-            'guru_id'        => $guruId,
-            'statsBulanan'   => $statsBulanan,
-            'riwayatGuru'    => $riwayatGuru,
-            'jadwalHariIni'  => $jadwalHariIni,
-            'tanggal'        => date('d F Y'),
+            'judul'           => 'Dashboard Guru',
+            'absensiHariIni'  => $guruId ? $this->monitor->getAbsensiGuruHariIni($guruId) : null,
+            'guru'            => $guruData,
+            'guru_id'         => $guruId,
+            'statsBulanan'    => $statsBulanan,
+            'riwayatGuru'     => $riwayatGuru,
+            'jadwalHariIni'   => $jadwalHariIni,
+            'isPembimbingPkl' => $isPembimbingPkl,
+            'pklDashboard'    => $pklDashboard,
+            'tanggal'         => date('d F Y'),
         ];
         $this->view('templates/header', $data);
         $this->view('dashboard/guru', $data);
@@ -191,6 +202,15 @@ class DashboardController extends Controller {
         $statsBulananGuru = $guruId ? $this->monitor->getStatsBulananGuru($guruId) : null;
         $jadwalHariIni    = $guruId ? $this->monitor->getJadwalHariIniGuru($guruId) : null;
 
+        // Data Pembimbing PKL (Pengaturan & Log Riwayat Presensi PKL jika merangkap)
+        $isPembimbingPkl = false;
+        $pklDashboard    = null;
+        $pklModel        = $this->model('Pkl');
+        if ($pklModel->isUserPembimbingPkl($userId)) {
+            $isPembimbingPkl = true;
+            $pklDashboard    = $pklModel->getDashboardPembimbingData($userId);
+        }
+
         $data = [
             'judul'               => 'Dashboard Wali Kelas',
             'kelas'               => $kelas,
@@ -201,6 +221,8 @@ class DashboardController extends Controller {
             'guru_id'             => $guruId,
             'statsBulananGuru'    => $statsBulananGuru,
             'jadwalHariIni'       => $jadwalHariIni,
+            'isPembimbingPkl'     => $isPembimbingPkl,
+            'pklDashboard'        => $pklDashboard,
             'tanggal'             => date('d F Y'),
             'absensiSiswaHariIni' => $absensiSiswaHariIni,
         ];

@@ -2,7 +2,7 @@
 /**
  * AbsensiController.php
  * Riwayat absensi dengan search, filter tanggal, filter status, dan pagination.
- * Hanya mengambil data — tidak mengubah business logic absensi.
+ * Serta Presensi Mandiri Siswa PKL (Foto + Validasi GPS) & Notifikasi Telegram PKL.
  */
 class AbsensiController extends Controller {
 
@@ -80,7 +80,7 @@ class AbsensiController extends Controller {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SISWA PKL — Presensi Mandiri (Foto Selfie + Lokasi GPS <= 10m)
+    // SISWA PKL — Presensi Mandiri (Foto Selfie + Lokasi GPS <= radius)
     // ─────────────────────────────────────────────────────────────────────────
     public function pkl() {
         AuthHelper::checkRole(['siswa']);
@@ -119,17 +119,17 @@ class AbsensiController extends Controller {
     }
 
     /**
-     * Simpan / Perbarui Lokasi PKL Siswa
+     * Simpan / Perbarui Lokasi PKL Siswa (Proteksi: Hanya oleh Guru Pembimbing / Admin)
      */
     public function save_lokasi_pkl() {
         AuthHelper::checkRole(['siswa']);
-        Flasher::setFlash('Informasi', 'Penetapan dan perubahan lokasi PKL diatur langsung oleh Wali Kelas / Guru Pembimbing untuk mencegah kecurangan.', 'warning');
+        Flasher::setFlash('Informasi', 'Penetapan dan perubahan lokasi PKL dikelola langsung melalui Guru Pembimbing PKL untuk mencegah kecurangan.', 'warning');
         header('Location: ' . BASEURL . '/absensi/pkl');
         exit;
     }
 
     /**
-     * Submit Presensi PKL (Selfie Camera + Validasi Jarak <= 10m)
+     * Submit Presensi PKL (Selfie Camera + Validasi Jarak GPS + Notifikasi Telegram)
      */
     public function submit_pkl() {
         AuthHelper::checkRole(['siswa']);
@@ -153,7 +153,7 @@ class AbsensiController extends Controller {
         $lokasiPkl = $pklModel->getLokasiBySiswaId($siswaId);
 
         if (!$lokasiPkl) {
-            echo json_encode(['success' => false, 'message' => 'Anda belum didaftarkan ke kelompok tempat PKL oleh Wali Kelas. Silakan hubungi Wali Kelas Anda.']);
+            echo json_encode(['success' => false, 'message' => 'Anda belum didaftarkan ke kelompok tempat PKL oleh Guru Pembimbing PKL. Silakan hubungi Guru Pembimbing PKL Anda.']);
             exit;
         }
 
@@ -171,7 +171,7 @@ class AbsensiController extends Controller {
         }
 
         if (empty($fotoBase64)) {
-            echo json_encode(['success' => false, 'message' => 'Foto selfie wajib diambil melalui kamera.']);
+            echo json_encode(['success' => false, 'message' => 'Foto selfie wajib diambil langsung melalui kamera.']);
             exit;
         }
 
@@ -180,7 +180,7 @@ class AbsensiController extends Controller {
         $maxRadius = (int)($lokasiPkl->radius_meter ?? 50);
         if ($maxRadius < 10) $maxRadius = 50;
 
-        // Jika melebihi batas radius -> Absensi GAGAL!
+        // Jika melebihi batas radius -> Presensi GAGAL!
         if ($jarakMeter > $maxRadius) {
             echo json_encode([
                 'success' => false,
@@ -224,39 +224,60 @@ class AbsensiController extends Controller {
             exit;
         }
 
-        // 3. Cek Status Presensi Hari Ini
+        // 3. Cek Status Presensi Hari Ini (Mencegah absensi & notifikasi ganda)
         $absensiToday = $pklModel->getAbsensiToday($siswaId, $today);
 
+        $tempatPklNama = !empty($lokasiPkl->nama_tempat) ? $lokasiPkl->nama_tempat : ($lokasiPkl->nama_kelompok ?? 'Lokasi PKL');
+
         if (!$absensiToday) {
-            // Belum ada absen hari ini -> ABSEN MASUK
-            $pklModel->catatAbsenMasuk($siswaId, $today, $nowTime, $filename, $latUser, $lngUser, $jarakMeter);
-            echo json_encode([
-                'success' => true,
-                'type'    => 'masuk',
-                'message' => "Presensi Masuk PKL Berhasil! Waktu: {$nowTime} WIB. Jarak ke titik PKL: {$jarakMeter} meter.",
-                'jam'     => $nowTime,
-                'jarak'   => $jarakMeter
-            ]);
+            // Belum ada absen hari ini -> ABSEN MASUK (DATANG)
+            $saved = $pklModel->catatAbsenMasuk($siswaId, $today, $nowTime, $filename, $latUser, $lngUser, $jarakMeter);
+            if ($saved) {
+                // Notifikasi otomatis Telegram khusus PKL (hanya setelah berhasil disimpan ke DB)
+                TelegramHelper::sendPklNotification($siswaData, $tempatPklNama, 'Datang', $nowTime, $today, $jarakMeter);
+
+                echo json_encode([
+                    'success' => true,
+                    'type'    => 'masuk',
+                    'message' => "Presensi Datang PKL Berhasil! Waktu: {$nowTime} WIB. Jarak ke titik PKL: {$jarakMeter} meter. Notifikasi telah dikirim ke Telegram.",
+                    'jam'     => $nowTime,
+                    'jarak'   => $jarakMeter
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem saat menyimpan presensi datang ke database.'
+                ]);
+            }
             exit;
         } elseif (empty($absensiToday->jam_pulang)) {
             // Sudah masuk, belum absen pulang -> ABSEN PULANG
-            $pklModel->catatAbsenPulang($absensiToday->id, $nowTime, $filename, $latUser, $lngUser, $jarakMeter);
-            echo json_encode([
-                'success' => true,
-                'type'    => 'pulang',
-                'message' => "Presensi Pulang PKL Berhasil! Waktu: {$nowTime} WIB. Jarak ke titik PKL: {$jarakMeter} meter.",
-                'jam'     => $nowTime,
-                'jarak'   => $jarakMeter
-            ]);
+            $saved = $pklModel->catatAbsenPulang($absensiToday->id, $nowTime, $filename, $latUser, $lngUser, $jarakMeter);
+            if ($saved) {
+                // Notifikasi otomatis Telegram khusus PKL (hanya setelah berhasil disimpan ke DB)
+                TelegramHelper::sendPklNotification($siswaData, $tempatPklNama, 'Pulang', $nowTime, $today, $jarakMeter);
+
+                echo json_encode([
+                    'success' => true,
+                    'type'    => 'pulang',
+                    'message' => "Presensi Pulang PKL Berhasil! Waktu: {$nowTime} WIB. Jarak ke titik PKL: {$jarakMeter} meter. Notifikasi telah dikirim ke Telegram.",
+                    'jam'     => $nowTime,
+                    'jarak'   => $jarakMeter
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem saat menyimpan presensi pulang ke database.'
+                ]);
+            }
             exit;
         } else {
             // Sudah absen masuk dan pulang
             echo json_encode([
                 'success' => false,
-                'message' => "Anda sudah menyelesaikan Presensi Masuk ({$absensiToday->jam_datang}) dan Pulang ({$absensiToday->jam_pulang}) untuk hari ini."
+                'message' => "Anda sudah menyelesaikan Presensi Datang ({$absensiToday->jam_datang}) dan Pulang ({$absensiToday->jam_pulang}) untuk hari ini."
             ]);
             exit;
         }
     }
 }
-

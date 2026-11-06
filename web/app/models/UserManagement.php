@@ -2,6 +2,7 @@
 /**
  * UserManagement.php
  * Model untuk CRUD user (guru & siswa) oleh admin.
+ * Mendukung penugasan Wali Kelas & Guru Pembimbing PKL.
  */
 class UserManagement extends Model {
 
@@ -9,10 +10,14 @@ class UserManagement extends Model {
 
     public function getAllGuru() {
         $this->db->query("SELECT u.id, u.username, u.name, u.role, u.created_at,
-                          g.id as guru_id, g.nip, g.barcode_id, g.subject
+                          g.id as guru_id, g.nip, g.barcode_id, g.subject, g.is_pembimbing_pkl,
+                          GROUP_CONCAT(DISTINCT kp.nama_kelas ORDER BY kp.nama_kelas ASC SEPARATOR ', ') as pembimbing_kelas_names
                           FROM users u
                           JOIN guru g ON g.user_id = u.id
+                          LEFT JOIN pkl_pembimbing_kelas ppk ON ppk.guru_id = g.id
+                          LEFT JOIN kelas kp ON ppk.kelas_id = kp.id
                           WHERE u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')
+                          GROUP BY g.id
                           ORDER BY u.name ASC");
         return $this->db->resultSet();
     }
@@ -34,15 +39,43 @@ class UserManagement extends Model {
         return $this->db->resultSet();
     }
 
+    public function getAllKelasPkl() {
+        $this->db->query("SELECT * FROM kelas WHERE status = 'pkl' ORDER BY nama_kelas ASC");
+        $res = $this->db->resultSet();
+        // Fallback: jika belum ada kelas berstatus 'pkl', tampilkan semua kelas
+        if (empty($res)) {
+            return $this->getAllKelas();
+        }
+        return $res;
+    }
+
+    public function getKelasIdsByJurusan($jurusan) {
+        $this->db->query("SELECT id FROM kelas WHERE UPPER(jurusan) = UPPER(:jurusan) ORDER BY nama_kelas ASC");
+        $this->db->bind(':jurusan', $jurusan);
+        $res = $this->db->resultSet();
+        $ids = [];
+        foreach ($res as $r) {
+            $ids[] = (int)$r->id;
+        }
+        return $ids;
+    }
+
     // -- GURU DETAIL --
 
     public function getGuruById($guru_id) {
-        $this->db->query("SELECT u.id, u.username, u.name, g.id as guru_id, g.nip, g.barcode_id, g.subject, k.id as wali_kelas_id
+        $this->db->query("SELECT u.id, u.username, u.name, g.id as guru_id, g.nip, g.barcode_id, g.subject, g.is_pembimbing_pkl, k.id as wali_kelas_id
                           FROM users u JOIN guru g ON g.user_id = u.id
                           LEFT JOIN kelas k ON k.wali_kelas_id = u.id
                           WHERE g.id = :guru_id");
         $this->db->bind(':guru_id', $guru_id);
         return $this->db->single();
+    }
+
+    public function getPembimbingKelasIds($guru_id) {
+        $this->db->query("SELECT kelas_id FROM pkl_pembimbing_kelas WHERE guru_id = :gid");
+        $this->db->bind(':gid', $guru_id);
+        $rows = $this->db->resultSet();
+        return array_map(function($r) { return (int)$r->kelas_id; }, $rows);
     }
 
     // -- SISWA DETAIL --
@@ -79,12 +112,35 @@ class UserManagement extends Model {
             }
         }
 
-        $this->db->query("INSERT INTO guru (user_id, nip, barcode_id, subject) VALUES (:user_id, :nip, :barcode_id, :subject)");
+        $isPembimbingPkl = !empty($data['is_pembimbing_pkl']) ? 1 : 0;
+
+        $this->db->query("INSERT INTO guru (user_id, nip, barcode_id, subject, is_pembimbing_pkl) VALUES (:user_id, :nip, :barcode_id, :subject, :is_pkl)");
         $this->db->bind(':user_id', $user_id);
         $this->db->bind(':nip', $data['nip']);
         $this->db->bind(':barcode_id', $barcode);
         $this->db->bind(':subject', isset($data['subject']) ? $data['subject'] : null);
+        $this->db->bind(':is_pkl', $isPembimbingPkl);
         $this->db->execute();
+        $guru_id = (int)$this->db->lastInsertId();
+
+        if ($isPembimbingPkl && !empty($data['pembimbing_kelas_ids']) && is_array($data['pembimbing_kelas_ids'])) {
+            foreach ($data['pembimbing_kelas_ids'] as $kid) {
+                $kid = (int)$kid;
+                if ($kid <= 0) continue;
+                $this->db->query("INSERT INTO pkl_pembimbing_kelas (guru_id, user_id, kelas_id) VALUES (:gid, :uid, :kid)");
+                $this->db->bind(':gid', $guru_id);
+                $this->db->bind(':uid', $user_id);
+                $this->db->bind(':kid', $kid);
+                $this->db->execute();
+
+                // Hubungkan kelompok yang sudah ada di kelas ini
+                $this->db->query("UPDATE pkl_kelompok SET pembimbing_guru_id = :gid WHERE kelas_id = :kid AND (pembimbing_guru_id IS NULL OR pembimbing_guru_id = 0)");
+                $this->db->bind(':gid', $guru_id);
+                $this->db->bind(':kid', $kid);
+                $this->db->execute();
+            }
+        }
+
         return $user_id;
     }
 
@@ -117,50 +173,83 @@ class UserManagement extends Model {
             }
         }
 
-        $this->db->query("UPDATE guru SET nip = :nip, barcode_id = :barcode_id, subject = :subject WHERE id = :guru_id");
+        $isPembimbingPkl = !empty($data['is_pembimbing_pkl']) ? 1 : 0;
+
+        $this->db->query("UPDATE guru SET nip = :nip, barcode_id = :barcode_id, subject = :subject, is_pembimbing_pkl = :is_pkl WHERE id = :guru_id");
         $this->db->bind(':nip', $data['nip']);
         $this->db->bind(':barcode_id', $barcode);
         $this->db->bind(':subject', isset($data['subject']) ? $data['subject'] : null);
+        $this->db->bind(':is_pkl', $isPembimbingPkl);
         $this->db->bind(':guru_id', $guru_id);
         $this->db->execute();
 
+        // Ambil user_id guru
+        $this->db->query("SELECT user_id FROM guru WHERE id = :guru_id");
+        $this->db->bind(':guru_id', $guru_id);
+        $userRow = $this->db->single();
+        $user_id = $userRow ? (int)$userRow->user_id : 0;
+
         // Update wali kelas assignment
-        if (array_key_exists('wali_kelas_id', $data)) {
-            $this->db->query("SELECT user_id FROM guru WHERE id = :guru_id");
-            $this->db->bind(':guru_id', $guru_id);
-            $userRow = $this->db->single();
-            if ($userRow) {
-                $user_id = $userRow->user_id;
-                
-                // Set role
-                $role = !empty($data['wali_kelas_id']) ? 'wali_kelas' : 'guru';
-                $this->db->query("UPDATE users SET role = :role WHERE id = :user_id");
-                $this->db->bind(':role', $role);
-                $this->db->bind(':user_id', $user_id);
-                $this->db->execute();
+        if (array_key_exists('wali_kelas_id', $data) && $user_id > 0) {
+            // Set role
+            $role = !empty($data['wali_kelas_id']) ? 'wali_kelas' : 'guru';
+            $this->db->query("UPDATE users SET role = :role WHERE id = :user_id");
+            $this->db->bind(':role', $role);
+            $this->db->bind(':user_id', $user_id);
+            $this->db->execute();
 
-                // Clear previous class assignment for this user
-                $this->db->query("UPDATE kelas SET wali_kelas_id = NULL WHERE wali_kelas_id = :user_id");
-                $this->db->bind(':user_id', $user_id);
-                $this->db->execute();
+            // Clear previous class assignment for this user
+            $this->db->query("UPDATE kelas SET wali_kelas_id = NULL WHERE wali_kelas_id = :user_id");
+            $this->db->bind(':user_id', $user_id);
+            $this->db->execute();
 
-                if (!empty($data['wali_kelas_id'])) {
-                    // Check if target class already had a wali kelas, if so demote them to guru
-                    $this->db->query("SELECT wali_kelas_id FROM kelas WHERE id = :kelas_id");
-                    $this->db->bind(':kelas_id', $data['wali_kelas_id']);
-                    $oldClass = $this->db->single();
-                    if ($oldClass && $oldClass->wali_kelas_id && $oldClass->wali_kelas_id != $user_id) {
-                        $this->db->query("UPDATE users SET role = 'guru' WHERE id = :old_user_id");
-                        $this->db->bind(':old_user_id', $oldClass->wali_kelas_id);
-                        $this->db->execute();
-                    }
-
-                    // Set as new wali kelas
-                    $this->db->query("UPDATE kelas SET wali_kelas_id = :user_id WHERE id = :kelas_id");
-                    $this->db->bind(':user_id', $user_id);
-                    $this->db->bind(':kelas_id', $data['wali_kelas_id']);
+            if (!empty($data['wali_kelas_id'])) {
+                // Check if target class already had a wali kelas, if so demote them to guru
+                $this->db->query("SELECT wali_kelas_id FROM kelas WHERE id = :kelas_id");
+                $this->db->bind(':kelas_id', $data['wali_kelas_id']);
+                $oldClass = $this->db->single();
+                if ($oldClass && $oldClass->wali_kelas_id && $oldClass->wali_kelas_id != $user_id) {
+                    $this->db->query("UPDATE users SET role = 'guru' WHERE id = :old_user_id");
+                    $this->db->bind(':old_user_id', $oldClass->wali_kelas_id);
                     $this->db->execute();
                 }
+
+                // Set as new wali kelas
+                $this->db->query("UPDATE kelas SET wali_kelas_id = :user_id WHERE id = :kelas_id");
+                $this->db->bind(':user_id', $user_id);
+                $this->db->bind(':kelas_id', $data['wali_kelas_id']);
+                $this->db->execute();
+            }
+        }
+
+        // Update penugasan pembimbing PKL
+        if (array_key_exists('pembimbing_kelas_ids', $data) && $user_id > 0) {
+            // Hapus mapping kelas lama guru ini
+            $this->db->query("DELETE FROM pkl_pembimbing_kelas WHERE guru_id = :gid");
+            $this->db->bind(':gid', $guru_id);
+            $this->db->execute();
+
+            if ($isPembimbingPkl && !empty($data['pembimbing_kelas_ids']) && is_array($data['pembimbing_kelas_ids'])) {
+                foreach ($data['pembimbing_kelas_ids'] as $kid) {
+                    $kid = (int)$kid;
+                    if ($kid <= 0) continue;
+                    $this->db->query("INSERT INTO pkl_pembimbing_kelas (guru_id, user_id, kelas_id) VALUES (:gid, :uid, :kid)");
+                    $this->db->bind(':gid', $guru_id);
+                    $this->db->bind(':uid', $user_id);
+                    $this->db->bind(':kid', $kid);
+                    $this->db->execute();
+
+                    // Hubungkan kelompok yang ada pada kelas ini dengan guru pembimbing
+                    $this->db->query("UPDATE pkl_kelompok SET pembimbing_guru_id = :gid WHERE kelas_id = :kid AND (pembimbing_guru_id IS NULL OR pembimbing_guru_id = 0)");
+                    $this->db->bind(':gid', $guru_id);
+                    $this->db->bind(':kid', $kid);
+                    $this->db->execute();
+                }
+            } else {
+                // Jika tidak lagi pembimbing, lepas kelompok yang dibimbing
+                $this->db->query("UPDATE pkl_kelompok SET pembimbing_guru_id = NULL WHERE pembimbing_guru_id = :gid");
+                $this->db->bind(':gid', $guru_id);
+                $this->db->execute();
             }
         }
     }
@@ -184,10 +273,10 @@ class UserManagement extends Model {
         $this->db->execute();
         $user_id = $this->db->lastInsertId();
 
-        $this->db->query("INSERT INTO siswa (user_id, kelas_id, nis, no_hp_ortu) VALUES (:user_id, :kelas_id, :nis, :no_hp_ortu)");
+        $this->db->query("INSERT INTO siswa (user_id, nis, kelas_id, no_hp_ortu) VALUES (:user_id, :nis, :kelas_id, :no_hp_ortu)");
         $this->db->bind(':user_id', $user_id);
-        $this->db->bind(':kelas_id', !empty($data['kelas_id']) ? $data['kelas_id'] : null);
         $this->db->bind(':nis', $data['nis']);
+        $this->db->bind(':kelas_id', !empty($data['kelas_id']) ? $data['kelas_id'] : null);
         $this->db->bind(':no_hp_ortu', !empty($data['no_hp_ortu']) ? $data['no_hp_ortu'] : null);
         $this->db->execute();
         $siswa_id = $this->db->lastInsertId();
@@ -198,6 +287,7 @@ class UserManagement extends Model {
             $this->db->bind(':student_id', $siswa_id);
             $this->db->execute();
         }
+
         return $user_id;
     }
 
@@ -223,25 +313,23 @@ class UserManagement extends Model {
         $this->db->execute();
 
         if (array_key_exists('rfid_uid', $data)) {
-            if (empty($data['rfid_uid'])) {
-                $this->db->query("DELETE FROM rfid_cards WHERE student_id = :student_id");
-                $this->db->bind(':student_id', $siswa_id);
+            $new_uid = trim($data['rfid_uid']);
+            if (empty($new_uid)) {
+                $this->db->query("DELETE FROM rfid_cards WHERE student_id = :siswa_id");
+                $this->db->bind(':siswa_id', $siswa_id);
                 $this->db->execute();
             } else {
-                $this->db->query("SELECT id FROM rfid_cards WHERE student_id = :student_id");
-                $this->db->bind(':student_id', $siswa_id);
+                $this->db->query("SELECT id FROM rfid_cards WHERE student_id = :siswa_id");
+                $this->db->bind(':siswa_id', $siswa_id);
                 $existing = $this->db->single();
                 if ($existing) {
-                    $this->db->query("UPDATE rfid_cards SET uid = :uid, status = 'active' WHERE student_id = :student_id");
-                    $this->db->bind(':uid', $data['rfid_uid']);
-                    $this->db->bind(':student_id', $siswa_id);
-                    $this->db->execute();
+                    $this->db->query("UPDATE rfid_cards SET uid = :uid, status = 'active' WHERE student_id = :siswa_id");
                 } else {
-                    $this->db->query("INSERT INTO rfid_cards (uid, student_id, status) VALUES (:uid, :student_id, 'active')");
-                    $this->db->bind(':uid', $data['rfid_uid']);
-                    $this->db->bind(':student_id', $siswa_id);
-                    $this->db->execute();
+                    $this->db->query("INSERT INTO rfid_cards (uid, student_id, status) VALUES (:uid, :siswa_id, 'active')");
                 }
+                $this->db->bind(':uid', $new_uid);
+                $this->db->bind(':siswa_id', $siswa_id);
+                $this->db->execute();
             }
         }
     }
@@ -255,24 +343,7 @@ class UserManagement extends Model {
         return $this->db->rowCount();
     }
 
-    // -- BULK ACTIONS SISWA --
-
-    public function moveSiswaByKelas($kelas_asal_id, $kelas_tujuan_id) {
-        $this->db->query("UPDATE siswa SET kelas_id = :kelas_tujuan_id WHERE kelas_id = :kelas_asal_id");
-        $this->db->bind(':kelas_tujuan_id', $kelas_tujuan_id);
-        $this->db->bind(':kelas_asal_id', $kelas_asal_id);
-        $this->db->execute();
-        return $this->db->rowCount();
-    }
-
-    public function deleteSiswaByKelas($kelas_id) {
-        $this->db->query("DELETE u FROM users u JOIN siswa s ON s.user_id = u.id WHERE s.kelas_id = :kelas_id");
-        $this->db->bind(':kelas_id', $kelas_id);
-        $this->db->execute();
-        return $this->db->rowCount();
-    }
-
-    // -- VALIDASI DUPLIKAT --
+    // -- VALIDATION CHECKS --
 
     public function isUsernameExist($username, $excludeId = null) {
         if ($excludeId) {

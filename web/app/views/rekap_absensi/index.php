@@ -11,17 +11,21 @@ $statusMap = [
 
 $role         = $data['role'] ?? '';
 $tipe         = $data['tipe'] ?? 'siswa';
-$viewMode     = $data['viewMode'] ?? 'ringkasan';
-$filters      = $data['filters'] ?? [];
-$stats        = $data['stats'] ?? [];
-$akumulasiMap = $data['akumulasiMap'] ?? [];
+$viewMode       = $data['viewMode'] ?? 'ringkasan';
+$kategori       = $data['kategori'] ?? 'biasa';
+$isKelasPkl     = $data['isKelasPkl'] ?? false;
+$activeKelasObj = $data['activeKelasObj'] ?? null;
+$filters        = $data['filters'] ?? [];
+$stats          = $data['stats'] ?? [];
+$akumulasiMap   = $data['akumulasiMap'] ?? [];
 
 // Siapkan parameter URL untuk download CSV dan pagination
 $csvParams = [
-    'tipe'   => $tipe,
-    'view'   => $viewMode,
-    'dari'   => $filters['dari'] ?? '',
-    'sampai' => $filters['sampai'] ?? '',
+    'tipe'     => $tipe,
+    'view'     => $viewMode,
+    'kategori' => $kategori,
+    'dari'     => $filters['dari'] ?? '',
+    'sampai'   => $filters['sampai'] ?? '',
 ];
 if (!empty($filters['status']))   $csvParams['status']   = $filters['status'];
 if (!empty($filters['search']))   $csvParams['search']   = $filters['search'];
@@ -38,6 +42,17 @@ $urlViewRingkasan = BASEURL . '/rekapabsensi?' . http_build_query($switchViewPar
 
 $switchViewParams['view'] = 'detail';
 $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams);
+
+$switchKatParams = $filters;
+unset($switchKatParams['limit'], $switchKatParams['offset']);
+$switchKatParams['tipe'] = $tipe;
+$switchKatParams['view'] = $viewMode;
+
+$switchKatParams['kategori'] = 'biasa';
+$urlKategoriBiasa = BASEURL . '/rekapabsensi?' . http_build_query($switchKatParams);
+
+$switchKatParams['kategori'] = 'pkl';
+$urlKategoriPkl = BASEURL . '/rekapabsensi?' . http_build_query($switchKatParams);
 ?>
 
 <div class="w-full space-y-6">
@@ -80,6 +95,38 @@ $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams
     <div class="p-4 mb-6 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs flex items-center gap-3">
         <i class="fa-solid fa-triangle-exclamation text-base text-amber-600"></i>
         <span>Akun Anda belum terhubung dengan kelas binaan manapun. Hubungi administrator untuk mengatur penugasan wali kelas.</span>
+    </div>
+    <?php endif; ?>
+
+    <!-- SWITCHER 2 TOMBOL: REKAP ABSENSI BIASA VS REKAP ABSENSI PKL (KHUSUS KELAS PKL) -->
+    <?php if ($tipe === 'siswa' && $isKelasPkl): ?>
+    <div class="p-4 bg-gradient-to-r from-emerald-50/90 via-indigo-50/70 to-emerald-50/90 border border-indigo-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center text-lg shadow-sm shrink-0">
+                <i class="fa-solid fa-briefcase"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-sm font-bold text-slate-800">Mode Rekapitulasi Kelas PKL</h3>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-700 border border-indigo-200">
+                        <?= htmlspecialchars($activeKelasObj->nama_kelas ?? 'Kelas PKL') ?>
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-0.5">Pilih jenis data absensi yang ingin dilihat atau diekspor untuk kelas PKL ini.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="<?= $urlKategoriBiasa ?>" 
+               class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer <?= $kategori === 'biasa' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600/30 font-extrabold' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200' ?>">
+                <i class="fa-solid fa-school <?= $kategori === 'biasa' ? 'text-white' : 'text-emerald-600' ?>"></i>
+                <span>Rekap Absensi Reguler (Sekolah)</span>
+            </a>
+            <a href="<?= $urlKategoriPkl ?>" 
+               class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer <?= $kategori === 'pkl' ? 'bg-indigo-600 text-white shadow-sm ring-2 ring-indigo-600/30 font-extrabold' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200' ?>">
+                <i class="fa-solid fa-map-location-dot <?= $kategori === 'pkl' ? 'text-white' : 'text-indigo-600' ?>"></i>
+                <span>Rekap Presensi PKL (Tempat Magang)</span>
+            </a>
+        </div>
     </div>
     <?php endif; ?>
 
@@ -153,6 +200,7 @@ $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams
         <form method="GET" action="<?= BASEURL ?>/rekapabsensi" class="space-y-4">
             <input type="hidden" name="tipe" value="<?= htmlspecialchars($tipe) ?>">
             <input type="hidden" name="view" value="<?= htmlspecialchars($viewMode) ?>">
+            <input type="hidden" name="kategori" value="<?= htmlspecialchars($kategori) ?>">
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4 items-end">
                 <!-- Dari Tanggal -->
@@ -180,7 +228,7 @@ $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams
                         <?php if (!empty($data['kelasList'])): ?>
                             <?php foreach ($data['kelasList'] as $k): ?>
                                 <option value="<?= $k->id ?>" <?= ($filters['kelas_id'] == $k->id) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($k->nama_kelas) ?> (<?= htmlspecialchars($k->tingkat ?? '') ?> <?= htmlspecialchars($k->jurusan ?? '') ?>)
+                                    <?= htmlspecialchars($k->nama_kelas) ?> (<?= htmlspecialchars($k->tingkat ?? '') ?> <?= htmlspecialchars($k->jurusan ?? '') ?>) <?= (($k->status ?? '') === 'pkl') ? '[PKL]' : '' ?>
                                 </option>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -279,7 +327,80 @@ $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams
     <!-- TABLE AREA -->
     <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
         <div class="overflow-x-auto">
-            <?php if ($viewMode === 'ringkasan'): ?>
+            <?php if ($viewMode === 'ringkasan' && $kategori === 'pkl'): ?>
+            <!-- ================= TABLE MODE RINGKASAN PKL ================= -->
+            <table class="w-full min-w-[850px] text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-600 uppercase bg-slate-50 border-b border-slate-200 font-semibold tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3.5 text-center w-12">No</th>
+                        <th class="px-4 py-3.5">NIS</th>
+                        <th class="px-4 py-3.5">Nama Siswa</th>
+                        <th class="px-4 py-3.5">Tempat / Perusahaan PKL</th>
+                        <th class="px-4 py-3.5">Guru Pembimbing</th>
+                        <th class="px-3 py-3.5 text-center text-emerald-800 font-bold" title="Total Hadir Datang PKL">Datang</th>
+                        <th class="px-3 py-3.5 text-center text-indigo-800 font-bold" title="Hadir Lengkap (Absen Datang & Pulang)">Lengkap</th>
+                        <th class="px-3 py-3.5 text-center text-blue-800 font-bold" title="Izin">I</th>
+                        <th class="px-3 py-3.5 text-center text-purple-800 font-bold" title="Sakit">S</th>
+                        <th class="px-3 py-3.5 text-center text-rose-800 font-bold" title="Alfa">A</th>
+                        <th class="px-4 py-3.5 text-center font-semibold">Kehadiran (%)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <?php if (empty($data['dataAbsensi'])): ?>
+                    <tr>
+                        <td colspan="11" class="px-6 py-14 text-center text-slate-400">
+                            <i class="fa-solid fa-briefcase text-4xl mb-3 text-slate-300 block"></i>
+                            <p class="font-bold text-slate-600">Belum ada data presensi PKL pada periode yang dipilih</p>
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                        <?php 
+                        $no = $data['filters']['offset'] + 1;
+                        foreach ($data['dataAbsensi'] as $row):
+                            $hadir   = (int)($row->pkl_hadir ?? 0);
+                            $lengkap = (int)($row->pkl_lengkap ?? 0);
+                            $i       = (int)($row->izin ?? 0);
+                            $s       = (int)($row->sakit ?? 0);
+                            $a       = (int)($row->alfa ?? 0);
+                            $totalHari = $hadir + $i + $s + $a;
+                            $pct = $totalHari > 0 ? round(($hadir / $totalHari) * 100, 1) : 0;
+                        ?>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3.5 text-center text-slate-400 font-mono text-xs"><?= $no++ ?></td>
+                            <td class="px-4 py-3.5 font-mono text-xs text-slate-500"><?= htmlspecialchars($row->nis ?? '-') ?></td>
+                            <td class="px-4 py-3.5 font-bold text-slate-800"><?= htmlspecialchars($row->name) ?></td>
+                            <td class="px-4 py-3.5 text-xs text-slate-700">
+                                <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-building text-emerald-600 text-[11px]"></i>
+                                    <span><?= htmlspecialchars($row->nama_tempat ?: ($row->nama_kelompok ?? '-')) ?></span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3.5 text-xs text-slate-600">
+                                <?= !empty($row->pembimbing_guru_nama) ? htmlspecialchars($row->pembimbing_guru_nama) : '<span class="text-slate-400 italic">Belum diset</span>' ?>
+                            </td>
+                            <td class="px-3 py-3.5 text-center bg-emerald-50/30">
+                                <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                    <?= $hadir ?>
+                                </span>
+                            </td>
+                            <td class="px-3 py-3.5 text-center bg-indigo-50/30">
+                                <span class="inline-flex items-center justify-center min-w-[28px] h-7 px-1.5 rounded-lg text-xs font-black bg-indigo-100 text-indigo-800 border border-indigo-200">
+                                    <?= $lengkap ?>
+                                </span>
+                            </td>
+                            <td class="px-3 py-3.5 text-center bg-blue-50/30 font-semibold text-xs"><?= $i ?></td>
+                            <td class="px-3 py-3.5 text-center bg-purple-50/30 font-semibold text-xs"><?= $s ?></td>
+                            <td class="px-3 py-3.5 text-center bg-rose-50/30 font-semibold text-xs"><?= $a ?></td>
+                            <td class="px-4 py-3.5 text-center font-mono font-bold <?= $pct >= 85 ? 'text-emerald-700' : 'text-amber-700' ?>">
+                                <?= $pct ?>%
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <?php elseif ($viewMode === 'ringkasan'): ?>
             <!-- ================= TABLE MODE RINGKASAN RAPORT (1 BARIS = 1 SISWA/GURU) ================= -->
             <table class="w-full min-w-[780px] text-sm text-left text-slate-600">
                 <thead class="text-xs text-slate-600 uppercase bg-slate-50 border-b border-slate-200 font-semibold tracking-wider">
@@ -424,6 +545,95 @@ $urlViewDetail = BASEURL . '/rekapabsensi?' . http_build_query($switchViewParams
                                 <span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border <?= $predColor ?>">
                                     <?= $predikat ?>
                                 </span>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <?php elseif ($kategori === 'pkl'): ?>
+            <!-- ================= TABLE MODE DETAIL LOG HARIAN PKL ================= -->
+            <table class="w-full min-w-[850px] text-sm text-left text-slate-600">
+                <thead class="text-xs text-slate-600 uppercase bg-slate-50 border-b border-slate-200 font-semibold tracking-wider">
+                    <tr>
+                        <th class="px-4 py-3.5 text-center w-12">No</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Tanggal</th>
+                        <th class="px-4 py-3.5">NIS</th>
+                        <th class="px-4 py-3.5">Nama Siswa</th>
+                        <th class="px-4 py-3.5">Tempat &amp; Kelompok PKL</th>
+                        <th class="px-4 py-3.5 text-center">Datang</th>
+                        <th class="px-4 py-3.5 text-center">Pulang</th>
+                        <th class="px-4 py-3.5 text-center">Jarak GPS</th>
+                        <th class="px-4 py-3.5">Guru Pembimbing</th>
+                        <th class="px-4 py-3.5 text-center">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <?php if (empty($data['dataAbsensi'])): ?>
+                    <tr>
+                        <td colspan="10" class="px-6 py-14 text-center text-slate-400">
+                            <i class="fa-solid fa-map-location-dot text-4xl mb-3 text-slate-300 block"></i>
+                            <p class="font-bold text-slate-600">Belum ada log transaksi kehadiran PKL pada periode ini</p>
+                        </td>
+                    </tr>
+                    <?php else: ?>
+                        <?php 
+                        $no = $data['filters']['offset'] + 1;
+                        foreach ($data['dataAbsensi'] as $row):
+                            $isComplete = !empty($row->jam_pulang);
+                        ?>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3.5 text-center text-slate-400 font-mono text-xs"><?= $no++ ?></td>
+                            <td class="px-4 py-3.5 font-semibold text-slate-700 whitespace-nowrap text-xs">
+                                <?= date('d M Y', strtotime($row->tanggal)) ?>
+                            </td>
+                            <td class="px-4 py-3.5 text-slate-500 font-mono text-xs"><?= htmlspecialchars($row->nis ?? '-') ?></td>
+                            <td class="px-4 py-3.5 font-bold text-slate-800"><?= htmlspecialchars($row->name) ?></td>
+                            <td class="px-4 py-3.5 text-xs text-slate-700">
+                                <div class="font-bold text-slate-800"><?= htmlspecialchars($row->nama_tempat ?: ($row->nama_kelompok ?? '-')) ?></div>
+                                <div class="text-[10px] text-slate-400 font-mono"><?= htmlspecialchars($row->nama_kelompok ?? '') ?></div>
+                            </td>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                <?php if (!empty($row->jam_datang)): ?>
+                                    <span class="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md font-mono font-semibold text-xs border border-emerald-100">
+                                        <?= substr($row->jam_datang, 0, 5) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-slate-300 font-bold">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                <?php if (!empty($row->jam_pulang)): ?>
+                                    <span class="inline-flex items-center gap-1 text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md font-mono font-semibold text-xs border border-blue-100">
+                                        <?= substr($row->jam_pulang, 0, 5) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-slate-300 font-bold">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3.5 text-center text-xs font-mono">
+                                <?php if ($row->jarak_meter !== null): ?>
+                                    <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-semibold border border-slate-200">
+                                        <?= number_format($row->jarak_meter, 1) ?>m
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-slate-300">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-4 py-3.5 text-xs text-slate-600">
+                                <?= !empty($row->pembimbing_guru_nama) ? htmlspecialchars($row->pembimbing_guru_nama) : '<span class="text-slate-400 italic">Belum diset</span>' ?>
+                            </td>
+                            <td class="px-4 py-3.5 text-center whitespace-nowrap">
+                                <?php if ($isComplete): ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                        <i class="fa-solid fa-circle-check text-[10px]"></i> Selesai PKL
+                                    </span>
+                                <?php else: ?>
+                                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                        <i class="fa-solid fa-clock text-[10px]"></i> Sedang PKL
+                                    </span>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>

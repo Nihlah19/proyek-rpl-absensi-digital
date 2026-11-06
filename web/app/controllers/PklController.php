@@ -1,8 +1,8 @@
 <?php
 /**
  * PklController.php
- * Controller untuk Manajemen Kelompok & Lokasi PKL (Wali Kelas & Admin)
- * dan Monitoring Presensi Mandiri PKL Siswa.
+ * Controller untuk Manajemen Kelompok & Lokasi PKL melalui Guru Pembimbing PKL & Admin,
+ * serta Monitoring Presensi Siswa PKL (Foto Selfie & Validasi GPS).
  */
 class PklController extends Controller {
 
@@ -13,16 +13,19 @@ class PklController extends Controller {
     }
 
     /**
-     * Index route: arahkan sesuai role pengguna
+     * Index route: arahkan sesuai role & status penugasan pengguna
      */
     public function index() {
-        $role = SessionHelper::get('role');
+        AuthHelper::check();
+        $userId = (int)SessionHelper::get('user_id');
+        $role   = SessionHelper::get('role');
+
         if ($role === 'siswa') {
             header('Location: ' . BASEURL . '/absensi/pkl');
             exit;
         }
 
-        if (in_array($role, ['wali_kelas', 'walikelas', 'admin'])) {
+        if ($role === 'admin' || $this->pklModel->isUserPembimbingPkl($userId)) {
             header('Location: ' . BASEURL . '/pkl/kelompok');
             exit;
         }
@@ -32,26 +35,46 @@ class PklController extends Controller {
     }
 
     /**
-     * Halaman Manajemen Kelompok & Lokasi PKL
+     * Halaman Manajemen Kelompok & Lokasi PKL (Kelola Guru Pembimbing PKL & Admin)
      */
     public function kelompok() {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'admin']);
+        AuthHelper::check();
         $userId   = (int)SessionHelper::get('user_id');
         $userRole = SessionHelper::get('role');
 
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            Flasher::setFlash('Akses Dibatasi', 'Pengaturan kelompok dan lokasi PKL dikelola melalui menu Guru Pembimbing PKL.', 'warning');
+            header('Location: ' . BASEURL . '/dashboard');
+            exit;
+        }
+
         $selectedKelasId = isset($_GET['kelas_id']) ? (int)$_GET['kelas_id'] : 0;
-        $allKelasPkl     = $this->pklModel->getAllKelasPkl();
         $activeKelas     = null;
+        $allKelasPkl     = [];
 
         if ($userRole === 'admin') {
+            $allKelasPkl = $this->pklModel->getAllKelasPkl();
             if ($selectedKelasId > 0) {
                 $activeKelas = $this->pklModel->getKelasById($selectedKelasId);
             } elseif (!empty($allKelasPkl)) {
                 $activeKelas = $allKelasPkl[0];
             }
         } else {
-            // Wali Kelas: Ambil kelas yang diampu oleh wali kelas ini
-            $activeKelas = $this->pklModel->getKelasByWaliUserId($userId);
+            // Guru Pembimbing PKL: Ambil daftar kelas yang menjadi tanggung jawabnya
+            $allKelasPkl = $this->pklModel->getKelasByPembimbingUserId($userId);
+            if ($selectedKelasId > 0) {
+                // Pastikan kelas yang dipilih ada di dalam hak bimbingannya
+                foreach ($allKelasPkl as $kp) {
+                    if ((int)$kp->id === $selectedKelasId) {
+                        $activeKelas = $kp;
+                        break;
+                    }
+                }
+            }
+            if (!$activeKelas && !empty($allKelasPkl)) {
+                $activeKelas = $allKelasPkl[0];
+            }
         }
 
         $kelompokList = [];
@@ -79,14 +102,20 @@ class PklController extends Controller {
             }
         }
 
+        // Ambil data guru pembimbing saat ini
+        $guruData = ($userRole !== 'admin') ? $this->pklModel->getGuruByUserId($userId) : null;
+
         $data = [
             'judul'         => 'Kelompok & Lokasi PKL',
             'userRole'      => $userRole,
+            'isPembimbing'  => $isPembimbing,
+            'guruData'      => $guruData,
             'activeKelas'   => $activeKelas,
             'allKelasPkl'   => $allKelasPkl,
             'kelompokList'  => $kelompokList,
             'siswaList'     => $siswaList,
             'stats'         => $stats,
+            'allPembimbing' => $this->pklModel->getAllPembimbing(),
         ];
 
         $this->view('templates/header', $data);
@@ -98,7 +127,17 @@ class PklController extends Controller {
      * Ambil data JSON satu kelompok untuk form modal edit
      */
     public function get_detail_json() {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'admin']);
+        AuthHelper::check();
+        $userId   = (int)SessionHelper::get('user_id');
+        $userRole = SessionHelper::get('role');
+
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            header('Content-Type: application/json; charset=UTF-8');
+            echo json_encode(['success' => false, 'message' => 'Akses ditolak.']);
+            exit;
+        }
+
         header('Content-Type: application/json; charset=UTF-8');
 
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -118,18 +157,24 @@ class PklController extends Controller {
     }
 
     /**
-     * Simpan / Perbarui Kelompok PKL beserta anggota siswanya (Group Assignment)
+     * Simpan / Perbarui Kelompok PKL beserta lokasi Maps dan anggota siswanya
      */
     public function save_kelompok() {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'admin']);
+        AuthHelper::check();
+        $userId   = (int)SessionHelper::get('user_id');
+        $userRole = SessionHelper::get('role');
+
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            Flasher::setFlash('Akses Ditolak', 'Anda tidak memiliki hak akses sebagai Guru Pembimbing PKL.', 'danger');
+            header('Location: ' . BASEURL . '/dashboard');
+            exit;
+        }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASEURL . '/pkl/kelompok');
             exit;
         }
-
-        $userId   = (int)SessionHelper::get('user_id');
-        $userRole = SessionHelper::get('role');
 
         $id           = !empty($_POST['id']) ? (int)$_POST['id'] : null;
         $kelasId      = (int)($_POST['kelas_id'] ?? 0);
@@ -144,11 +189,12 @@ class PklController extends Controller {
         $kontak       = trim($_POST['pembimbing_kontak'] ?? '');
         $siswaIds     = isset($_POST['siswa_ids']) && is_array($_POST['siswa_ids']) ? $_POST['siswa_ids'] : [];
 
-        // Validasi akses jika wali_kelas: pastikan kelas miliknya
+        // Validasi akses jika bukan admin: pastikan kelas tersebut berada di bawah tanggung jawab guru pembimbing ini
         if ($userRole !== 'admin') {
-            $waliKelas = $this->pklModel->getKelasByWaliUserId($userId);
-            if (!$waliKelas || (int)$waliKelas->id !== $kelasId) {
-                Flasher::setFlash('Akses Ditolak', 'Anda tidak memiliki hak akses untuk mengelola kelas ini.', 'danger');
+            $allowedKelas = $this->pklModel->getKelasByPembimbingUserId($userId);
+            $allowedIds = array_map(function($k) { return (int)$k->id; }, $allowedKelas);
+            if (!in_array($kelasId, $allowedIds)) {
+                Flasher::setFlash('Akses Ditolak', 'Anda tidak memiliki hak bimbingan untuk kelas ini.', 'danger');
                 header('Location: ' . BASEURL . '/pkl/kelompok');
                 exit;
             }
@@ -175,26 +221,36 @@ class PklController extends Controller {
             exit;
         }
 
+        // Ambil guru_id pembimbing
+        $guru = $this->pklModel->getGuruByUserId($userId);
+        $pembimbingGuruId = $guru ? (int)$guru->id : null;
+
+        // Jika admin memilih guru pembimbing spesifik dari form (opsional)
+        if ($userRole === 'admin' && !empty($_POST['pembimbing_guru_id'])) {
+            $pembimbingGuruId = (int)$_POST['pembimbing_guru_id'];
+        }
+
         $data = [
-            'id'                => $id,
-            'kelas_id'          => $kelasId,
-            'nama_kelompok'     => $namaKelompok,
-            'nama_tempat'       => $namaTempat,
-            'alamat'            => $alamat,
-            'link_lokasi'       => $linkLokasi,
-            'latitude'          => (float)$latInput,
-            'longitude'         => (float)$lngInput,
-            'radius_meter'      => $radius,
-            'pembimbing_nama'   => $pembimbing,
-            'pembimbing_kontak' => $kontak,
-            'created_by'        => $userId
+            'id'                 => $id,
+            'kelas_id'           => $kelasId,
+            'nama_kelompok'      => $namaKelompok,
+            'nama_tempat'        => $namaTempat,
+            'alamat'             => $alamat,
+            'link_lokasi'        => $linkLokasi,
+            'latitude'           => (float)$latInput,
+            'longitude'          => (float)$lngInput,
+            'radius_meter'       => $radius,
+            'pembimbing_nama'    => $pembimbing,
+            'pembimbing_kontak'  => $kontak,
+            'pembimbing_guru_id' => $pembimbingGuruId,
+            'created_by'         => $userId
         ];
 
         $savedId = $this->pklModel->saveKelompok($data, $siswaIds);
 
         if ($savedId) {
             $cntAnggota = count($siswaIds);
-            Flasher::setFlash('Berhasil', "Kelompok PKL <strong>" . htmlspecialchars($namaKelompok) . "</strong> berhasil disimpan dengan {$cntAnggota} siswa anggota.", 'success');
+            Flasher::setFlash('Berhasil', "Kelompok PKL <strong>" . htmlspecialchars($namaKelompok) . "</strong> dan lokasi Maps berhasil disimpan dengan {$cntAnggota} siswa anggota.", 'success');
         } else {
             Flasher::setFlash('Gagal', 'Terjadi kesalahan sistem saat menyimpan data kelompok PKL.', 'danger');
         }
@@ -207,7 +263,16 @@ class PklController extends Controller {
      * Hapus Kelompok PKL
      */
     public function delete_kelompok() {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'admin']);
+        AuthHelper::check();
+        $userId   = (int)SessionHelper::get('user_id');
+        $userRole = SessionHelper::get('role');
+
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            Flasher::setFlash('Akses Ditolak', 'Anda tidak memiliki hak akses Guru Pembimbing PKL.', 'danger');
+            header('Location: ' . BASEURL . '/dashboard');
+            exit;
+        }
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASEURL . '/pkl/kelompok');
@@ -216,8 +281,6 @@ class PklController extends Controller {
 
         $id       = (int)($_POST['id'] ?? 0);
         $kelasId  = (int)($_POST['kelas_id'] ?? 0);
-        $userId   = (int)SessionHelper::get('user_id');
-        $userRole = SessionHelper::get('role');
 
         $kel = $this->pklModel->getKelompokById($id);
         if (!$kel) {
@@ -227,8 +290,9 @@ class PklController extends Controller {
         }
 
         if ($userRole !== 'admin') {
-            $waliKelas = $this->pklModel->getKelasByWaliUserId($userId);
-            if (!$waliKelas || (int)$waliKelas->id !== (int)$kel->kelas_id) {
+            $allowedKelas = $this->pklModel->getKelasByPembimbingUserId($userId);
+            $allowedIds = array_map(function($k) { return (int)$k->id; }, $allowedKelas);
+            if (!in_array((int)$kel->kelas_id, $allowedIds)) {
                 Flasher::setFlash('Akses Ditolak', 'Anda tidak berwenang menghapus kelompok dari kelas ini.', 'danger');
                 header('Location: ' . BASEURL . '/pkl/kelompok');
                 exit;
@@ -236,8 +300,97 @@ class PklController extends Controller {
         }
 
         $this->pklModel->deleteKelompok($id);
-        Flasher::setFlash('Berhasil', 'Kelompok PKL dan penugasan anggotanya berhasil dihapus.', 'success');
+        Flasher::setFlash('Berhasil', 'Kelompok PKL dan lokasi Maps berhasil dihapus.', 'success');
         header('Location: ' . BASEURL . '/pkl/kelompok?kelas_id=' . $kelasId);
+        exit;
+    }
+
+    /**
+     * Otomatis deteksi & ekstrak titik Latitude dan Longitude dari Link Google Maps
+     */
+    public function resolve_gmaps() {
+        AuthHelper::check();
+        header('Content-Type: application/json; charset=UTF-8');
+
+        $url = trim($_REQUEST['url'] ?? '');
+        if (empty($url)) {
+            echo json_encode(['success' => false, 'message' => 'URL Google Maps kosong.']);
+            exit;
+        }
+
+        // Helper regex extraction
+        $extractCoords = function($rawUrl) {
+            // 1. !3d... !4d... (Google Maps Place format)
+            if (preg_match('/!3d([-+]?\d+\.\d+)!4d([-+]?\d+\.\d+)/', $rawUrl, $m)) {
+                return ['lat' => (float)$m[1], 'lng' => (float)$m[2]];
+            }
+            // 2. [?&]q=lat,lng
+            if (preg_match('/[?&]q=([-+]?\d+\.\d+)[,%2C\s]+([-+]?\d+\.\d+)/', $rawUrl, $m)) {
+                return ['lat' => (float)$m[1], 'lng' => (float)$m[2]];
+            }
+            // 3. @lat,lng
+            if (preg_match('/@([-+]?\d+\.\d+),([-+]?\d+\.\d+)/', $rawUrl, $m)) {
+                return ['lat' => (float)$m[1], 'lng' => (float)$m[2]];
+            }
+            // 4. [?&](query|ll)=lat,lng
+            if (preg_match('/[?&](?:query|ll)=([-+]?\d+\.\d+)[,%2C\s]+([-+]?\d+\.\d+)/', $rawUrl, $m)) {
+                return ['lat' => (float)$m[1], 'lng' => (float)$m[2]];
+            }
+            // 5. Raw lat, lng input
+            if (preg_match('/^\s*([-+]?\d{1,2}\.\d+)[,\s]+([-+]?\d{1,3}\.\d+)\s*$/', $rawUrl, $m)) {
+                return ['lat' => (float)$m[1], 'lng' => (float)$m[2]];
+            }
+            return null;
+        };
+
+        // Cek langsung pada URL awal
+        $coords = $extractCoords($url);
+        if ($coords) {
+            echo json_encode([
+                'success' => true,
+                'lat'     => $coords['lat'],
+                'lng'     => $coords['lng'],
+                'source'  => 'direct'
+            ]);
+            exit;
+        }
+
+        // Jika shortlink (misal maps.app.goo.gl atau goo.gl/maps), ikuti redirect
+        if (strpos($url, 'goo.gl') !== false || strpos($url, 'maps.app.goo.gl') !== false || strpos($url, 'bit.ly') !== false) {
+            $ch = curl_init();
+            curl_setopt_array($ch, [
+                CURLOPT_URL            => $url,
+                CURLOPT_HEADER         => true,
+                CURLOPT_NOBODY         => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT        => 6,
+                CURLOPT_SSL_VERIFYPEER => false,
+                CURLOPT_USERAGENT      => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            ]);
+            curl_exec($ch);
+            $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+            curl_close($ch);
+
+            if ($effectiveUrl) {
+                $coords = $extractCoords($effectiveUrl);
+                if ($coords) {
+                    echo json_encode([
+                        'success'       => true,
+                        'lat'           => $coords['lat'],
+                        'lng'           => $coords['lng'],
+                        'effective_url' => $effectiveUrl,
+                        'source'        => 'redirect'
+                    ]);
+                    exit;
+                }
+            }
+        }
+
+        echo json_encode([
+            'success' => false,
+            'message' => 'Titik koordinat tidak ditemukan di link Google Maps ini. Silakan masukkan Latitude dan Longitude secara manual.'
+        ]);
         exit;
     }
 
@@ -245,23 +398,42 @@ class PklController extends Controller {
      * Halaman Monitoring Presensi PKL Siswa Hari Ini (Selfie & Jarak GPS)
      */
     public function monitoring() {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'admin']);
+        AuthHelper::check();
         $userId   = (int)SessionHelper::get('user_id');
         $userRole = SessionHelper::get('role');
 
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            Flasher::setFlash('Akses Dibatasi', 'Monitoring Presensi PKL hanya dapat diakses oleh Guru Pembimbing PKL dan Admin.', 'warning');
+            header('Location: ' . BASEURL . '/dashboard');
+            exit;
+        }
+
         $selectedKelasId = isset($_GET['kelas_id']) ? (int)$_GET['kelas_id'] : 0;
         $tanggal         = !empty($_GET['tanggal']) ? trim($_GET['tanggal']) : date('Y-m-d');
-        $allKelasPkl     = $this->pklModel->getAllKelasPkl();
+        $allKelasPkl     = [];
         $activeKelas     = null;
 
         if ($userRole === 'admin') {
+            $allKelasPkl = $this->pklModel->getAllKelasPkl();
             if ($selectedKelasId > 0) {
                 $activeKelas = $this->pklModel->getKelasById($selectedKelasId);
             } elseif (!empty($allKelasPkl)) {
                 $activeKelas = $allKelasPkl[0];
             }
         } else {
-            $activeKelas = $this->pklModel->getKelasByWaliUserId($userId);
+            $allKelasPkl = $this->pklModel->getKelasByPembimbingUserId($userId);
+            if ($selectedKelasId > 0) {
+                foreach ($allKelasPkl as $kp) {
+                    if ((int)$kp->id === $selectedKelasId) {
+                        $activeKelas = $kp;
+                        break;
+                    }
+                }
+            }
+            if (!$activeKelas && !empty($allKelasPkl)) {
+                $activeKelas = $allKelasPkl[0];
+            }
         }
 
         $rows = [];

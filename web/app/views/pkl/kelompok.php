@@ -5,6 +5,7 @@ $kelompokList = $data['kelompokList'] ?? [];
 $siswaList    = $data['siswaList'] ?? [];
 $stats        = $data['stats'] ?? ['total_siswa' => 0, 'sudah_kelompok' => 0, 'belum_kelompok' => 0, 'total_kelompok' => 0];
 $userRole     = $data['userRole'] ?? '';
+$allPembimbing = $data['allPembimbing'] ?? [];
 $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
 ?>
 
@@ -32,8 +33,8 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
         </div>
 
         <div class="flex items-center gap-2 flex-wrap self-start sm:self-center">
-            <!-- Selector Kelas untuk Admin -->
-            <?php if ($userRole === 'admin' && !empty($allKelasPkl)): ?>
+            <!-- Selector Kelas untuk Admin & Guru Pembimbing (jika memiliki > 1 kelas) -->
+            <?php if (($userRole === 'admin' || count($allKelasPkl) > 1) && !empty($allKelasPkl)): ?>
             <div class="relative inline-block text-left" id="dropdownKelasAdmin">
                 <button type="button" onclick="toggleDropdownKelas()" class="btn-secondary text-xs flex items-center gap-2">
                     <i class="fa-solid fa-chalkboard text-slate-400"></i>
@@ -74,8 +75,8 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
             </div>
             <h3 class="text-base font-bold text-slate-900 dark:text-white">Kelas PKL Tidak Ditemukan</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                Anda belum ditugaskan sebagai wali kelas untuk kelas berstatus PKL, atau belum ada kelas yang berstatus PKL di sistem.
-                Silakan hubungi Administrator untuk mengatur status kelas menjadi PKL.
+                Anda belum ditugaskan sebagai Guru Pembimbing PKL untuk kelas yang aktif, atau belum ada kelas yang berstatus PKL di sistem.
+                Silakan hubungi Administrator untuk mengatur penugasan Guru Pembimbing PKL.
             </p>
         </div>
     <?php else: ?>
@@ -256,6 +257,12 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                                             <div class="md:col-span-5 font-mono text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 bg-slate-100/70 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800">
                                                 <div>Lat: <span class="font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($kel->latitude) ?></span></div>
                                                 <div>Lng: <span class="font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($kel->longitude) ?></span></div>
+                                                <?php if (!empty($kel->pembimbing_guru_nama)): ?>
+                                                    <div class="font-sans text-[11px] text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-800 mt-1">
+                                                        <i class="fa-solid fa-chalkboard-user text-indigo-600 dark:text-indigo-400 mr-1"></i>
+                                                        Guru Pembimbing: <strong><?= htmlspecialchars($kel->pembimbing_guru_nama) ?></strong>
+                                                    </div>
+                                                <?php endif; ?>
                                                 <?php if (!empty($kel->pembimbing_nama)): ?>
                                                     <div class="font-sans text-[11px] text-slate-700 dark:text-slate-300 pt-1 border-t border-slate-200 dark:border-slate-800 mt-1">
                                                         <i class="fa-solid fa-user-tie text-emerald-600 dark:text-emerald-400 mr-1"></i>
@@ -397,6 +404,7 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                 <div>
                     <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Link Google Maps</label>
                     <input type="text" name="link_lokasi" id="inputLinkLokasi" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" oninput="parseGmapsLink(this.value)" placeholder="Tempel link Google Maps untuk otomatis ambil koordinat...">
+                    <div id="gmapsParseStatus" class="hidden mt-1 text-[11px] font-medium transition-all"></div>
                 </div>
 
                 <!-- Koordinat & Radius -->
@@ -438,6 +446,19 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                         <input type="text" name="pembimbing_kontak" id="inputKontak" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500" placeholder="No. WhatsApp PIC">
                     </div>
                 </div>
+
+                <?php if ($userRole === 'admin' && !empty($allPembimbing)): ?>
+                <div>
+                    <label class="block font-medium text-slate-700 dark:text-slate-300 mb-1">Guru Pembimbing PKL</label>
+                    <select name="pembimbing_guru_id" id="inputPembimbingGuruId" class="w-full px-3 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        <option value="">-- Tetapkan Otomatis Sesuai Pembimbing Kelas --</option>
+                        <?php foreach ($allPembimbing as $pg): ?>
+                            <option value="<?= $pg->id ?>"><?= htmlspecialchars($pg->guru_nama) ?><?= !empty($pg->nip) ? ' (NIP: ' . htmlspecialchars($pg->nip) . ')' : '' ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="text-[10px] text-slate-400 mt-1">Guru yang bertugas membimbing kelompok PKL ini.</p>
+                </div>
+                <?php endif; ?>
 
                 <!-- Multi-select Siswa Anggota -->
                 <div class="pt-2">
@@ -599,6 +620,10 @@ function openAddKelompokModal() {
     document.getElementById('formKelompok').reset();
     document.getElementById('kelompok_id').value = '';
     document.getElementById('inputRadius').value = '50';
+    const inpGuruAdd = document.getElementById('inputPembimbingGuruId');
+    if (inpGuruAdd) inpGuruAdd.value = '';
+    const stGmaps = document.getElementById('gmapsParseStatus');
+    if (stGmaps) stGmaps.classList.add('hidden');
     document.querySelectorAll('.chk-siswa').forEach(chk => chk.checked = false);
     clearSearchAnggota();
     document.getElementById('modalKelompok').classList.remove('hidden');
@@ -629,6 +654,8 @@ async function openEditKelompokModal(kelompokId) {
             document.getElementById('inputRadius').value       = d.radius_meter || '50';
             document.getElementById('inputPembimbing').value   = d.pembimbing_nama || '';
             document.getElementById('inputKontak').value       = d.pembimbing_kontak || '';
+            const inpGuruEdit = document.getElementById('inputPembimbingGuruId');
+            if (inpGuruEdit) inpGuruEdit.value = d.pembimbing_guru_id || '';
 
             const memberIds = d.anggota_ids || [];
             document.querySelectorAll('.chk-siswa').forEach(chk => {
@@ -665,15 +692,86 @@ function selectAllStudents(val) {
     });
 }
 
+let gmapsDebounce = null;
 function parseGmapsLink(val) {
-    if (!val) return;
+    const statusEl = document.getElementById('gmapsParseStatus');
+    if (!val) {
+        if (statusEl) statusEl.classList.add('hidden');
+        return;
+    }
     val = val.trim();
-    let match = val.match(/[?&]q=([-+]?\d{1,2}\.\d+),([-+]?\d{1,3}\.\d+)/);
-    if (!match) match = val.match(/@([-+]?\d{1,2}\.\d+),([-+]?\d{1,3}\.\d+)/);
-    if (!match) match = val.match(/([-+]?\d{1,2}\.\d+)[,\s]+([-+]?\d{1,3}\.\d+)/);
+
+    // Helper untuk set koordinat dan tampilkan badge sukses
+    const setCoords = (lat, lng, label = 'Otomatis terdeteksi dari link Google Maps') => {
+        document.getElementById('inputLatitude').value  = lat;
+        document.getElementById('inputLongitude').value = lng;
+        if (statusEl) {
+            statusEl.className = 'mt-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5';
+            statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${label}: <strong>${lat}, ${lng}</strong></span>`;
+            statusEl.classList.remove('hidden');
+        }
+    };
+
+    // 1. Cek pattern !3d...!4d... (Google Maps Place format desktop)
+    let match = val.match(/!3d([-+]?\d+\.\d+)!4d([-+]?\d+\.\d+)/);
     if (match) {
-        document.getElementById('inputLatitude').value = match[1];
-        document.getElementById('inputLongitude').value = match[2];
+        setCoords(match[1], match[2]);
+        return;
+    }
+
+    // 2. Cek pattern [?&]q=lat,lng
+    match = val.match(/[?&]q=([-+]?\d+\.\d+)[,%2C\s]+([-+]?\d+\.\d+)/);
+    if (match) {
+        setCoords(match[1], match[2]);
+        return;
+    }
+
+    // 3. Cek pattern @lat,lng
+    match = val.match(/@([-+]?\d+\.\d+),([-+]?\d+\.\d+)/);
+    if (match) {
+        setCoords(match[1], match[2]);
+        return;
+    }
+
+    // 4. Cek pattern query=lat,lng atau ll=lat,lng
+    match = val.match(/[?&](?:query|ll)=([-+]?\d+\.\d+)[,%2C\s]+([-+]?\d+\.\d+)/);
+    if (match) {
+        setCoords(match[1], match[2]);
+        return;
+    }
+
+    // 5. Cek input koordinat manual langsung: "-6.123456, 108.123456"
+    match = val.match(/^\s*([-+]?\d{1,2}\.\d+)[,\s]+([-+]?\d{1,3}\.\d+)\s*$/);
+    if (match) {
+        setCoords(match[1], match[2], 'Koordinat terdeteksi');
+        return;
+    }
+
+    // 6. Jika berupa shortlink (maps.app.goo.gl / goo.gl / bit.ly), selesaikan via backend
+    if (val.includes('goo.gl') || val.includes('maps.app') || val.includes('bit.ly')) {
+        if (statusEl) {
+            statusEl.className = 'mt-1 text-[11px] font-medium text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5';
+            statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>Mendeteksi titik koordinat dari link short Google Maps...</span>`;
+            statusEl.classList.remove('hidden');
+        }
+
+        clearTimeout(gmapsDebounce);
+        gmapsDebounce = setTimeout(async () => {
+            try {
+                const res = await fetch(`<?= BASEURL ?>/pkl/resolve_gmaps?url=${encodeURIComponent(val)}`);
+                const json = await res.json();
+                if (json.success && json.lat && json.lng) {
+                    setCoords(json.lat, json.lng, 'Koordinat berhasil diekstrak dari shortlink');
+                } else {
+                    if (statusEl) {
+                        statusEl.className = 'mt-1 text-[11px] font-medium text-amber-600 dark:text-amber-400 flex items-center gap-1.5';
+                        statusEl.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> <span>Koordinat tidak ditemukan pada link. Silakan masukkan Latitude dan Longitude secara manual.</span>`;
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }, 300);
     }
 }
 

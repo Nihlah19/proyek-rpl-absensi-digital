@@ -101,12 +101,22 @@
                                         <i class="fa-solid fa-user"></i>
                                     </div>
                                     <div>
-                                        <span class="font-bold text-slate-800 flex items-center gap-2">
+                                        <span class="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                                             <?= htmlspecialchars($g->name) ?>
                                             <?php if($g->role === 'wali_kelas' || $g->role === 'walikelas'): ?>
                                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-200">Wali Kelas</span>
                                             <?php endif; ?>
+                                            <?php if(!empty($g->is_pembimbing_pkl)): ?>
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center gap-1">
+                                                    <i class="fa-solid fa-user-tie text-[9px]"></i> Pembimbing PKL
+                                                </span>
+                                            <?php endif; ?>
                                         </span>
+                                        <?php if(!empty($g->pembimbing_kelas_names)): ?>
+                                            <span class="text-[11px] text-indigo-600 font-semibold flex items-center gap-1 mt-0.5">
+                                                <i class="fa-solid fa-briefcase text-[10px]"></i> Bimbingan: <?= htmlspecialchars($g->pembimbing_kelas_names) ?>
+                                            </span>
+                                        <?php endif; ?>
                                         <span class="text-xs text-slate-400 font-medium">Terdaftar: <?= date('d M Y', strtotime($g->created_at)) ?></span>
                                     </div>
                                 </div>
@@ -392,7 +402,31 @@
                     ID ini akan digunakan untuk cetak kartu barcode absensi guru.
                 </p>
             </div>
-            
+            <!-- Penugasan Pembimbing PKL di Modal Tambah Guru -->
+            <div class="space-y-3 bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 mt-2">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-sm font-semibold text-slate-800 block">Tugaskan sebagai Pembimbing PKL</span>
+                        <span class="text-xs text-slate-500">Guru ini akan berwenang mengelola kelompok & lokasi PKL</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="is_pembimbing_pkl" value="1" class="sr-only peer" onchange="document.getElementById('modalTambahPklKelas').classList.toggle('hidden', !this.checked)">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                </div>
+                <div id="modalTambahPklKelas" class="hidden pt-2 border-t border-indigo-100 space-y-2">
+                    <label class="text-xs font-bold uppercase text-slate-600 block">Pilih Kelas PKL Tanggung Jawab:</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto">
+                        <?php foreach (($data['allKelasPkl'] ?? []) as $kp): ?>
+                        <label class="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-200 text-xs cursor-pointer hover:border-indigo-300">
+                            <input type="checkbox" name="pembimbing_kelas_ids[]" value="<?= $kp->id ?>" class="rounded text-indigo-600 focus:ring-indigo-500">
+                            <span class="font-medium text-slate-700 truncate"><?= htmlspecialchars($kp->nama_kelas) ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-4 pt-4 mt-2 border-t border-slate-200">
                 <button type="button" onclick="closeModal('modalTambahGuru')"
                         class="flex-1 px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 hover:text-slate-800 transition-all shadow-sm">

@@ -2,6 +2,7 @@
 /**
  * UsersController.php
  * Kelola pengguna (guru & siswa) oleh admin.
+ * Mendukung penugasan Wali Kelas & Guru Pembimbing PKL beserta kelas bimbingannya.
  */
 class UsersController extends Controller {
 
@@ -18,10 +19,11 @@ class UsersController extends Controller {
 
     public function index() {
         $data = [
-            'judul'  => 'Kelola Pengguna',
-            'guru'   => $this->model->getAllGuru(),
-            'siswa'  => $this->model->getAllSiswa(),
-            'kelas'  => $this->model->getAllKelas(),
+            'judul'       => 'Kelola Pengguna',
+            'guru'        => $this->model->getAllGuru(),
+            'siswa'       => $this->model->getAllSiswa(),
+            'kelas'       => $this->model->getAllKelas(),
+            'allKelasPkl' => $this->model->getAllKelasPkl(),
         ];
         $this->view('templates/header', $data);
         $this->view('users/index', $data);
@@ -50,6 +52,8 @@ class UsersController extends Controller {
         $nip        = ValidationHelper::sanitize($_POST['nip'] ?? '');
         $barcode_id = ValidationHelper::sanitize($_POST['barcode_id'] ?? '');
         $subject    = ValidationHelper::sanitize($_POST['subject'] ?? '');
+        $is_pembimbing_pkl    = isset($_POST['is_pembimbing_pkl']) ? 1 : 0;
+        $pembimbing_kelas_ids = isset($_POST['pembimbing_kelas_ids']) && is_array($_POST['pembimbing_kelas_ids']) ? $_POST['pembimbing_kelas_ids'] : [];
 
         if (!ValidationHelper::required([$name, $username, $password, $nip])) {
             Flasher::setFlash('gagal', 'Semua field wajib diisi.', 'danger');
@@ -75,15 +79,15 @@ class UsersController extends Controller {
             exit;
         }
 
-        // Biarkan model yang handle auto-generate QR-GURU-XXX jika kosong
-
         $this->model->createGuru([
-            'name'       => $name,
-            'username'   => $username,
-            'password'   => $password,
-            'nip'        => $nip,
-            'barcode_id' => $barcode_id,
-            'subject'    => $subject,
+            'name'                 => $name,
+            'username'             => $username,
+            'password'             => $password,
+            'nip'                  => $nip,
+            'barcode_id'           => $barcode_id,
+            'subject'              => $subject,
+            'is_pembimbing_pkl'    => $is_pembimbing_pkl,
+            'pembimbing_kelas_ids' => $pembimbing_kelas_ids,
         ]);
 
         Flasher::setFlash('berhasil', 'Guru berhasil ditambahkan.', 'success');
@@ -112,13 +116,33 @@ class UsersController extends Controller {
                 exit;
             }
 
-            $name       = ValidationHelper::sanitize($_POST['name'] ?? '');
-            $username   = ValidationHelper::sanitize($_POST['username'] ?? '');
-            $password   = $_POST['password'] ?? '';
-            $nip        = ValidationHelper::sanitize($_POST['nip'] ?? '');
-            $barcode_id = ValidationHelper::sanitize($_POST['barcode_id'] ?? '');
-            $subject    = ValidationHelper::sanitize($_POST['subject'] ?? '');
-            $wali_kelas_id = ValidationHelper::sanitize($_POST['wali_kelas_id'] ?? '');
+            $name                 = ValidationHelper::sanitize($_POST['name'] ?? '');
+            $username             = ValidationHelper::sanitize($_POST['username'] ?? '');
+            $password             = $_POST['password'] ?? '';
+            $nip                  = ValidationHelper::sanitize($_POST['nip'] ?? '');
+            $barcode_id           = ValidationHelper::sanitize($_POST['barcode_id'] ?? '');
+            $subject              = ValidationHelper::sanitize($_POST['subject'] ?? '');
+            $wali_kelas_id        = ValidationHelper::sanitize($_POST['wali_kelas_id'] ?? '');
+            $pembimbing_pkl_option= ValidationHelper::sanitize($_POST['pembimbing_pkl_option'] ?? '');
+            $pembimbing_kelas_ids = isset($_POST['pembimbing_kelas_ids']) && is_array($_POST['pembimbing_kelas_ids']) ? $_POST['pembimbing_kelas_ids'] : [];
+
+            // Evaluasi penugasan pembimbing PKL berdasarkan opsi (Bukan, TKJ, TKR, TSM, atau Kustom)
+            if (in_array(strtoupper($pembimbing_pkl_option), ['TKJ', 'TKR', 'TSM'])) {
+                $is_pembimbing_pkl = 1;
+                // Jika checkbox kelas kosong atau tidak dikirim manual, otomatis ambil seluruh kelas jurusan tersebut
+                if (empty($pembimbing_kelas_ids)) {
+                    $pembimbing_kelas_ids = $this->model->getKelasIdsByJurusan($pembimbing_pkl_option);
+                }
+            } elseif ($pembimbing_pkl_option === 'CUSTOM') {
+                $is_pembimbing_pkl = !empty($pembimbing_kelas_ids) ? 1 : 0;
+            } elseif ($pembimbing_pkl_option === '' && isset($_POST['is_pembimbing_pkl']) && (int)$_POST['is_pembimbing_pkl'] === 1) {
+                // Fallback toggle checkbox
+                $is_pembimbing_pkl = 1;
+            } else {
+                // -- Bukan Pembimbing PKL --
+                $is_pembimbing_pkl = 0;
+                $pembimbing_kelas_ids = [];
+            }
 
             if ($this->model->isUsernameExist($username, $guru->id)) {
                 Flasher::setFlash('gagal', 'Username sudah digunakan.', 'danger');
@@ -139,24 +163,55 @@ class UsersController extends Controller {
             }
 
             $this->model->updateGuru($guru_id, [
-                'name'          => $name,
-                'username'      => $username,
-                'password'      => $password,
-                'nip'           => $nip,
-                'barcode_id'    => $barcode_id,
-                'subject'       => $subject,
-                'wali_kelas_id' => $wali_kelas_id,
+                'name'                 => $name,
+                'username'             => $username,
+                'password'             => $password,
+                'nip'                  => $nip,
+                'barcode_id'           => $barcode_id,
+                'subject'              => $subject,
+                'wali_kelas_id'        => $wali_kelas_id,
+                'is_pembimbing_pkl'    => $is_pembimbing_pkl,
+                'pembimbing_kelas_ids' => $pembimbing_kelas_ids,
             ]);
 
-            Flasher::setFlash('berhasil', 'Data guru berhasil diperbarui.', 'success');
+            Flasher::setFlash('berhasil', 'Data guru dan pengaturan pembimbing PKL berhasil diperbarui.', 'success');
             header('Location: ' . BASEURL . '/users');
             exit;
         }
 
+        $guru             = $this->model->getGuruById($guru_id);
+        $allKelasPkl      = $this->model->getAllKelasPkl();
+        $assignedKelasIds = $this->model->getPembimbingKelasIds($guru_id);
+
+        // Deteksi opsi pembimbing PKL yang aktif (Bukan, TKJ, TKR, TSM, atau CUSTOM)
+        $selectedJurusanPkl = '';
+        if (!empty($guru->is_pembimbing_pkl) || !empty($assignedKelasIds)) {
+            if (!empty($assignedKelasIds)) {
+                $jurusans = [];
+                foreach ($allKelasPkl as $kp) {
+                    if (in_array((int)$kp->id, $assignedKelasIds)) {
+                        $jur = strtoupper(trim($kp->jurusan ?? ''));
+                        if ($jur) $jurusans[$jur] = true;
+                    }
+                }
+                $jurKeys = array_keys($jurusans);
+                if (count($jurKeys) === 1 && in_array($jurKeys[0], ['TKJ', 'TKR', 'TSM'])) {
+                    $selectedJurusanPkl = $jurKeys[0];
+                } else {
+                    $selectedJurusanPkl = 'CUSTOM';
+                }
+            } else {
+                $selectedJurusanPkl = 'CUSTOM';
+            }
+        }
+
         $data = [
-            'judul' => 'Edit Guru',
-            'guru'  => $this->model->getGuruById($guru_id),
-            'kelas' => $this->model->getAllKelas(),
+            'judul'              => 'Edit Guru',
+            'guru'               => $guru,
+            'kelas'              => $this->model->getAllKelas(),
+            'allKelasPkl'        => $allKelasPkl,
+            'assignedKelasIds'   => $assignedKelasIds,
+            'selectedJurusanPkl' => $selectedJurusanPkl,
         ];
         $this->view('templates/header', $data);
         $this->view('users/edit_guru', $data);
@@ -330,6 +385,7 @@ class UsersController extends Controller {
         header('Location: ' . BASEURL . '/users');
         exit;
     }
+
     // ─────────────────────────────────────────────────────────────────────────
     // BULK ACTIONS
     // ─────────────────────────────────────────────────────────────────────────

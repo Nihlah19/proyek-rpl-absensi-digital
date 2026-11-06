@@ -26,11 +26,12 @@ class TelegramController extends Controller {
         foreach ([
             "ALTER TABLE kelas ADD COLUMN telegram_bot_token VARCHAR(100) NULL",
             "ALTER TABLE kelas ADD COLUMN telegram_chat_id VARCHAR(50) NULL",
+            "ALTER TABLE kelas ADD COLUMN telegram_chat_id_pkl VARCHAR(50) NULL",
         ] as $sql) {
             try { $this->db->query($sql); $this->db->execute(); } catch (Exception $e) { /* sudah ada */ }
         }
 
-        // Simpan token ke DB dan ambil chat_id per kelas
+        // Simpan token ke DB jika belum
         foreach ($this->bots as $bot) {
             $this->db->query("SELECT id FROM kelas WHERE nama_kelas LIKE :nama");
             $this->db->bind(':nama', '%' . trim($bot['nama_kelas']) . '%');
@@ -54,42 +55,61 @@ class TelegramController extends Controller {
             if (isset($_POST['save_all'])) {
                 $saved = 0;
                 foreach ($this->bots as $bot) {
-                    $key    = 'uid_' . preg_replace('/\s+/', '_', $bot['nama_kelas']);
-                    $newUID = trim($_POST[$key] ?? '');
-                    if (!empty($newUID) && is_numeric($newUID) && !empty($kelasData[$bot['nama_kelas']]['db_id'])) {
-                        $this->db->query("UPDATE kelas SET telegram_chat_id = :uid WHERE id = :id");
-                        $this->db->bind(':uid', $newUID);
-                        $this->db->bind(':id',  $kelasData[$bot['nama_kelas']]['db_id']);
+                    $keyWali = 'uid_' . preg_replace('/\s+/', '_', $bot['nama_kelas']);
+                    $keyPkl  = 'uid_pkl_' . preg_replace('/\s+/', '_', $bot['nama_kelas']);
+                    $newWali = trim($_POST[$keyWali] ?? '');
+                    $newPkl  = trim($_POST[$keyPkl] ?? '');
+                    $dbId    = $kelasData[$bot['nama_kelas']]['db_id'] ?? null;
+
+                    if ($dbId) {
+                        $this->db->query("
+                            UPDATE kelas 
+                            SET telegram_chat_id = :uid,
+                                telegram_chat_id_pkl = :uid_pkl
+                            WHERE id = :id
+                        ");
+                        $this->db->bind(':uid', !empty($newWali) ? $newWali : null);
+                        $this->db->bind(':uid_pkl', !empty($newPkl) ? $newPkl : null);
+                        $this->db->bind(':id',  $dbId);
                         $this->db->execute();
-                        $kelasData[$bot['nama_kelas']]['chat_id'] = $newUID;
+
+                        $kelasData[$bot['nama_kelas']]['chat_id']     = $newWali;
+                        $kelasData[$bot['nama_kelas']]['chat_id_pkl'] = $newPkl;
                         $saved++;
                     }
                 }
-                Flasher::setFlash('Berhasil', "{$saved} dari 9 kelas berhasil disimpan!", 'success');
+                Flasher::setFlash('Berhasil', "Konfigurasi ID penerima untuk {$saved} kelas berhasil disimpan!", 'success');
                 header('Location: ' . BASEURL . '/telegram');
                 exit;
             }
 
             // SAVE SATU KELAS
             if (isset($_POST['save_single'])) {
-                $namaKelas = $_POST['kelas_name'] ?? '';
-                $newUID    = trim($_POST['single_uid'] ?? '');
-                $dbId      = $kelasData[$namaKelas]['db_id'] ?? null;
+                $namaKelas  = $_POST['kelas_name'] ?? '';
+                $newUID     = trim($_POST['single_uid'] ?? '');
+                $newUIDPkl  = trim($_POST['single_uid_pkl'] ?? '');
+                $dbId       = $kelasData[$namaKelas]['db_id'] ?? null;
 
-                if (!empty($newUID) && is_numeric($newUID) && $dbId) {
-                    $this->db->query("UPDATE kelas SET telegram_chat_id = :uid WHERE id = :id");
-                    $this->db->bind(':uid', $newUID);
+                if ($dbId) {
+                    $this->db->query("
+                        UPDATE kelas 
+                        SET telegram_chat_id = :uid,
+                            telegram_chat_id_pkl = :uid_pkl
+                        WHERE id = :id
+                    ");
+                    $this->db->bind(':uid', !empty($newUID) ? $newUID : null);
+                    $this->db->bind(':uid_pkl', !empty($newUIDPkl) ? $newUIDPkl : null);
                     $this->db->bind(':id',  $dbId);
                     $this->db->execute();
-                    Flasher::setFlash('Berhasil', "User ID kelas {$namaKelas} berhasil disimpan!", 'success');
+                    Flasher::setFlash('Berhasil', "ID penerima Telegram kelas {$namaKelas} berhasil disimpan!", 'success');
                 } else {
-                    Flasher::setFlash('Gagal', 'User ID tidak valid. Pastikan hanya berisi angka.', 'error');
+                    Flasher::setFlash('Gagal', 'Kelas tidak ditemukan di database.', 'error');
                 }
                 header('Location: ' . BASEURL . '/telegram');
                 exit;
             }
 
-            // TEST SATU BOT
+            // TEST BOT REGULER (WALI KELAS)
             if (isset($_POST['test_single'])) {
                 $namaKelas = $_POST['kelas_name'] ?? '';
                 $chatId    = $kelasData[$namaKelas]['chat_id'] ?? '';
@@ -98,16 +118,59 @@ class TelegramController extends Controller {
                     if ($b['nama_kelas'] === $namaKelas) { $token = $b['token']; break; }
                 }
                 if (!empty($chatId) && !empty($token)) {
-                    $pesan = "🔔 <b>TEST NOTIFIKASI</b>\n\n🏫 Kelas: <b>{$namaKelas}</b>\n⏰ " . date('d/m/Y H:i:s');
+                    $pesan = "🔔 <b>TEST NOTIFIKASI WALI KELAS</b>\n\n🏫 Kelas: <b>{$namaKelas}</b>\n⏰ " . date('d/m/Y H:i:s') . "\n\n✅ Jalur notifikasi reguler siap digunakan.";
                     $r = $this->sendTelegram($token, $chatId, $pesan);
                     $results[$namaKelas] = $r;
                     if ($r['ok']) {
-                        Flasher::setFlash('Berhasil', "Test notifikasi kelas {$namaKelas} berhasil dikirim!", 'success');
+                        Flasher::setFlash('Berhasil', "Test notifikasi reguler kelas {$namaKelas} berhasil dikirim!", 'success');
                     } else {
-                        Flasher::setFlash('Gagal', "Test gagal: " . ($r['description'] ?? 'Unknown'), 'error');
+                        Flasher::setFlash('Gagal', "Test gagal: " . ($r['description'] ?? 'Unknown error'), 'error');
                     }
                 } else {
-                    Flasher::setFlash('Gagal', "Isi User ID kelas {$namaKelas} terlebih dahulu.", 'error');
+                    Flasher::setFlash('Gagal', "Isi User ID Wali Kelas untuk {$namaKelas} terlebih dahulu.", 'error');
+                }
+                header('Location: ' . BASEURL . '/telegram');
+                exit;
+            }
+
+            // TEST BOT PKL (PEMBIMBING PKL)
+            if (isset($_POST['test_single_pkl'])) {
+                $namaKelas = $_POST['kelas_name'] ?? '';
+                $chatId    = $kelasData[$namaKelas]['chat_id_pkl'] ?? '';
+                $token     = '';
+                foreach ($this->bots as $b) {
+                    if ($b['nama_kelas'] === $namaKelas) { $token = $b['token']; break; }
+                }
+                if (!empty($chatId) && !empty($token)) {
+                    $testData = [
+                        'nama'            => 'Siswa Contoh PKL',
+                        'nis'             => '20260101',
+                        'nama_kelas'      => $namaKelas,
+                        'nama_tempat'     => 'PT Industri Mitra Teknologi (Test)',
+                        'jam'             => date('H:i'),
+                        'tanggal'         => date('Y-m-d'),
+                        'statusAktivitas' => 'Datang',
+                        'jarakMeter'      => 14.5
+                    ];
+                    $pesan = TelegramHelper::formatPesanPkl(
+                        $testData['nama'],
+                        $testData['nis'],
+                        $testData['nama_kelas'],
+                        $testData['nama_tempat'],
+                        $testData['jam'],
+                        $testData['tanggal'],
+                        $testData['statusAktivitas'],
+                        $testData['jarakMeter']
+                    );
+                    $r = $this->sendTelegram($token, $chatId, $pesan);
+                    $results[$namaKelas . '_pkl'] = $r;
+                    if ($r['ok']) {
+                        Flasher::setFlash('Berhasil', "Test notifikasi PKL kelas {$namaKelas} berhasil dikirim ke Pembimbing PKL!", 'success');
+                    } else {
+                        Flasher::setFlash('Gagal', "Test PKL gagal: " . ($r['description'] ?? 'Unknown error'), 'error');
+                    }
+                } else {
+                    Flasher::setFlash('Gagal', "Isi User ID Pembimbing PKL untuk {$namaKelas} terlebih dahulu.", 'error');
                 }
                 header('Location: ' . BASEURL . '/telegram');
                 exit;
@@ -130,7 +193,6 @@ class TelegramController extends Controller {
                 }
                 $type = ($err === 0) ? 'success' : (($ok > 0) ? 'warning' : 'error');
                 Flasher::setFlash('Test Selesai', "Test: {$ok} berhasil, {$err} gagal.", $type);
-                // Simpan hasil ke session agar bisa ditampilkan di view
                 $_SESSION['tele_results'] = $results;
                 header('Location: ' . BASEURL . '/telegram');
                 exit;
@@ -141,18 +203,20 @@ class TelegramController extends Controller {
         $results = $_SESSION['tele_results'] ?? [];
         unset($_SESSION['tele_results']);
 
-        $totalSet = count(array_filter($kelasData, fn($k) => !empty($k['chat_id'])));
-        $totalOk  = !empty($results) ? count(array_filter($results, fn($r) => $r['ok'])) : 0;
-        $totalErr = !empty($results) ? count($results) - $totalOk : 0;
+        $totalSet    = count(array_filter($kelasData, fn($k) => !empty($k['chat_id'])));
+        $totalSetPkl = count(array_filter($kelasData, fn($k) => !empty($k['chat_id_pkl'])));
+        $totalOk     = !empty($results) ? count(array_filter($results, fn($r) => $r['ok'])) : 0;
+        $totalErr    = !empty($results) ? count($results) - $totalOk : 0;
 
         $data = [
-            'judul'     => 'Setup Telegram Bot',
-            'bots'      => $this->bots,
-            'kelasData' => $kelasData,
-            'results'   => $results,
-            'totalSet'  => $totalSet,
-            'totalOk'   => $totalOk,
-            'totalErr'  => $totalErr,
+            'judul'       => 'Setup Telegram Bot',
+            'bots'        => $this->bots,
+            'kelasData'   => $kelasData,
+            'results'     => $results,
+            'totalSet'    => $totalSet,
+            'totalSetPkl' => $totalSetPkl,
+            'totalOk'     => $totalOk,
+            'totalErr'    => $totalErr,
         ];
 
         $this->view('templates/header', $data);
@@ -164,16 +228,24 @@ class TelegramController extends Controller {
     private function getKelasData(): array {
         $kelasData = [];
         foreach ($this->bots as $bot) {
-            $this->db->query("SELECT id, nama_kelas, telegram_chat_id FROM kelas WHERE nama_kelas LIKE :nama");
+            $this->db->query("SELECT id, nama_kelas, telegram_chat_id, telegram_chat_id_pkl, status FROM kelas WHERE nama_kelas LIKE :nama");
             $this->db->bind(':nama', '%' . trim($bot['nama_kelas']) . '%');
-            $found  = $this->db->single();
-            $chatId = '';
-            if ($found && !empty($found->telegram_chat_id) && strpos($found->telegram_chat_id, ':') === false) {
-                $chatId = $found->telegram_chat_id;
+            $found     = $this->db->single();
+            $chatId    = '';
+            $chatIdPkl = '';
+            if ($found) {
+                if (!empty($found->telegram_chat_id) && strpos($found->telegram_chat_id, ':') === false) {
+                    $chatId = $found->telegram_chat_id;
+                }
+                if (!empty($found->telegram_chat_id_pkl) && strpos($found->telegram_chat_id_pkl, ':') === false) {
+                    $chatIdPkl = $found->telegram_chat_id_pkl;
+                }
             }
             $kelasData[$bot['nama_kelas']] = [
-                'db_id'   => $found->id ?? null,
-                'chat_id' => $chatId,
+                'db_id'       => $found->id ?? null,
+                'chat_id'     => $chatId,
+                'chat_id_pkl' => $chatIdPkl,
+                'status'      => $found->status ?? 'aktif',
             ];
         }
         return $kelasData;

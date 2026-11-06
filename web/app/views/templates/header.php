@@ -866,10 +866,10 @@ function downloadHeaderQr() {
                         $isScannerActive = (strpos($reqUri, '/guru/scanner') !== false);
                         $isPklKelompokActive = (strpos($reqUri, '/pkl/kelompok') !== false);
                         $isPklMonitoringActive = (strpos($reqUri, '/pkl/monitoring') !== false);
-                        $isPklGroupActive = (strpos($reqUri, '/pkl') !== false);
-                        $isPresensiAdminActive = ($isRekapActive || $isApprovalActive || $isPklGroupActive);
+                        $isPklGroupActive = (strpos($reqUri, '/pkl') !== false && strpos($reqUri, '/absensi/pkl') === false);
+                        $isPresensiAdminActive = ($isRekapActive || $isApprovalActive);
                         $isPresensiKepsekActive = ($isRekapActive || $isApprovalActive);
-                        $isPresensiWaliActive = ($isScannerActive || $isRekapActive || $isApprovalActive || $isPklGroupActive);
+                        $isPresensiWaliActive = ($isScannerActive || $isRekapActive || $isApprovalActive);
 
                         // Live Monitor Checkers
                         $isMonitorSiswa = (strpos($reqUri, '/riwayat') !== false && strpos($reqUri, '/riwayat/guru') === false && strpos($reqUri, '/izin/riwayat') === false);
@@ -908,6 +908,17 @@ function downloadHeaderQr() {
                                 $headerDb->bind(':uid', $headerUid);
                                 $hRes = $headerDb->single();
                                 $isStudentPkl = ($hRes && ($hRes->status_kelas ?? '') === 'pkl');
+                            }
+                        }
+
+                        // Cek apakah user adalah Pembimbing PKL
+                        $isUserPembimbingPkl = false;
+                        if (in_array($userRole, ['guru', 'wali_kelas', 'walikelas'])) {
+                            $headerUid = (int)SessionHelper::get('user_id');
+                            if ($headerUid) {
+                                require_once __DIR__ . '/../../models/Pkl.php';
+                                $pklCheckModel = new Pkl();
+                                $isUserPembimbingPkl = $pklCheckModel->isUserPembimbingPkl($headerUid);
                             }
                         }
 
@@ -977,17 +988,38 @@ function downloadHeaderQr() {
                                     <span class="truncate">Riwayat Persetujuan</span>
                                 </a>
                             </li>
+                        </ul>
+                    </li>
+
+                    <!-- ADMIN: 4. GURU PEMBIMBING PKL (Nested List) -->
+                    <li>
+                        <button type="button" onclick="toggleNavSubmenu('submenu-admin-pkl', this)"
+                                class="group w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-colors <?= $isPklGroupActive ? 'bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80' ?>">
+                            <div class="flex items-center gap-3 truncate">
+                                <i class="fa-solid fa-user-tie w-5 text-center text-sm <?= $isPklGroupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
+                                <span class="truncate">Guru Pembimbing PKL</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 submenu-arrow <?= $isPklGroupActive ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : '' ?>"></i>
+                        </button>
+                        <ul id="submenu-admin-pkl" class="ml-5 pl-3 py-1 space-y-0.5 border-l border-slate-200 dark:border-slate-800 <?= $isPklGroupActive ? '' : 'hidden' ?>">
                             <li>
                                 <a href="<?= BASEURL; ?>/pkl/kelompok"
-                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklGroupActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
-                                    <i class="fa-solid fa-map-location-dot text-xs w-4 text-center shrink-0 <?= $isPklGroupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
-                                    <span class="truncate">Kelola Kelompok PKL</span>
+                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklKelompokActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
+                                    <i class="fa-solid fa-sliders text-xs w-4 text-center shrink-0 <?= $isPklKelompokActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
+                                    <span class="truncate">Pengaturan Kelompok &amp; Lokasi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= BASEURL; ?>/pkl/monitoring"
+                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklMonitoringActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
+                                    <i class="fa-solid fa-clock-rotate-left text-xs w-4 text-center shrink-0 <?= $isPklMonitoringActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
+                                    <span class="truncate">Log Riwayat &amp; Monitoring</span>
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- ADMIN: 4. LIVE MONITOR (Nested List) -->
+                    <!-- ADMIN: 5. LIVE MONITOR (Nested List) -->
                     <li>
                         <button type="button" onclick="toggleNavSubmenu('submenu-monitor', this)"
                                 class="group w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-colors <?= $isMonitorGroupActive ? 'bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80' ?>">
@@ -1155,20 +1187,6 @@ function downloadHeaderQr() {
                                     <span class="truncate">Persetujuan Izin</span>
                                 </a>
                             </li>
-                            <li>
-                                <a href="<?= BASEURL; ?>/pkl/kelompok"
-                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklKelompokActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
-                                    <i class="fa-solid fa-map-location-dot text-xs w-4 text-center shrink-0 <?= $isPklKelompokActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
-                                    <span class="truncate">Kelompok & Lokasi PKL</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= BASEURL; ?>/pkl/monitoring"
-                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklMonitoringActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
-                                    <i class="fa-solid fa-camera-retro text-xs w-4 text-center shrink-0 <?= $isPklMonitoringActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
-                                    <span class="truncate">Monitoring Presensi PKL</span>
-                                </a>
-                            </li>
                         </ul>
                     </li>
                     <li>
@@ -1195,6 +1213,36 @@ function downloadHeaderQr() {
                             <i class="fa-solid fa-paper-plane w-5 text-center text-sm <?= $isPengajuanIzin ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
                             <span class="truncate">Pengajuan Izin</span>
                         </a>
+                    </li>
+                    <?php endif; ?>
+
+                    <?php if (in_array($userRole, ['guru', 'wali_kelas', 'walikelas']) && $isUserPembimbingPkl): ?>
+                    <!-- GURU PEMBIMBING PKL -->
+                    <li>
+                        <button type="button" onclick="toggleNavSubmenu('submenu-guru-pkl', this)"
+                                class="group w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium transition-colors <?= $isPklGroupActive ? 'bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300 font-semibold' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80' ?>">
+                            <div class="flex items-center gap-3 truncate">
+                                <i class="fa-solid fa-user-tie w-5 text-center text-sm <?= $isPklGroupActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
+                                <span class="truncate">Guru Pembimbing PKL</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 submenu-arrow <?= $isPklGroupActive ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : '' ?>"></i>
+                        </button>
+                        <ul id="submenu-guru-pkl" class="ml-5 pl-3 py-1 space-y-0.5 border-l border-slate-200 dark:border-slate-800 <?= $isPklGroupActive ? '' : 'hidden' ?>">
+                            <li>
+                                <a href="<?= BASEURL; ?>/pkl/kelompok"
+                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklKelompokActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
+                                    <i class="fa-solid fa-sliders text-xs w-4 text-center shrink-0 <?= $isPklKelompokActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
+                                    <span class="truncate">Pengaturan Kelompok &amp; Lokasi</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= BASEURL; ?>/pkl/monitoring"
+                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isPklMonitoringActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
+                                    <i class="fa-solid fa-clock-rotate-left text-xs w-4 text-center shrink-0 <?= $isPklMonitoringActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
+                                    <span class="truncate">Log Riwayat &amp; Monitoring</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     <?php endif; ?>
 

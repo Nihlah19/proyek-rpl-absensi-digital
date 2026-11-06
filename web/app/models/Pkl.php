@@ -1,21 +1,27 @@
 <?php
 /**
  * Pkl.php
- * Model untuk manajemen lokasi PKL per kelompok dan Presensi Mandiri Siswa PKL (Foto + Titik Lokasi GPS)
+ * Model untuk manajemen lokasi PKL per kelompok, Guru Pembimbing PKL,
+ * dan Presensi Mandiri Siswa PKL (Foto + Titik Lokasi GPS)
  */
 class Pkl extends Model {
 
     /**
-     * Ambil informasi detail siswa, kelas, status kelas PKL, dan nama wali kelas
+     * Ambil informasi detail siswa, kelas, status kelas PKL, telegram bot, dan nama wali kelas
      */
     public function getSiswaPklDetail($userId) {
         $this->db->query("
             SELECT s.*, u.name as nama, u.username, k.nama_kelas, k.status as status_kelas,
-                   w.name as wali_nama
+                   k.telegram_chat_id, k.telegram_chat_id_pkl, k.telegram_bot_token,
+                   w.name as wali_nama,
+                   gp.telegram_chat_id as pembimbing_telegram_chat_id
             FROM siswa s
             JOIN users u ON s.user_id = u.id
             LEFT JOIN kelas k ON s.kelas_id = k.id
             LEFT JOIN users w ON k.wali_kelas_id = w.id
+            LEFT JOIN pkl_kelompok_siswa ks ON s.id = ks.siswa_id
+            LEFT JOIN pkl_kelompok kel ON ks.kelompok_id = kel.id
+            LEFT JOIN guru gp ON kel.pembimbing_guru_id = gp.id
             WHERE s.user_id = :uid
             LIMIT 1
         ");
@@ -24,7 +30,7 @@ class Pkl extends Model {
     }
 
     /**
-     * Ambil lokasi PKL siswa (berdasarkan kelompok PKL yang didaftarkan oleh wali)
+     * Ambil lokasi PKL siswa (berdasarkan kelompok PKL yang didaftarkan oleh guru pembimbing)
      * Fallback ke tabel siswa_pkl_lokasi jika ada data legacy
      */
     public function getLokasiBySiswaId($siswaId) {
@@ -41,9 +47,15 @@ class Pkl extends Model {
                 k.longitude,
                 k.radius_meter,
                 k.pembimbing_nama,
-                k.pembimbing_kontak
+                k.pembimbing_kontak,
+                k.pembimbing_guru_id,
+                k.hari_kerja,
+                k.is_jam_bebas,
+                ug.name as pembimbing_guru_nama
             FROM pkl_kelompok_siswa ks
             JOIN pkl_kelompok k ON ks.kelompok_id = k.id
+            LEFT JOIN guru g ON k.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
             WHERE ks.siswa_id = :sid
             LIMIT 1
         ");
@@ -55,13 +67,187 @@ class Pkl extends Model {
         }
 
         // 2. Fallback ke siswa_pkl_lokasi jika belum tergabung kelompok
-        $this->db->query("SELECT *, nama_tempat as nama_kelompok FROM siswa_pkl_lokasi WHERE siswa_id = :sid LIMIT 1");
+        $this->db->query("SELECT *, nama_tempat as nama_kelompok, NULL as pembimbing_guru_nama FROM siswa_pkl_lokasi WHERE siswa_id = :sid LIMIT 1");
         $this->db->bind(':sid', $siswaId);
         return $this->db->single();
     }
 
     /**
-     * Ambil daftar kelas yang diampu oleh wali kelas (atau berstatus PKL)
+     * Cek apakah user adalah Guru Pembimbing PKL
+     */
+    public function isUserPembimbingPkl($userId) {
+        $userId = (int)$userId;
+        if ($userId <= 0) return false;
+
+        $this->db->query("
+            SELECT g.id, g.is_pembimbing_pkl,
+                   (SELECT COUNT(*) FROM pkl_pembimbing_kelas ppk WHERE ppk.guru_id = g.id) as cnt_kelas,
+                   (SELECT COUNT(*) FROM pkl_kelompok pk WHERE pk.pembimbing_guru_id = g.id) as cnt_kelompok
+            FROM guru g
+            WHERE g.user_id = :uid
+            LIMIT 1
+        ");
+        $this->db->bind(':uid', $userId);
+        $row = $this->db->single();
+        if (!$row) return false;
+        return ((int)$row->is_pembimbing_pkl === 1 || (int)$row->cnt_kelas > 0 || (int)$row->cnt_kelompok > 0);
+    }
+
+    /**
+     * Ambil data guru dari user_id
+     */
+    public function getGuruByUserId($userId) {
+        $this->db->query("
+            SELECT g.*, u.name, u.username 
+            FROM guru g 
+            JOIN users u ON g.user_id = u.id 
+            WHERE g.user_id = :uid 
+            LIMIT 1
+        ");
+        $this->db->bind(':uid', $userId);
+        return $this->db->single();
+    }
+
+    /**
+     * Ambil daftar kelas yang dibimbing oleh Guru Pembimbing PKL
+     */
+    public function getKelasByPembimbingUserId($userId) {
+        $this->db->query("
+            SELECT DISTINCT k.*, u.name as wali_nama,
+                   (SELECT COUNT(*) FROM siswa s WHERE s.kelas_id = k.id) as total_siswa,
+                   (SELECT COUNT(*) FROM pkl_kelompok pk WHERE pk.kelas_id = k.id) as total_kelompok
+            FROM kelas k
+            LEFT JOIN users u ON k.wali_kelas_id = u.id
+            WHERE k.id IN (
+                SELECT ppk.kelas_id 
+                FROM pkl_pembimbing_kelas ppk
+                JOIN guru g ON ppk.guru_id = g.id
+                WHERE g.user_id = :uid1
+            )
+            OR k.id IN (
+                SELECT pk2.kelas_id
+                FROM pkl_kelompok pk2
+                JOIN guru g2 ON pk2.pembimbing_guru_id = g2.id
+                WHERE g2.user_id = :uid2
+            )
+            ORDER BY k.nama_kelas ASC
+        ");
+        $this->db->bind(':uid1', $userId);
+        $this->db->bind(':uid2', $userId);
+        $res = $this->db->resultSet();
+
+        // Fallback jika guru tercatat sebagai pembimbing PKL aktif tapi belum diassign kelas spesifik
+        if (empty($res)) {
+            $guru = $this->getGuruByUserId($userId);
+            if ($guru && !empty($guru->is_pembimbing_pkl)) {
+                return $this->getAllKelasPkl();
+            }
+        }
+        return $res;
+    }
+
+    /**
+     * Ambil seluruh guru yang berstatus Pembimbing PKL
+     */
+    public function getAllPembimbing() {
+        $this->db->query("
+            SELECT g.id, g.user_id, u.name as guru_nama, g.nip
+            FROM guru g
+            JOIN users u ON g.user_id = u.id
+            WHERE g.is_pembimbing_pkl = 1
+            ORDER BY u.name ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+    /**
+     * Ambil data statistik dan log riwayat presensi PKL untuk Dashboard Guru Pembimbing
+     */
+    public function getDashboardPembimbingData($userId) {
+        $userId = (int)$userId;
+        $kelasList = $this->getKelasByPembimbingUserId($userId);
+        if (empty($kelasList)) {
+            return null;
+        }
+
+        $kelasIds = array_map(function($k) { return (int)$k->id; }, $kelasList);
+        $inClause = implode(',', $kelasIds);
+        $today = date('Y-m-d');
+
+        // Total Siswa PKL Bimbingan
+        $this->db->query("SELECT COUNT(*) as total FROM siswa WHERE kelas_id IN ($inClause)");
+        $rowSiswa = $this->db->single();
+        $totalSiswa = (int)($rowSiswa->total ?? 0);
+
+        // Total Kelompok / Tempat PKL
+        $this->db->query("SELECT COUNT(*) as total FROM pkl_kelompok WHERE kelas_id IN ($inClause)");
+        $rowKelompok = $this->db->single();
+        $totalKelompok = (int)($rowKelompok->total ?? 0);
+
+        // Kehadiran PKL Hari Ini
+        $this->db->query("
+            SELECT 
+                COUNT(DISTINCT s.id) as total_siswa,
+                SUM(CASE WHEN a.jam_datang IS NOT NULL AND a.jam_datang != '' THEN 1 ELSE 0 END) as masuk,
+                SUM(CASE WHEN a.jam_pulang IS NOT NULL AND a.jam_pulang != '' THEN 1 ELSE 0 END) as pulang
+            FROM siswa s
+            LEFT JOIN absensi_siswa a ON s.id = a.siswa_id AND a.tanggal = :tgl
+            WHERE s.kelas_id IN ($inClause)
+        ");
+        $this->db->bind(':tgl', $today);
+        $rowAbsen = $this->db->single();
+
+        $masuk = (int)($rowAbsen->masuk ?? 0);
+        $pulang = (int)($rowAbsen->pulang ?? 0);
+        $belum = max(0, $totalSiswa - $masuk);
+
+        // Log Riwayat Presensi PKL Terbaru (Hari ini dan beberapa hari terakhir)
+        $this->db->query("
+            SELECT 
+                s.id as siswa_id,
+                s.nis,
+                u.name as nama_siswa,
+                k.nama_kelas,
+                pk.nama_kelompok,
+                pk.nama_tempat,
+                pk.radius_meter,
+                a.tanggal,
+                a.jam_datang,
+                a.jam_pulang,
+                a.status,
+                a.foto_masuk,
+                a.foto_pulang,
+                a.jarak_meter,
+                a.latitude_masuk,
+                a.longitude_masuk,
+                a.latitude_pulang,
+                a.longitude_pulang
+            FROM absensi_siswa a
+            JOIN siswa s ON a.siswa_id = s.id
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa ks ON s.id = ks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON ks.kelompok_id = pk.id
+            WHERE s.kelas_id IN ($inClause)
+            ORDER BY a.tanggal DESC, a.jam_datang DESC
+            LIMIT 10
+        ");
+        $recentLogs = $this->db->resultSet();
+
+        return [
+            'is_pembimbing' => true,
+            'kelasList'     => $kelasList,
+            'total_siswa'   => $totalSiswa,
+            'total_kelompok'=> $totalKelompok,
+            'masuk'         => $masuk,
+            'pulang'        => $pulang,
+            'belum'         => $belum,
+            'recentLogs'    => $recentLogs,
+        ];
+    }
+
+    /**
+     * Ambil daftar kelas yang diampu oleh wali kelas (legacy helper)
      */
     public function getKelasByWaliUserId($waliUserId) {
         $this->db->query("
@@ -89,7 +275,20 @@ class Pkl extends Model {
             WHERE k.status = 'pkl'
             ORDER BY k.nama_kelas ASC
         ");
-        return $this->db->resultSet();
+        $res = $this->db->resultSet();
+        // Fallback jika belum ada kelas berstatus 'pkl', tampilkan semua kelas
+        if (empty($res)) {
+            $this->db->query("
+                SELECT k.*, u.name as wali_nama,
+                       (SELECT COUNT(*) FROM siswa s WHERE s.kelas_id = k.id) as total_siswa,
+                       (SELECT COUNT(*) FROM pkl_kelompok pk WHERE pk.kelas_id = k.id) as total_kelompok
+                FROM kelas k
+                LEFT JOIN users u ON k.wali_kelas_id = u.id
+                ORDER BY k.nama_kelas ASC
+            ");
+            $res = $this->db->resultSet();
+        }
+        return $res;
     }
 
     /**
@@ -109,14 +308,17 @@ class Pkl extends Model {
     }
 
     /**
-     * Ambil seluruh kelompok PKL dalam satu kelas beserta daftar nama siswanya
+     * Ambil seluruh kelompok PKL dalam satu kelas beserta daftar nama siswanya & guru pembimbing
      */
     public function getKelompokByKelasId($kelasId) {
         $this->db->query("
             SELECT k.*, 
-                   COUNT(ks.siswa_id) as jumlah_siswa
+                   COUNT(ks.siswa_id) as jumlah_siswa,
+                   ug.name as pembimbing_guru_nama
             FROM pkl_kelompok k
             LEFT JOIN pkl_kelompok_siswa ks ON k.id = ks.kelompok_id
+            LEFT JOIN guru g ON k.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
             WHERE k.kelas_id = :kid
             GROUP BY k.id
             ORDER BY k.id DESC
@@ -145,7 +347,14 @@ class Pkl extends Model {
      * Ambil single kelompok berdasarkan ID
      */
     public function getKelompokById($kelompokId) {
-        $this->db->query("SELECT * FROM pkl_kelompok WHERE id = :id LIMIT 1");
+        $this->db->query("
+            SELECT k.*, ug.name as pembimbing_guru_nama
+            FROM pkl_kelompok k
+            LEFT JOIN guru g ON k.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            WHERE k.id = :id 
+            LIMIT 1
+        ");
         $this->db->bind(':id', $kelompokId);
         $kel = $this->db->single();
 
@@ -188,6 +397,7 @@ class Pkl extends Model {
 
     /**
      * Simpan / Perbarui Kelompok PKL sekaligus masukkan siswa anggotanya secara grup (per kelompok)
+     * Terhubung dengan Guru Pembimbing PKL
      */
     public function saveKelompok($data, $siswaIds = []) {
         $id               = !empty($data['id']) ? (int)$data['id'] : null;
@@ -201,25 +411,44 @@ class Pkl extends Model {
         $radius           = !empty($data['radius_meter']) ? (int)$data['radius_meter'] : 50;
         $pembimbingNama   = trim($data['pembimbing_nama'] ?? '');
         $pembimbingKontak = trim($data['pembimbing_kontak'] ?? '');
+        $pembimbingGuruId = !empty($data['pembimbing_guru_id']) ? (int)$data['pembimbing_guru_id'] : null;
+        $hariKerja        = !empty($data['hari_kerja']) ? $data['hari_kerja'] : '["Senin","Selasa","Rabu","Kamis","Jumat"]';
+        if (is_array($hariKerja)) {
+            $hariKerja = json_encode($hariKerja);
+        }
+        $isJamBebas       = isset($data['is_jam_bebas']) ? (int)$data['is_jam_bebas'] : 1;
         $createdBy        = !empty($data['created_by']) ? (int)$data['created_by'] : null;
 
         // Radius minimal 10m, default 50m jika tidak diisi
         if ($radius < 10) $radius = 10;
 
+        // Jika pembimbing_guru_id belum diset, coba cari dari pkl_pembimbing_kelas
+        if (!$pembimbingGuruId) {
+            $this->db->query("SELECT guru_id FROM pkl_pembimbing_kelas WHERE kelas_id = :kid LIMIT 1");
+            $this->db->bind(':kid', $kelasId);
+            $pRow = $this->db->single();
+            if ($pRow) {
+                $pembimbingGuruId = (int)$pRow->guru_id;
+            }
+        }
+
         if ($id) {
             // Update
             $this->db->query("
                 UPDATE pkl_kelompok
-                SET nama_kelompok = :nama_kelompok,
-                    nama_tempat   = :nama_tempat,
-                    alamat        = :alamat,
-                    link_lokasi   = :link_lokasi,
-                    latitude      = :lat,
-                    longitude     = :lng,
-                    radius_meter  = :radius,
-                    pembimbing_nama = :pnama,
-                    pembimbing_kontak = :pkontak,
-                    updated_at    = NOW()
+                SET nama_kelompok      = :nama_kelompok,
+                    nama_tempat        = :nama_tempat,
+                    alamat             = :alamat,
+                    link_lokasi        = :link_lokasi,
+                    latitude           = :lat,
+                    longitude          = :lng,
+                    radius_meter       = :radius,
+                    pembimbing_nama    = :pnama,
+                    pembimbing_kontak  = :pkontak,
+                    pembimbing_guru_id = :pguru_id,
+                    hari_kerja         = :hari_kerja,
+                    is_jam_bebas       = :jam_bebas,
+                    updated_at         = NOW()
                 WHERE id = :id AND kelas_id = :kid
             ");
             $this->db->bind(':id', $id);
@@ -233,15 +462,18 @@ class Pkl extends Model {
             $this->db->bind(':radius', $radius);
             $this->db->bind(':pnama', $pembimbingNama);
             $this->db->bind(':pkontak', $pembimbingKontak);
+            $this->db->bind(':pguru_id', $pembimbingGuruId);
+            $this->db->bind(':hari_kerja', $hariKerja);
+            $this->db->bind(':jam_bebas', $isJamBebas);
             $this->db->execute();
             $kelompokId = $id;
         } else {
             // Insert
             $this->db->query("
                 INSERT INTO pkl_kelompok 
-                    (kelas_id, nama_kelompok, nama_tempat, alamat, link_lokasi, latitude, longitude, radius_meter, pembimbing_nama, pembimbing_kontak, created_by)
+                    (kelas_id, nama_kelompok, nama_tempat, alamat, link_lokasi, latitude, longitude, radius_meter, pembimbing_nama, pembimbing_kontak, pembimbing_guru_id, hari_kerja, is_jam_bebas, created_by)
                 VALUES 
-                    (:kid, :nama_kelompok, :nama_tempat, :alamat, :link_lokasi, :lat, :lng, :radius, :pnama, :pkontak, :created_by)
+                    (:kid, :nama_kelompok, :nama_tempat, :alamat, :link_lokasi, :lat, :lng, :radius, :pnama, :pkontak, :pguru_id, :hari_kerja, :jam_bebas, :created_by)
             ");
             $this->db->bind(':kid', $kelasId);
             $this->db->bind(':nama_kelompok', $namaKelompok);
@@ -253,6 +485,9 @@ class Pkl extends Model {
             $this->db->bind(':radius', $radius);
             $this->db->bind(':pnama', $pembimbingNama);
             $this->db->bind(':pkontak', $pembimbingKontak);
+            $this->db->bind(':pguru_id', $pembimbingGuruId);
+            $this->db->bind(':hari_kerja', $hariKerja);
+            $this->db->bind(':jam_bebas', $isJamBebas);
             $this->db->bind(':created_by', $createdBy);
             $this->db->execute();
             $kelompokId = (int)$this->db->lastInsertId();
@@ -353,6 +588,7 @@ class Pkl extends Model {
                 pk.nama_kelompok,
                 pk.nama_tempat,
                 pk.radius_meter,
+                ug.name as pembimbing_guru_nama,
                 a.id as absensi_id,
                 a.jam_datang,
                 a.jam_pulang,
@@ -368,6 +604,8 @@ class Pkl extends Model {
             JOIN users u ON s.user_id = u.id
             LEFT JOIN pkl_kelompok_siswa ks ON s.id = ks.siswa_id
             LEFT JOIN pkl_kelompok pk ON ks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
             LEFT JOIN absensi_siswa a ON s.id = a.siswa_id AND a.tanggal = :tgl
             WHERE s.kelas_id = :kid
             ORDER BY pk.nama_kelompok ASC, u.name ASC

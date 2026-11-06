@@ -5,6 +5,7 @@
  * Mendukung multi-bot (1 bot per kelas) dengan mapping berdasarkan nama kelas.
  * Token diambil dari database kolom `telegram_bot_token` di tabel `kelas`.
  * Chat ID diambil dari kolom `telegram_chat_id` di tabel `kelas`.
+ * Mendukung notifikasi khusus aktivitas kehadiran siswa PKL (Datang & Pulang).
  */
 class TelegramHelper {
 
@@ -162,5 +163,96 @@ class TelegramHelper {
                "🏫 <b>Kelas :</b> {$kelas}\n" .
                "🕐 <b>Jam   :</b> {$jam}\n\n" .
                "✅ <b>Status: PULANG</b>";
+    }
+
+    /**
+     * Format notifikasi kehadiran khusus siswa PKL (Datang / Pulang).
+     * Memuat informasi: Nama, NIS/NISN, Kelas, Nama Tempat/Lokasi PKL, Waktu & Tanggal, Status (Datang/Pulang).
+     */
+    public static function formatPesanPkl(
+        string $nama,
+        string $nis,
+        string $kelas,
+        string $namaTempat,
+        string $jam,
+        string $tanggal,
+        string $statusAktivitas,
+        ?float $jarakMeter = null
+    ): string {
+        $isDatang = (stripos($statusAktivitas, 'datang') !== false || stripos($statusAktivitas, 'masuk') !== false);
+        $statusEmoji = $isDatang ? '✅' : '🏠';
+        $statusTeks  = $isDatang ? 'DATANG (CHECK-IN)' : 'PULANG (CHECK-OUT)';
+
+        $bulanIndo = [
+            1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+        ];
+        $timeTs = strtotime($tanggal);
+        $tglFormatted = date('d', $timeTs) . ' ' . ($bulanIndo[(int)date('m', $timeTs)] ?? date('F', $timeTs)) . ' ' . date('Y', $timeTs);
+
+        $jarakStr = ($jarakMeter !== null) ? "\n📏 <b>Jarak GPS :</b> " . number_format($jarakMeter, 1, ',', '.') . " meter" : "";
+
+        return "<b>📢 NOTIFIKASI PRESENSI SISWA PKL</b>\n\n" .
+               "👤 <b>Nama :</b> {$nama}\n" .
+               "🔖 <b>NIS/NISN :</b> {$nis}\n" .
+               "🏫 <b>Kelas :</b> {$kelas}\n" .
+               "🏢 <b>Tempat PKL :</b> {$namaTempat}\n" .
+               "📅 <b>Tanggal :</b> {$tglFormatted}\n" .
+               "🕐 <b>Waktu :</b> {$jam} WIB" .
+               $jarakStr . "\n\n" .
+               "{$statusEmoji} <b>Status: {$statusTeks}</b>";
+    }
+
+    /**
+     * Kirim notifikasi Telegram khusus presensi PKL ke grup khusus atau chat kelas.
+     * Hanya dikirim untuk siswa PKL setelah absensi berhasil disimpan ke database.
+     */
+    public static function sendPklNotification(
+        $siswa,
+        string $namaTempat,
+        string $statusAktivitas,
+        string $jam,
+        string $tanggal,
+        ?float $jarakMeter = null
+    ): bool {
+        // Cek switch aktif
+        if (class_exists('AppSetting') && AppSetting::get('telegram_pkl_enabled', '1') === '0') {
+            return false;
+        }
+
+        $nama  = $siswa->nama ?? $siswa->name ?? 'Siswa';
+        $nis   = $siswa->nis ?? '-';
+        $kelas = $siswa->nama_kelas ?? '-';
+
+        $message = self::formatPesanPkl($nama, $nis, $kelas, $namaTempat, $jam, $tanggal, $statusAktivitas, $jarakMeter);
+
+        // 1. Bot token yang digunakan: SELALU dari bot kelas siswa masing-masing
+        // Misal kelas 12 TKJ memakai bot 12 TKJ, 11 TSM memakai bot 11 TSM
+        $botToken = !empty($siswa->telegram_bot_token) ? $siswa->telegram_bot_token : self::getTokenForKelas($kelas);
+
+        // 2. Tentukan Chat ID Penerima (Pembimbing PKL):
+        // Prioritas:
+        // a. telegram_chat_id_pkl pada kelas siswa
+        // b. pembimbing_telegram_chat_id dari akun Guru Pembimbing
+        // c. telegram_pkl_chat_id dari pengaturan global AppSetting
+        // d. fallback ke telegram_chat_id kelas siswa
+        $chatId = null;
+        if (!empty($siswa->telegram_chat_id_pkl)) {
+            $chatId = $siswa->telegram_chat_id_pkl;
+        } elseif (!empty($siswa->pembimbing_telegram_chat_id)) {
+            $chatId = $siswa->pembimbing_telegram_chat_id;
+        } elseif (class_exists('AppSetting') && !empty(AppSetting::get('telegram_pkl_chat_id'))) {
+            $chatId = AppSetting::get('telegram_pkl_chat_id');
+        } elseif (!empty($siswa->telegram_chat_id)) {
+            $chatId = $siswa->telegram_chat_id;
+        }
+
+        if (empty($chatId) || empty($botToken)) {
+            error_log("[TelegramHelper] Presensi PKL batal kirim: chatId atau botToken kosong untuk kelas: {$kelas}");
+            return false;
+        }
+
+        $res = self::sendMessage($chatId, $message, $kelas, $botToken);
+        return ($res !== false);
     }
 }

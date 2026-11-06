@@ -86,6 +86,11 @@ $pctSiswaTelat = $ts > 0 ? round(($st / $ts) * 100, 1) : 0;
 
     <?php Flasher::flash(); ?>
 
+    <?php if (!empty($data['isPembimbingPkl']) && !empty($data['pklDashboard'])): ?>
+        <!-- ── PANEL GURU PEMBIMBING PKL (PENGATURAN & LOG RIWAYAT ABSENSI PKL) ── -->
+        <?php $this->view('dashboard/panel_pembimbing_pkl', ['pkl' => $data['pklDashboard']]); ?>
+    <?php endif; ?>
+
     <!-- ── 5 METRIC STAT CARDS ROW ── -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <!-- 1. Total Siswa -->

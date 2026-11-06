@@ -9,7 +9,8 @@ class Database {
     private $stmt;
 
     public function __construct() {
-        $dsn = 'mysql:host=' . $this->host . ';dbname=' . $this->db_name;
+        $portStr = (defined('DB_PORT') && DB_PORT) ? ';port=' . DB_PORT : '';
+        $dsn = 'mysql:host=' . $this->host . $portStr . ';dbname=' . $this->db_name . ';charset=utf8mb4';
         
         $option = [
             PDO::ATTR_PERSISTENT => true,

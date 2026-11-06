@@ -703,5 +703,260 @@ class Laporan {
         }
         return $map;
     }
-}
 
+    // ================== REKAPITULASI KHUSUS PKL ==================
+
+    public function getAkumulasiPkl($filters = []) {
+        $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
+        $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
+        
+        $where = "1=1";
+        $binds = [':dari' => $dari, ':sampai' => $sampai];
+
+        if (!empty($filters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $filters['kelas_id'];
+        }
+        if (!empty($filters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        $query = "
+            SELECT 
+                s.id AS siswa_id,
+                s.nis,
+                u.name,
+                k.nama_kelas,
+                pk.nama_kelompok,
+                pk.nama_tempat,
+                ug.name AS pembimbing_guru_nama,
+                COUNT(ab.id) AS total_absen,
+                SUM(CASE WHEN ab.status = 'pkl' THEN 1 ELSE 0 END) AS pkl_hadir,
+                SUM(CASE WHEN ab.status = 'pkl' AND ab.jam_pulang IS NOT NULL THEN 1 ELSE 0 END) AS pkl_lengkap,
+                SUM(CASE WHEN ab.status = 'izin' THEN 1 ELSE 0 END) AS izin,
+                SUM(CASE WHEN ab.status = 'sakit' THEN 1 ELSE 0 END) AS sakit,
+                SUM(CASE WHEN ab.status = 'alfa' THEN 1 ELSE 0 END) AS alfa
+            FROM siswa s
+            JOIN users u ON s.user_id = u.id
+            JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            LEFT JOIN absensi_siswa ab ON ab.siswa_id = s.id 
+                AND ab.tanggal >= :dari AND ab.tanggal <= :sampai
+            WHERE $where
+            GROUP BY s.id, s.nis, u.name, k.nama_kelas, pk.nama_kelompok, pk.nama_tempat, ug.name
+            ORDER BY pk.nama_tempat ASC, u.name ASC
+        ";
+
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $query .= " LIMIT " . (int)$filters['limit'] . " OFFSET " . (int)$filters['offset'];
+        }
+
+        $this->db->query($query);
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        return $this->db->resultSet();
+    }
+
+    public function countAkumulasiPkl($filters = []) {
+        $where = "1=1";
+        $binds = [];
+        if (!empty($filters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $filters['kelas_id'];
+        }
+        if (!empty($filters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        $this->db->query("
+            SELECT COUNT(DISTINCT s.id) AS total
+            FROM siswa s
+            JOIN users u ON s.user_id = u.id
+            JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            WHERE $where
+        ");
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        $row = $this->db->single();
+        return (int)($row->total ?? 0);
+    }
+
+    public function getAkumulasiPklAll($dari = '', $sampai = '', $extraFilters = []) {
+        $dari   = !empty($dari) ? $dari : date('Y-m-01');
+        $sampai = !empty($sampai) ? $sampai : date('Y-m-d');
+        
+        $where = "1=1";
+        $binds = [':dari' => $dari, ':sampai' => $sampai];
+
+        if (!empty($extraFilters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $extraFilters['kelas_id'];
+        }
+        if (!empty($extraFilters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $extraFilters['search'] . '%';
+        }
+
+        $this->db->query("
+            SELECT 
+                s.id AS siswa_id,
+                s.nis,
+                u.name,
+                k.nama_kelas,
+                pk.nama_kelompok,
+                pk.nama_tempat,
+                ug.name AS pembimbing_guru_nama,
+                COUNT(ab.id) AS total_absen,
+                SUM(CASE WHEN ab.status = 'pkl' THEN 1 ELSE 0 END) AS pkl_hadir,
+                SUM(CASE WHEN ab.status = 'pkl' AND ab.jam_pulang IS NOT NULL THEN 1 ELSE 0 END) AS pkl_lengkap,
+                SUM(CASE WHEN ab.status = 'izin' THEN 1 ELSE 0 END) AS izin,
+                SUM(CASE WHEN ab.status = 'sakit' THEN 1 ELSE 0 END) AS sakit,
+                SUM(CASE WHEN ab.status = 'alfa' THEN 1 ELSE 0 END) AS alfa
+            FROM siswa s
+            JOIN users u ON s.user_id = u.id
+            JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            LEFT JOIN absensi_siswa ab ON ab.siswa_id = s.id 
+                AND ab.tanggal >= :dari AND ab.tanggal <= :sampai
+            WHERE $where
+            GROUP BY s.id, s.nis, u.name, k.nama_kelas, pk.nama_kelompok, pk.nama_tempat, ug.name
+            ORDER BY pk.nama_tempat ASC, u.name ASC
+        ");
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        return $this->db->resultSet();
+    }
+
+    public function getRekapPkl($filters = []) {
+        $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
+        $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
+        
+        $where = "ab.status = 'pkl'";
+        $binds = [':dari' => $dari, ':sampai' => $sampai];
+        $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
+
+        if (!empty($filters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $filters['kelas_id'];
+        }
+        if (!empty($filters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        $query = "
+            SELECT ab.id as absensi_id, ab.tanggal, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan,
+                   ab.jarak_meter, ab.foto_masuk, ab.foto_pulang,
+                   u.name, s.nis, k.nama_kelas, s.id AS siswa_id,
+                   pk.nama_kelompok, pk.nama_tempat, pk.radius_meter,
+                   ug.name as pembimbing_guru_nama
+            FROM absensi_siswa ab
+            JOIN siswa s ON s.id = ab.siswa_id
+            JOIN users u ON u.id = s.user_id
+            JOIN kelas k ON k.id = s.kelas_id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            WHERE $where
+            ORDER BY ab.tanggal DESC, ab.jam_datang DESC
+        ";
+
+        if (isset($filters['limit']) && isset($filters['offset'])) {
+            $query .= " LIMIT " . (int)$filters['limit'] . " OFFSET " . (int)$filters['offset'];
+        }
+
+        $this->db->query($query);
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        return $this->db->resultSet();
+    }
+
+    public function countRekapPkl($filters = []) {
+        $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
+        $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
+        
+        $where = "ab.status = 'pkl'";
+        $binds = [':dari' => $dari, ':sampai' => $sampai];
+        $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
+
+        if (!empty($filters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $filters['kelas_id'];
+        }
+        if (!empty($filters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $filters['search'] . '%';
+        }
+
+        $this->db->query("
+            SELECT COUNT(ab.id) AS total
+            FROM absensi_siswa ab
+            JOIN siswa s ON s.id = ab.siswa_id
+            JOIN users u ON u.id = s.user_id
+            JOIN kelas k ON k.id = s.kelas_id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            WHERE $where
+        ");
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        $row = $this->db->single();
+        return (int)($row->total ?? 0);
+    }
+
+    public function getRekapPklAll($dari = '', $sampai = '', $extraFilters = []) {
+        $dari   = !empty($dari) ? $dari : date('Y-m-01');
+        $sampai = !empty($sampai) ? $sampai : date('Y-m-d');
+        
+        $where = "ab.status = 'pkl'";
+        $binds = [':dari' => $dari, ':sampai' => $sampai];
+        $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
+
+        if (!empty($extraFilters['kelas_id'])) {
+            $where .= " AND k.id = :kelas_id";
+            $binds[':kelas_id'] = $extraFilters['kelas_id'];
+        }
+        if (!empty($extraFilters['search'])) {
+            $where .= " AND (u.name LIKE :search OR s.nis LIKE :search OR pk.nama_tempat LIKE :search)";
+            $binds[':search'] = '%' . $extraFilters['search'] . '%';
+        }
+
+        $this->db->query("
+            SELECT ab.id as absensi_id, ab.tanggal, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan,
+                   ab.jarak_meter, ab.foto_masuk, ab.foto_pulang,
+                   u.name, s.nis, k.nama_kelas, s.id AS siswa_id,
+                   pk.nama_kelompok, pk.nama_tempat, pk.radius_meter,
+                   ug.name as pembimbing_guru_nama
+            FROM absensi_siswa ab
+            JOIN siswa s ON s.id = ab.siswa_id
+            JOIN users u ON u.id = s.user_id
+            JOIN kelas k ON k.id = s.kelas_id
+            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            WHERE $where
+            ORDER BY ab.tanggal DESC, ab.jam_datang DESC
+        ");
+        foreach ($binds as $key => $val) {
+            $this->db->bind($key, $val);
+        }
+        return $this->db->resultSet();
+    }
+}

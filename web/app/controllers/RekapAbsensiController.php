@@ -27,6 +27,9 @@ class RekapAbsensiController extends Controller {
         // Tentukan mode tampilan: 'ringkasan' (Rekap Per Siswa / Nilai Raport) atau 'detail' (Log Transaksi Harian)
         $viewMode = isset($_GET['view']) && in_array(strtolower($_GET['view']), ['ringkasan', 'detail']) ? strtolower($_GET['view']) : 'ringkasan';
 
+        // Tentukan kategori absensi: 'biasa' (Reguler) atau 'pkl' (Presensi PKL)
+        $kategori = isset($_GET['kategori']) && in_array(strtolower($_GET['kategori']), ['biasa', 'pkl']) ? strtolower($_GET['kategori']) : 'biasa';
+
         $filters = [
             'dari'     => $_GET['dari'] ?? date('Y-m-01'),
             'sampai'   => $_GET['sampai'] ?? date('Y-m-d'),
@@ -44,7 +47,7 @@ class RekapAbsensiController extends Controller {
         }
 
         // Ambil daftar seluruh kelas untuk filter dropdown admin
-        $this->db->query("SELECT id, nama_kelas, tingkat, jurusan FROM kelas ORDER BY nama_kelas ASC");
+        $this->db->query("SELECT id, nama_kelas, tingkat, jurusan, status FROM kelas ORDER BY nama_kelas ASC");
         $kelasList = $this->db->resultSet();
 
         // Pagination
@@ -84,36 +87,69 @@ class RekapAbsensiController extends Controller {
                 }
             }
 
+            // Deteksi apakah kelas saat ini berstatus PKL
+            $isKelasPkl = false;
+            $activeKelasObj = null;
+            if (!empty($filters['kelas_id']) && (int)$filters['kelas_id'] > 0) {
+                foreach ($kelasList as $k) {
+                    if ((int)$k->id === (int)$filters['kelas_id'] && ($k->status ?? '') === 'pkl') {
+                        $isKelasPkl = true;
+                        $activeKelasObj = $k;
+                        break;
+                    }
+                }
+            } elseif (in_array($role, ['wali_kelas', 'walikelas']) && !empty($waliKelasInfo)) {
+                if (($waliKelasInfo->status ?? '') === 'pkl') {
+                    $isKelasPkl = true;
+                    $activeKelasObj = $waliKelasInfo;
+                }
+            }
+
             $stats = $this->laporanModel->getStatsRekapSiswa($filters);
 
-            if ($viewMode === 'ringkasan') {
-                $dataAbsensi = $this->laporanModel->getAkumulasiSiswa($filters);
-                $totalData   = $this->laporanModel->countAkumulasiSiswa($filters);
+            if ($kategori === 'pkl') {
+                // Khusus mode Rekap Absensi PKL
+                if ($viewMode === 'ringkasan') {
+                    $dataAbsensi = $this->laporanModel->getAkumulasiPkl($filters);
+                    $totalData   = $this->laporanModel->countAkumulasiPkl($filters);
+                } else {
+                    $dataAbsensi = $this->laporanModel->getRekapPkl($filters);
+                    $totalData   = $this->laporanModel->countRekapPkl($filters);
+                }
             } else {
-                $dataAbsensi = $this->laporanModel->getRekapSiswa($filters);
-                $totalData   = $this->laporanModel->countRekapSiswa($filters);
-                $siswaIds    = array_unique(array_filter(array_map(function($r) { return $r->siswa_id ?? null; }, $dataAbsensi)));
-                $akumulasiMap = $this->laporanModel->getAkumulasiMapSiswa($filters['dari'], $filters['sampai'], $siswaIds);
+                // Mode Rekap Absensi Biasa (Reguler)
+                if ($viewMode === 'ringkasan') {
+                    $dataAbsensi = $this->laporanModel->getAkumulasiSiswa($filters);
+                    $totalData   = $this->laporanModel->countAkumulasiSiswa($filters);
+                } else {
+                    $dataAbsensi = $this->laporanModel->getRekapSiswa($filters);
+                    $totalData   = $this->laporanModel->countRekapSiswa($filters);
+                    $siswaIds    = array_unique(array_filter(array_map(function($r) { return $r->siswa_id ?? null; }, $dataAbsensi)));
+                    $akumulasiMap = $this->laporanModel->getAkumulasiMapSiswa($filters['dari'], $filters['sampai'], $siswaIds);
+                }
             }
         }
 
         $totalPages = $totalData > 0 ? ceil($totalData / $limit) : 1;
 
         $data = [
-            'judul'         => 'Rekap Absensi',
-            'role'          => $role,
-            'tipe'          => $tipe,
-            'viewMode'      => $viewMode,
-            'filters'       => $filters,
-            'dataAbsensi'   => $dataAbsensi,
-            'akumulasiMap'  => $akumulasiMap,
-            'kelasList'     => $kelasList,
-            'waliKelasInfo' => $waliKelasInfo,
-            'stats'         => $stats,
-            'page'          => $page,
-            'limit'         => $limit,
-            'totalPages'    => $totalPages,
-            'totalData'     => $totalData
+            'judul'          => 'Rekap Absensi',
+            'role'           => $role,
+            'tipe'           => $tipe,
+            'viewMode'       => $viewMode,
+            'kategori'       => $kategori,
+            'isKelasPkl'     => $isKelasPkl,
+            'activeKelasObj' => $activeKelasObj,
+            'filters'        => $filters,
+            'dataAbsensi'    => $dataAbsensi,
+            'akumulasiMap'   => $akumulasiMap,
+            'kelasList'      => $kelasList,
+            'waliKelasInfo'  => $waliKelasInfo,
+            'stats'          => $stats,
+            'page'           => $page,
+            'limit'          => $limit,
+            'totalPages'     => $totalPages,
+            'totalData'      => $totalData
         ];
 
         $this->view('templates/header', $data);
@@ -128,6 +164,7 @@ class RekapAbsensiController extends Controller {
         $dari   = $_GET['dari']   ?? date('Y-m-01');
         $sampai = $_GET['sampai'] ?? date('Y-m-d');
         $viewMode = isset($_GET['view']) && in_array(strtolower($_GET['view']), ['ringkasan', 'detail']) ? strtolower($_GET['view']) : 'ringkasan';
+        $kategori = isset($_GET['kategori']) && in_array(strtolower($_GET['kategori']), ['biasa', 'pkl']) ? strtolower($_GET['kategori']) : 'biasa';
 
         // Tentukan tipe
         if ($role === 'admin') {
@@ -149,6 +186,91 @@ class RekapAbsensiController extends Controller {
         $syncSampai = min($sampai, date('Y-m-d'));
         if ($dari <= $syncSampai) {
             $absensiModel->syncAlfaDanIzinRange($dari, $syncSampai);
+        }
+
+        if ($kategori === 'pkl' && $tipe === 'siswa') {
+            if ($viewMode === 'ringkasan') {
+                $rows = $this->laporanModel->getAkumulasiPklAll($dari, $sampai, $extraFilters);
+                $filename = 'rekap_akumulasi_presensi_pkl_' . $dari . '_sd_' . $sampai . '.csv';
+
+                header('Content-Type: text/csv; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Pragma: no-cache');
+
+                $out = fopen('php://output', 'w');
+                fputs($out, "\xEF\xBB\xBF");
+
+                fputcsv($out, ['REKAPITULASI PRESENSI PKL SISWA'], ';');
+                fputcsv($out, ['Periode: ' . date('d/m/Y', strtotime($dari)) . ' s/d ' . date('d/m/Y', strtotime($sampai))], ';');
+                fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i:s')], ';');
+                fputcsv($out, [''], ';');
+
+                fputcsv($out, ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Tempat PKL', 'Guru Pembimbing', 'Total Hadir Datang', 'Hadir Lengkap (Pulang)', 'Izin', 'Sakit', 'Alfa', 'Persentase (%)'], ';');
+
+                $no = 1;
+                foreach ($rows as $r) {
+                    $totalMasuk = (int)($r->pkl_hadir ?? 0);
+                    $totalHari  = $totalMasuk + (int)($r->izin ?? 0) + (int)($r->sakit ?? 0) + (int)($r->alfa ?? 0);
+                    $pct = $totalHari > 0 ? round(($totalMasuk / $totalHari) * 100, 1) : 0;
+
+                    fputcsv($out, [
+                        $no++,
+                        $r->nis ?? '-',
+                        $r->name,
+                        $r->nama_kelas,
+                        $r->nama_tempat ?? ($r->nama_kelompok ?? '-'),
+                        $r->pembimbing_guru_nama ?? '-',
+                        $r->pkl_hadir ?? 0,
+                        $r->pkl_lengkap ?? 0,
+                        $r->izin ?? 0,
+                        $r->sakit ?? 0,
+                        $r->alfa ?? 0,
+                        $pct . '%',
+                    ], ';');
+                }
+
+                fclose($out);
+                exit;
+            } else {
+                // Detail logs PKL
+                $rows = $this->laporanModel->getRekapPklAll($dari, $sampai, $extraFilters);
+                $filename = 'log_detail_presensi_pkl_' . $dari . '_sd_' . $sampai . '.csv';
+
+                header('Content-Type: text/csv; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="' . $filename . '"');
+                header('Pragma: no-cache');
+
+                $out = fopen('php://output', 'w');
+                fputs($out, "\xEF\xBB\xBF");
+
+                fputcsv($out, ['LOG DETAIL PRESENSI PKL SISWA'], ';');
+                fputcsv($out, ['Periode: ' . date('d/m/Y', strtotime($dari)) . ' s/d ' . date('d/m/Y', strtotime($sampai))], ';');
+                fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i:s')], ';');
+                fputcsv($out, [''], ';');
+
+                fputcsv($out, ['No', 'Tanggal', 'NIS', 'Nama Siswa', 'Kelas', 'Tempat PKL', 'Guru Pembimbing', 'Jam Datang', 'Jam Pulang', 'Jarak GPS (Meter)', 'Keterangan'], ';');
+
+                $no = 1;
+                foreach ($rows as $r) {
+                    $tgl = date('d/m/Y', strtotime($r->tanggal));
+                    fputcsv($out, [
+                        $no++,
+                        $tgl,
+                        $r->nis ?? '-',
+                        $r->name,
+                        $r->nama_kelas,
+                        $r->nama_tempat ?? ($r->nama_kelompok ?? '-'),
+                        $r->pembimbing_guru_nama ?? '-',
+                        $r->jam_datang ? substr($r->jam_datang, 0, 5) : '-',
+                        $r->jam_pulang ? substr($r->jam_pulang, 0, 5) : '-',
+                        $r->jarak_meter !== null ? number_format($r->jarak_meter, 1) . ' m' : '-',
+                        $r->keterangan ?? 'Presensi PKL',
+                    ], ';');
+                }
+
+                fclose($out);
+                exit;
+            }
         }
 
         if ($viewMode === 'ringkasan') {

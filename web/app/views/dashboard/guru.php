@@ -140,6 +140,11 @@ $totalIzinSakit  = (int)($statsBulan->izin_sakit ?? 0);
         </div>
     </div>
 
+    <?php if (!empty($data['isPembimbingPkl']) && !empty($data['pklDashboard'])): ?>
+        <!-- ── PANEL GURU PEMBIMBING PKL (PENGATURAN & LOG RIWAYAT ABSENSI PKL) ── -->
+        <?php $this->view('dashboard/panel_pembimbing_pkl', ['pkl' => $data['pklDashboard']]); ?>
+    <?php endif; ?>
+
     <!-- ── MAIN CONTENT (2 COLUMNS: 7 / 5) ── -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <!-- ── LEFT COLUMN (7 COLS): PRESENSI HARI INI & RIWAYAT ── -->
