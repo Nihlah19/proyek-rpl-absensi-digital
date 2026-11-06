@@ -50,12 +50,21 @@ class UserManagement extends Model {
     }
 
     public function getKelasIdsByJurusan($jurusan) {
-        $this->db->query("SELECT id FROM kelas WHERE UPPER(jurusan) = UPPER(:jurusan) ORDER BY nama_kelas ASC");
+        // Siswa PKL berasal dari kelas 12
+        $this->db->query("SELECT id FROM kelas WHERE UPPER(jurusan) = UPPER(:jurusan) AND (nama_kelas LIKE '12 %' OR tingkat = '12' OR status = 'pkl') ORDER BY nama_kelas ASC");
         $this->db->bind(':jurusan', $jurusan);
         $res = $this->db->resultSet();
         $ids = [];
         foreach ($res as $r) {
             $ids[] = (int)$r->id;
+        }
+        if (empty($ids)) {
+            $this->db->query("SELECT id FROM kelas WHERE UPPER(jurusan) = UPPER(:jurusan) ORDER BY nama_kelas ASC");
+            $this->db->bind(':jurusan', $jurusan);
+            $res2 = $this->db->resultSet();
+            foreach ($res2 as $r2) {
+                $ids[] = (int)$r2->id;
+            }
         }
         return $ids;
     }

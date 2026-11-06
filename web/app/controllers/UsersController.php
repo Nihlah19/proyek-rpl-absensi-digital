@@ -123,24 +123,16 @@ class UsersController extends Controller {
             $barcode_id           = ValidationHelper::sanitize($_POST['barcode_id'] ?? '');
             $subject              = ValidationHelper::sanitize($_POST['subject'] ?? '');
             $wali_kelas_id        = ValidationHelper::sanitize($_POST['wali_kelas_id'] ?? '');
-            $pembimbing_pkl_option= ValidationHelper::sanitize($_POST['pembimbing_pkl_option'] ?? '');
-            $pembimbing_kelas_ids = isset($_POST['pembimbing_kelas_ids']) && is_array($_POST['pembimbing_kelas_ids']) ? $_POST['pembimbing_kelas_ids'] : [];
+            $pembimbing_pkl_option = strtoupper(trim(ValidationHelper::sanitize($_POST['pembimbing_pkl_option'] ?? '')));
+            $pembimbing_kelas_ids  = [];
 
-            // Evaluasi penugasan pembimbing PKL berdasarkan opsi (Bukan, TKJ, TKR, TSM, atau Kustom)
-            if (in_array(strtoupper($pembimbing_pkl_option), ['TKJ', 'TKR', 'TSM'])) {
-                $is_pembimbing_pkl = 1;
-                // Jika checkbox kelas kosong atau tidak dikirim manual, otomatis ambil seluruh kelas jurusan tersebut
-                if (empty($pembimbing_kelas_ids)) {
-                    $pembimbing_kelas_ids = $this->model->getKelasIdsByJurusan($pembimbing_pkl_option);
-                }
-            } elseif ($pembimbing_pkl_option === 'CUSTOM') {
-                $is_pembimbing_pkl = !empty($pembimbing_kelas_ids) ? 1 : 0;
-            } elseif ($pembimbing_pkl_option === '' && isset($_POST['is_pembimbing_pkl']) && (int)$_POST['is_pembimbing_pkl'] === 1) {
-                // Fallback toggle checkbox
-                $is_pembimbing_pkl = 1;
+            // Evaluasi penugasan pembimbing PKL: siswa PKL berasal dari kelas 12 per jurusan (TKJ, TKR, TSM)
+            if (in_array($pembimbing_pkl_option, ['TKJ', 'TKR', 'TSM'])) {
+                $is_pembimbing_pkl    = 1;
+                $pembimbing_kelas_ids = $this->model->getKelasIdsByJurusan($pembimbing_pkl_option);
             } else {
                 // -- Bukan Pembimbing PKL --
-                $is_pembimbing_pkl = 0;
+                $is_pembimbing_pkl    = 0;
                 $pembimbing_kelas_ids = [];
             }
 
@@ -195,13 +187,16 @@ class UsersController extends Controller {
                     }
                 }
                 $jurKeys = array_keys($jurusans);
-                if (count($jurKeys) === 1 && in_array($jurKeys[0], ['TKJ', 'TKR', 'TSM'])) {
+                if (!empty($jurKeys) && in_array($jurKeys[0], ['TKJ', 'TKR', 'TSM'])) {
                     $selectedJurusanPkl = $jurKeys[0];
                 } else {
-                    $selectedJurusanPkl = 'CUSTOM';
+                    $dbTmp = new Database();
+                    $dbTmp->query("SELECT jurusan FROM kelas WHERE id IN (" . implode(',', array_map('intval', $assignedKelasIds)) . ") LIMIT 1");
+                    $rTmp = $dbTmp->single();
+                    if ($rTmp && in_array(strtoupper(trim($rTmp->jurusan)), ['TKJ', 'TKR', 'TSM'])) {
+                        $selectedJurusanPkl = strtoupper(trim($rTmp->jurusan));
+                    }
                 }
-            } else {
-                $selectedJurusanPkl = 'CUSTOM';
             }
         }
 
