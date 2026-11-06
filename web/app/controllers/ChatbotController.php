@@ -62,8 +62,8 @@ class ChatbotController extends Controller {
                               preg_match('/\b(nama|identitas|fungsi)\s+(kamu|anda|bot)\b/i', $message);
 
                 // Evaluasi hitungan matematika sederhana (misal: 1+1 berapa, 5*10, dsb)
-                $mathClean = preg_replace('/\s+(berapa|hasilnya|sama dengan|itu berapa|\?)/i', '', trim($message));
-                if (preg_match('/^(\d+(?:\.\d+)?)\s*([\+\-\*/xX:])\s*(\d+(?:\.\d+)?)$/i', $mathClean, $mMath)) {
+                $mathClean = trim(preg_replace('/\s*(berapa|hasilnya|sama dengan|itu berapa|\?|=)/i', '', trim($message)));
+                if (preg_match('~^(\d+(?:\.\d+)?)\s*([\+\-\*/xX:])\s*(\d+(?:\.\d+)?)$~i', $mathClean, $mMath)) {
                     $num1 = (float)$mMath[1];
                     $operator = strtolower($mMath[2]);
                     $num2 = (float)$mMath[3];

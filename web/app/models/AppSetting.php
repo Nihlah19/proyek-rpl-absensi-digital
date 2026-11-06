@@ -215,9 +215,19 @@ class AppSetting extends Model {
     public static function fetchAiModels($provider = null, $apiKey = null) {
         if (empty($apiKey)) {
             $conf = self::getAiConfig();
-            $apiKey = $conf['api_key'];
-            if (empty($provider)) {
-                $provider = $conf['provider'];
+            $storedKey = $conf['api_key'] ?? '';
+            $storedProvider = $conf['provider'] ?? 'gemini';
+
+            if (!empty($provider) && $provider !== 'auto') {
+                $keyProvider = self::detectAiProvider($storedKey);
+                if ($keyProvider === $provider) {
+                    $apiKey = $storedKey;
+                } else {
+                    $apiKey = '';
+                }
+            } else {
+                $apiKey = $storedKey;
+                $provider = $storedProvider;
             }
         }
 
@@ -225,9 +235,31 @@ class AppSetting extends Model {
             $provider = self::detectAiProvider($apiKey);
         }
 
+        // Jika API key masih kosong, sediakan model rekomendasi
+        if (empty($apiKey)) {
+            return [
+                'success'  => true,
+                'provider' => $provider,
+                'message'  => 'Daftar model rekomendasi (' . strtoupper($provider) . '). Masukkan API Key Anda untuk memuat model kustom.',
+                'models'   => self::getDefaultModels($provider)
+            ];
+        }
+
         // 1. Coba eksekusi melalui Python script ai_model_fetcher.py jika tersedia
-        $pythonScript = dirname(__DIR__, 2) . '/scripts/ai_model_fetcher.py';
-        if (file_exists($pythonScript)) {
+        $possiblePaths = [
+            dirname(__DIR__, 3) . '/scripts/ai_model_fetcher.py',
+            dirname(__DIR__, 2) . '/scripts/ai_model_fetcher.py',
+            dirname(__DIR__, 1) . '/scripts/ai_model_fetcher.py'
+        ];
+        $pythonScript = null;
+        foreach ($possiblePaths as $path) {
+            if (file_exists($path)) {
+                $pythonScript = $path;
+                break;
+            }
+        }
+
+        if ($pythonScript) {
             $cmd = 'python ' . escapeshellarg($pythonScript) . ' --provider ' . escapeshellarg($provider) . ' --api-key ' . escapeshellarg($apiKey) . ' --json 2>&1';
             $output = @shell_exec($cmd);
             if (!empty($output)) {
@@ -282,9 +314,9 @@ class AppSetting extends Model {
 
         if ($curlError || $httpCode !== 200) {
             return [
-                'success' => false,
+                'success' => true,
                 'provider'=> $provider,
-                'message' => 'Gagal mengambil model dari ' . strtoupper($provider) . ' (HTTP ' . $httpCode . '). Menggunakan daftar model rekomendasi.',
+                'message' => 'Tidak dapat terhubung ke endpoint ' . strtoupper($provider) . ' (HTTP ' . $httpCode . '). Menggunakan daftar model rekomendasi.',
                 'models'  => self::getDefaultModels($provider)
             ];
         }
