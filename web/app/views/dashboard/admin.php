@@ -189,6 +189,11 @@ if (!empty($data['statsPerKelas'])) {
         </div>
     </div>
 
+    <!-- ── PUSAT PEMANTAUAN & TATA KELOLA SISWA PKL (ADMIN) ── -->
+    <?php if (!empty($data['adminPkl'])): ?>
+        <?php $this->view('dashboard/panel_admin_pkl', ['adminPkl' => $data['adminPkl']]); ?>
+    <?php endif; ?>
+
     <!-- ── BARIS GRAFIK 1: DIAGRAM BATANG & TREN KEHADIRAN ── -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <!-- 1. DIAGRAM BATANG: Status Presensi Hari Ini (Siswa vs Guru) -->

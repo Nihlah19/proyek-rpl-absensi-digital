@@ -161,6 +161,112 @@ class Pkl extends Model {
     }
 
     /**
+     * Ambil data ringkasan eksekutif PKL untuk Admin Dashboard
+     */
+    public function getAdminPklDashboardData() {
+        $today = date('Y-m-d');
+
+        // 1. Total Kelas PKL
+        $this->db->query("SELECT id, nama_kelas, jurusan, status FROM kelas WHERE status = 'pkl' ORDER BY nama_kelas ASC");
+        $kelasList = $this->db->resultSet();
+        $kelasIds = array_column($kelasList, 'id');
+        $inKelas = !empty($kelasIds) ? implode(',', array_map('intval', $kelasIds)) : '0';
+
+        // 2. Total Siswa PKL
+        $this->db->query("SELECT COUNT(*) as total FROM siswa WHERE kelas_id IN ($inKelas)");
+        $rowSiswa = $this->db->single();
+        $totalSiswa = (int)($rowSiswa->total ?? 0);
+
+        // 3. Total Kelompok / DU-DI
+        $this->db->query("SELECT COUNT(*) as total FROM pkl_kelompok");
+        $rowKelompok = $this->db->single();
+        $totalKelompok = (int)($rowKelompok->total ?? 0);
+
+        // 4. Total Guru Pembimbing PKL
+        $this->db->query("
+            SELECT g.id, g.user_id, u.name as guru_nama, g.nip,
+                   GROUP_CONCAT(DISTINCT k.nama_kelas ORDER BY k.nama_kelas SEPARATOR ', ') as bimbingan_kelas,
+                   GROUP_CONCAT(DISTINCT k.jurusan ORDER BY k.jurusan SEPARATOR ', ') as bimbingan_jurusan,
+                   (SELECT COUNT(DISTINCT s.id) FROM pkl_pembimbing_kelas ppk JOIN siswa s ON ppk.kelas_id = s.kelas_id WHERE ppk.guru_id = g.id) as total_siswa_bimbingan
+            FROM guru g
+            JOIN users u ON g.user_id = u.id
+            LEFT JOIN pkl_pembimbing_kelas ppk ON g.id = ppk.guru_id
+            LEFT JOIN kelas k ON ppk.kelas_id = k.id
+            WHERE g.is_pembimbing_pkl = 1
+            GROUP BY g.id
+            ORDER BY u.name ASC
+        ");
+        $pembimbingList = $this->db->resultSet();
+        $totalPembimbing = count($pembimbingList);
+
+        // 5. Kehadiran Siswa PKL Hari Ini
+        $this->db->query("
+            SELECT 
+                SUM(CASE WHEN a.jam_datang IS NOT NULL AND a.jam_datang != '' THEN 1 ELSE 0 END) as masuk,
+                SUM(CASE WHEN a.jam_pulang IS NOT NULL AND a.jam_pulang != '' THEN 1 ELSE 0 END) as pulang
+            FROM siswa s
+            JOIN absensi_siswa a ON s.id = a.siswa_id AND a.tanggal = :tgl
+            WHERE s.kelas_id IN ($inKelas)
+               OR a.metode = 'pkl'
+               OR a.id_pkl_kelompok IS NOT NULL
+        ");
+        $this->db->bind(':tgl', $today);
+        $rowAbsen = $this->db->single();
+
+        $masuk = (int)($rowAbsen->masuk ?? 0);
+        $pulang = (int)($rowAbsen->pulang ?? 0);
+        $belum = max(0, $totalSiswa - $masuk);
+
+        // 6. Log Riwayat Presensi PKL Terbaru (10 Log Terakhir)
+        $this->db->query("
+            SELECT 
+                s.id as siswa_id,
+                s.nis,
+                u.name as nama_siswa,
+                k.nama_kelas,
+                pk.nama_kelompok,
+                pk.nama_tempat,
+                pk.radius_meter,
+                ug.name as pembimbing_nama,
+                a.tanggal,
+                a.jam_datang,
+                a.jam_pulang,
+                a.status,
+                a.foto_masuk,
+                a.foto_pulang,
+                a.jarak_meter,
+                a.latitude_masuk,
+                a.longitude_masuk,
+                a.latitude_pulang,
+                a.longitude_pulang
+            FROM absensi_siswa a
+            JOIN siswa s ON a.siswa_id = s.id
+            JOIN users u ON s.user_id = u.id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa ks ON s.id = ks.siswa_id
+            LEFT JOIN pkl_kelompok pk ON ks.kelompok_id = pk.id
+            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
+            LEFT JOIN users ug ON g.user_id = ug.id
+            WHERE (s.kelas_id IN ($inKelas) OR a.metode = 'pkl' OR a.id_pkl_kelompok IS NOT NULL OR a.foto_masuk IS NOT NULL)
+            ORDER BY a.tanggal DESC, a.jam_datang DESC
+            LIMIT 10
+        ");
+        $recentLogs = $this->db->resultSet();
+
+        return [
+            'kelasList'       => $kelasList,
+            'totalSiswa'      => $totalSiswa,
+            'totalKelompok'   => $totalKelompok,
+            'totalPembimbing' => $totalPembimbing,
+            'pembimbingList'  => $pembimbingList,
+            'masuk'           => $masuk,
+            'pulang'          => $pulang,
+            'belum'           => $belum,
+            'recentLogs'      => $recentLogs,
+        ];
+    }
+
+    /**
      * Ambil data statistik dan log riwayat presensi PKL untuk Dashboard Guru Pembimbing
      */
     public function getDashboardPembimbingData($userId) {

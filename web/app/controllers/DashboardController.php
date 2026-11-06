@@ -72,8 +72,13 @@ class DashboardController extends Controller {
 
         $currentAppMode = AppSetting::get('app_mode', 'absen');
 
+        // Data Monitoring & Tata Kelola Siswa PKL untuk Dashboard Admin
+        $pklModel     = $this->model('Pkl');
+        $adminPklData = $pklModel->getAdminPklDashboardData();
+
         $data = [
             'judul'               => 'Dashboard Admin',
+            'adminPkl'            => $adminPklData,
             'statsSiswa'          => $this->monitor->getStatsSiswaHariIni(),
             'statsGuru'           => $this->monitor->getStatsGuruHariIni(),
             'trendHarian'         => $this->monitor->getTrendKehadiran7Hari(),
