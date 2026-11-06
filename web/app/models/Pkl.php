@@ -207,8 +207,8 @@ class Pkl extends Model {
             FROM siswa s
             JOIN absensi_siswa a ON s.id = a.siswa_id AND a.tanggal = :tgl
             WHERE s.kelas_id IN ($inKelas)
-               OR a.metode = 'pkl'
-               OR a.id_pkl_kelompok IS NOT NULL
+               OR a.status = 'pkl'
+               OR a.foto_masuk IS NOT NULL
         ");
         $this->db->bind(':tgl', $today);
         $rowAbsen = $this->db->single();
@@ -247,7 +247,7 @@ class Pkl extends Model {
             LEFT JOIN pkl_kelompok pk ON ks.kelompok_id = pk.id
             LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id
             LEFT JOIN users ug ON g.user_id = ug.id
-            WHERE (s.kelas_id IN ($inKelas) OR a.metode = 'pkl' OR a.id_pkl_kelompok IS NOT NULL OR a.foto_masuk IS NOT NULL)
+            WHERE (s.kelas_id IN ($inKelas) OR a.status = 'pkl' OR a.foto_masuk IS NOT NULL)
             ORDER BY a.tanggal DESC, a.jam_datang DESC
             LIMIT 10
         ");
