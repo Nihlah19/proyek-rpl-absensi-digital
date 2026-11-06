@@ -1,6 +1,6 @@
 <?php
 // Konfigurasi cookie sesi sebelum session_start()
-// agar kompatibel dengan ngrok (HTTPS) maupun localhost (HTTP).
+// agar kompatibel dengan ngrok (HTTPS), Vercel, maupun localhost (HTTP).
 if (!session_id()) {
     $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
@@ -9,33 +9,33 @@ if (!session_id()) {
         'lifetime' => 0,
         'path'     => '/',
         'domain'   => '',           // Kosong = gunakan domain host aktif secara otomatis
-        'secure'   => $isHttps,     // Wajib true saat HTTPS (ngrok)
+        'secure'   => $isHttps,     // Wajib true saat HTTPS
         'httponly' => true,
-        'samesite' => $isHttps ? 'None' : 'Lax', // None diperlukan agar cookie dikirim via ngrok
+        'samesite' => $isHttps ? 'None' : 'Lax',
     ]);
     session_start();
 }
 
 // Load Config
-require_once 'config/config.php';
+require_once __DIR__ . '/config/config.php';
 
 // Load Core MVC Classes
-require_once 'core/App.php';
-require_once 'core/Controller.php';
-require_once 'core/Database.php';
-require_once 'core/Model.php';
-require_once 'models/AppSetting.php';
-require_once 'core/TelegramHelper.php';
-require_once 'core/NotificationHelper.php';
-require_once 'core/WhatsAppHelper.php';
+require_once __DIR__ . '/core/App.php';
+require_once __DIR__ . '/core/Controller.php';
+require_once __DIR__ . '/core/Database.php';
+require_once __DIR__ . '/core/Model.php';
+require_once __DIR__ . '/models/AppSetting.php';
+require_once __DIR__ . '/core/TelegramHelper.php';
+require_once __DIR__ . '/core/NotificationHelper.php';
+require_once __DIR__ . '/core/WhatsAppHelper.php';
 
 // Load Helpers
-require_once 'helpers/SessionHelper.php';
-require_once 'helpers/AuthHelper.php';
-require_once 'helpers/CsrfHelper.php';
-require_once 'helpers/ValidationHelper.php';
-require_once 'helpers/Flasher.php';
-require_once 'helpers/BadgeHelper.php';
+require_once __DIR__ . '/helpers/SessionHelper.php';
+require_once __DIR__ . '/helpers/AuthHelper.php';
+require_once __DIR__ . '/helpers/CsrfHelper.php';
+require_once __DIR__ . '/helpers/ValidationHelper.php';
+require_once __DIR__ . '/helpers/Flasher.php';
+require_once __DIR__ . '/helpers/BadgeHelper.php';
 
 // Default Error Handler
 set_exception_handler(function ($e) {
@@ -53,7 +53,7 @@ set_exception_handler(function ($e) {
         echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
         echo "</div>";
     } else {
-        require_once '../app/controllers/ErrorController.php';
+        require_once __DIR__ . '/controllers/ErrorController.php';
         $err = new ErrorController();
         $err->serverError();
     }

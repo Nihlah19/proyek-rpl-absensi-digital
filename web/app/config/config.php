@@ -16,10 +16,8 @@ if (file_exists($envPath)) {
 }
 
 // Konfigurasi Konstanta
-// BASEURL diturunkan secara dinamis dari HTTP host yang aktif (localhost, ngrok, dsb).
-// Ini memastikan semua redirect dan form action selalu menggunakan host yang benar,
-// tanpa perlu mengubah .env setiap kali URL ngrok berubah.
-// APP_URL di .env digunakan sebagai fallback jika tidak berjalan via web server.
+// BASEURL diturunkan secara dinamis dari HTTP host yang aktif (localhost, ngrok, Vercel, dsb).
+// Ini memastikan semua redirect dan form action selalu menggunakan host yang benar.
 if (isset($_SERVER['HTTP_HOST'])) {
     $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
     // Deteksi reverse-proxy (Vercel, ngrok, cloud): X-Forwarded-Proto menentukan scheme asli
@@ -33,10 +31,14 @@ if (isset($_SERVER['HTTP_HOST'])) {
         $parsedPath = parse_url($appUrl, PHP_URL_PATH);
         define('BASEURL', rtrim($scheme . '://' . $host . ($parsedPath ?: ''), '/'));
     } else {
-        // Otomatis deteksi subdirektori (misal di XAMPP /AbsensiRFID/web/public vs di root container /)
+        // Otomatis deteksi subdirektori (misal di XAMPP /AbsensiRFID/web/public vs di root Vercel/container /)
         $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
         $scriptDir  = dirname($scriptName);
         $subDir     = ($scriptDir === '/' || $scriptDir === '\\' || $scriptDir === '.') ? '' : str_replace('\\', '/', $scriptDir);
+        // Jika berjalan di lingkungan Vercel atau subdirektori adalah /api, gunakan root domain
+        if (isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false) || $subDir === '/api') {
+            $subDir = '';
+        }
         define('BASEURL', rtrim($scheme . '://' . $host . $subDir, '/'));
     }
 } else {
@@ -68,4 +70,3 @@ if (!defined('APP_ENV')) {
 define('SCHOOL_LAT',          (float)($_ENV['SCHOOL_LAT']          ?? $_SERVER['SCHOOL_LAT'] ?? getenv('SCHOOL_LAT') ?: -6.5724553));
 define('SCHOOL_LNG',          (float)($_ENV['SCHOOL_LNG']          ?? $_SERVER['SCHOOL_LNG'] ?? getenv('SCHOOL_LNG') ?: 108.3977467));
 define('SCHOOL_RADIUS_METER', (int)  ($_ENV['SCHOOL_RADIUS_METER']   ?? $_SERVER['SCHOOL_RADIUS_METER'] ?? getenv('SCHOOL_RADIUS_METER') ?: 100));
-
