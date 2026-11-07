@@ -1,76 +1,79 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
-  <rect width="1440" height="900" fill="#0f172a" />
+  <!-- Backdrop -->
+  <rect width="1440" height="900" fill="#0f172a" opacity="0.6" />
 
-  <!-- Backdrop background dashboard faded -->
-  <rect x="0" y="0" width="1440" height="900" fill="#1e1b4b" opacity="0.3" />
+  <!-- Chatbot Window Centered -->
+  <g transform="translate(420, 50)">
+    <!-- Container -->
+    <rect x="0" y="0" width="600" height="800" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
 
-  <!-- Chatbot Window Centered / Docked Right -->
-  <!-- Main Modal Card -->
-  <rect x="420" y="50" width="600" height="800" rx="16" fill="#ffffff" stroke="#334155" stroke-width="1" />
-  
-  <!-- Window Header -->
-  <rect x="420" y="50" width="600" height="70" rx="16" fill="#0f172a" />
-  <circle cx="455" cy="85" r="20" fill="#4f46e5" />
-  <text x="455" y="92" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">🤖</text>
-  <text x="490" y="78" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Asisten Cerdas Absensi &amp; PKL</text>
-  <text x="490" y="96" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Powered by Groq Llama-3.3-70b • Konteks Database Terintegrasi</text>
-
-  <circle cx="985" cy="85" r="14" fill="#334155" />
-  <text x="985" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">✕</text>
-
-  <!-- Chat Body Message Stream -->
-  <rect x="420" y="120" width="600" height="580" fill="#f8fafc" />
-
-  <!-- Bot Greeting Bubble -->
-  <g transform="translate(445, 140)">
-    <rect x="0" y="0" width="460" height="80" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="18" y="26" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">Halo! Saya Asisten AI Presensi SMK NU Wargabinangun.</text>
-    <text x="18" y="46" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">Silakan tanyakan rekapitulasi data kehadiran, status siswa PKL,</text>
-    <text x="18" y="66" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">atau jadwal aktif sekolah hari ini.</text>
-  </g>
-
-  <!-- User Bubble 1 -->
-  <g transform="translate(560, 240)">
-    <rect x="0" y="0" width="435" height="55" rx="12" fill="#4f46e5" />
-    <text x="18" y="24" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Berapa siswa kelas XII RPL 1 yang hadir dan</text>
-    <text x="18" y="44" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="13">sedang melaksanakan PKL hari ini?</text>
-  </g>
-
-  <!-- Bot Response Bubble 1 (Grounded with DB facts) -->
-  <g transform="translate(445, 315)">
-    <rect x="0" y="0" width="520" height="230" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="18" y="28" fill="#4f46e5" font-family="Arial, sans-serif" font-weight="bold" font-size="13">📊 Laporan Kehadiran Kelas XII RPL 1 (08 Nov 2026):</text>
+    <!-- Header (Forest Dark #163300) -->
+    <rect x="0" y="0" width="600" height="68" rx="16" fill="#163300" />
+    <rect x="0" y="50" width="600" height="18" fill="#163300" />
     
-    <text x="18" y="55" fill="#334155" font-family="Arial, sans-serif" font-size="12">• Total Siswa Kelas: <tspan font-weight="bold">36 Siswa</tspan></text>
-    <text x="18" y="78" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Hadir Reguler di Sekolah: 30 Siswa (Tap RFID)</text>
-    <text x="18" y="101" fill="#0284c7" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Presensi Mandiri PKL: 5 Siswa (Semua dalam radius DUDI)</text>
-    <text x="36" y="121" fill="#64748b" font-family="Arial, sans-serif" font-size="11">- 3 siswa di PT Telkom Akses (Jarak 12-24m)</text>
-    <text x="36" y="139" fill="#64748b" font-family="Arial, sans-serif" font-size="11">- 2 siswa di PT Inovasi Solusi (Jarak 18m)</text>
-    <text x="18" y="162" fill="#b45309" font-family="Arial, sans-serif" font-size="12">• Izin Sakit: 1 Siswa (Surat dokter telah diverifikasi Wali Kelas)</text>
-    <text x="18" y="185" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Alfa / Tanpa Keterangan: 0 Siswa</text>
+    <!-- FontAwesome Icon Circle -->
+    <circle cx="40" cy="34" r="18" fill="#9fe870" />
+    <text x="40" y="40" fill="#163300" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">🤖</text>
+    <text x="70" y="30" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">Asisten Cerdas Absensi &amp; PKL</text>
+    <text x="70" y="48" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">SMK NU Wargabinangun • Konteks Database Terintegrasi</text>
+
+    <!-- Close button -->
+    <circle cx="565" cy="34" r="14" fill="#285804" />
+    <text x="565" y="39" fill="#ffffff" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">✕</text>
+
+    <!-- Chat Message Stream Body -->
+    <rect x="0" y="68" width="600" height="610" fill="#f8fafc" />
+
+    <!-- Bot Bubble 1 (Greeting) -->
+    <g transform="translate(24, 90)">
+      <rect x="0" y="0" width="460" height="85" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="18" y="26" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Halo! Saya Asisten AI Presensi SMK NU Wargabinangun.</text>
+      <text x="18" y="48" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Saya ditugaskan untuk menjawab pertanyaan data absensi,</text>
+      <text x="18" y="68" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">status kehadiran siswa, penugasan PKL, atau jadwal sekolah.</text>
+    </g>
+
+    <!-- User Bubble (Inquiry) -->
+    <g transform="translate(136, 195)">
+      <rect x="0" y="0" width="440" height="56" rx="12" fill="#163300" />
+      <text x="18" y="25" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Berapa siswa kelas XII RPL 1 yang hadir di sekolah</text>
+      <text x="18" y="44" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">dan berapa yang sedang melaksanakan PKL hari ini?</text>
+    </g>
+
+    <!-- Bot Response Bubble (Grounded with DB facts) -->
+    <g transform="translate(24, 270)">
+      <rect x="0" y="0" width="520" height="235" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="18" y="28" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">📊 Rekap Kehadiran Terkini — Kelas XII RPL 1 (08 Nov 2026):</text>
+      
+      <text x="18" y="55" fill="#334155" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">• Total Siswa Terdaftar: <tspan font-weight="bold">36 Siswa</tspan></text>
+      <text x="18" y="78" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Hadir di Sekolah: 30 Siswa (Tap Kartu RFID Gerbang)</text>
+      <text x="18" y="101" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Presensi Mandiri PKL: 5 Siswa (Valid Radius Geofence DUDI)</text>
+      <text x="36" y="121" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">- 3 siswa di PT Telkom Akses (Jarak 12-24 meter)</text>
+      <text x="36" y="139" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">- 2 siswa di PT Inovasi Solusi (Jarak 18 meter)</text>
+      <text x="18" y="162" fill="#b45309" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">• Izin Sakit: 1 Siswa (Surat dokter telah diverifikasi)</text>
+      <text x="18" y="185" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Alfa / Tanpa Keterangan: 0 Siswa</text>
+      <text x="18" y="214" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Persentase kehadiran total kelas mencapai <tspan font-weight="bold" fill="#0f172a">97.2%</tspan>.</text>
+    </g>
+
+    <!-- Suggestion Pills -->
+    <g transform="translate(24, 520)">
+      <rect x="0" y="0" width="165" height="28" rx="14" fill="#e2f6d5" />
+      <text x="82" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Siswa terlambat hari ini</text>
+
+      <rect x="175" y="0" width="165" height="28" rx="14" fill="#e2f6d5" />
+      <text x="257" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Status bot Telegram kelas</text>
+
+      <rect x="350" y="0" width="155" height="28" rx="14" fill="#e2f6d5" />
+      <text x="427" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Jadwal libur sekolah</text>
+    </g>
+
+    <!-- Input Footer -->
+    <rect x="24" y="565" width="552" height="60" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="42" y="601" fill="#94a3b8" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Ketik pertanyaan seputar absensi atau PKL...</text>
     
-    <text x="18" y="212" fill="#64748b" font-family="Arial, sans-serif" font-size="11">Tingkat kehadiran total kelas mencapai <tspan font-weight="bold" fill="#0f172a">97.2%</tspan>.</text>
+    <rect x="524" y="575" width="42" height="40" rx="8" fill="#163300" />
+    <text x="545" y="600" fill="#9fe870" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">➤</text>
+
+    <!-- Guardrail Notice -->
+    <text x="300" y="650" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" text-anchor="middle">Sistem AI mematuhi SOP Sekolah. Hanya melayani pertanyaan presensi &amp; operasional sekolah.</text>
   </g>
-
-  <!-- Suggestion Prompt Pills -->
-  <g transform="translate(445, 570)">
-    <rect x="0" y="0" width="160" height="28" rx="14" fill="#e0e7ff" />
-    <text x="80" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Siswa terlambat hari ini</text>
-
-    <rect x="170" y="0" width="165" height="28" rx="14" fill="#e0e7ff" />
-    <text x="252" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Status bot Telegram kelas</text>
-
-    <rect x="345" y="0" width="160" height="28" rx="14" fill="#e0e7ff" />
-    <text x="425" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Rekap PKL minggu ini</text>
-  </g>
-
-  <!-- Input Field Box -->
-  <rect x="445" y="615" width="550" height="65" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
-  <text x="465" y="652" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Ketik pertanyaan seputar absensi atau PKL...</text>
-  
-  <rect x="935" y="627" width="48" height="40" rx="8" fill="#4f46e5" />
-  <text x="959" y="652" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">➤</text>
-
-  <!-- Bottom Guardrail Notice -->
-  <text x="720" y="700" fill="#64748b" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Sistem AI mematuhi SOP Sekolah. Hanya melayani kueri data absensi &amp; PKL resmi.</text>
 </svg>

@@ -1,556 +1,718 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 4600 3000" width="4600" height="3000">
   <defs>
     <filter id="megaShadow" x="-5%" y="-5%" width="110%" height="110%">
-      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.2"/>
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <!-- Figma Canvas Background -->
-  <rect width="4600" height="3000" fill="#1e1e1e" />
+  <!-- Canvas Surface -->
+  <rect width="4600" height="3000" fill="#f0f2ed" />
 
-  <!-- Canvas Header -->
-  <text x="100" y="80" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="36">SMK NU WARGABINANGUN — UI/UX FIGMA DESIGN SYSTEM MASTER</text>
-  <text x="100" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18">Komponen Lengkap: Landing Page, Dashboard Seluruh Aktor, Alur Presensi PKL Geofence &amp; Asisten AI</text>
+  <!-- Master Canvas Header -->
+  <text x="100" y="70" fill="#163300" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="900" font-size="34">SMK NU WARGABINANGUN — FIGMA UI/UX DESIGN SYSTEM (WISE STANDARD)</text>
+  <text x="100" y="105" fill="#454745" font-family="Inter, sans-serif" font-size="18">Replika Desain Asli Website http://localhost/AbsensiRFID/web/public/ (Forest #163300, Electric Lime #9fe870, Paper #ffffff)</text>
 
   <!-- ROW 1 -->
   <!-- 01. Landing Page -->
-  <g transform="translate(100, 180)" filter="url(#megaShadow)">
-    <text x="0" y="-20" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="20">01. LANDING PAGE UTAMA (1440 x 900)</text>
+  <g transform="translate(100, 160)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">01. LANDING PAGE UTAMA (Wise Style)</text>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a" />
-      <stop offset="50%" stop-color="#1e1b4b" />
-      <stop offset="100%" stop-color="#0f172a" />
-    </linearGradient>
-    <linearGradient id="btnGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#4f46e5" />
-      <stop offset="100%" stop-color="#6366f1" />
-    </linearGradient>
-    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#06b6d4" />
-      <stop offset="100%" stop-color="#3b82f6" />
-    </linearGradient>
     <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#000000" flood-opacity="0.08"/>
     </filter>
   </defs>
 
-  <rect width="1440" height="900" fill="url(#bgGrad)" />
-  <circle cx="200" cy="200" r="300" fill="#4f46e5" opacity="0.15" />
-  <circle cx="1200" cy="300" r="350" fill="#06b6d4" opacity="0.12" />
+  <!-- Background Paper -->
+  <rect width="1440" height="900" fill="#ffffff" />
 
-  <!-- Navbar -->
-  <rect x="0" y="0" width="1440" height="75" fill="#0f172a" opacity="0.85" />
-  <line x1="0" y1="75" x2="1440" y2="75" stroke="#334155" stroke-width="1" />
-  
-  <rect x="80" y="18" width="40" height="40" rx="10" fill="url(#btnGrad)" />
-  <text x="100" y="44" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="20" text-anchor="middle">A</text>
-  <text x="135" y="38" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">SMK NU WARGABINANGUN</text>
-  <text x="135" y="53" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Sistem Presensi Digital &amp; IoT PKL</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TOP NAVIGATION BAR (64px, White, Fog Border, Pill Switcher)    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="0" y="0" width="1440" height="64" fill="#ffffff" />
+  <line x1="0" y1="64" x2="1440" y2="64" stroke="#e8ebe6" stroke-width="1" />
 
-  <g font-family="Arial, sans-serif" font-size="14" fill="#cbd5e1">
-    <text x="560" y="43" fill="#ffffff" font-weight="bold">Beranda</text>
-    <text x="650" y="43">Fitur Sistem</text>
-    <text x="760" y="43">Alur PKL</text>
-    <text x="860" y="43">Rekapitulasi</text>
-    <text x="980" y="43">Bantuan &amp; AI</text>
-  </g>
+  <!-- Brand / Logo -->
+  <circle cx="100" cy="32" r="18" fill="#163300" />
+  <text x="100" y="38" fill="#9fe870" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="900" font-size="16" text-anchor="middle">NU</text>
+  <text x="130" y="37" fill="#0e0f0c" font-family="'Plus Jakarta Sans', Inter, sans-serif" font-weight="900" font-size="14" letter-spacing="0.5">SMK NU WARGABINANGUN</text>
 
-  <rect x="1220" y="18" width="140" height="40" rx="8" fill="url(#btnGrad)" />
-  <text x="1290" y="43" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="13" text-anchor="middle">Masuk Sistem →</text>
+  <!-- Segmented Tab Nav Switcher (Wise Signature Pill Nav) -->
+  <rect x="520" y="14" width="400" height="36" rx="18" fill="#e8ebe6" />
+  <!-- Active Tab: Beranda -->
+  <rect x="523" y="17" width="85" height="30" rx="15" fill="#9fe870" />
+  <text x="565" y="36" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">Beranda</text>
+  <text x="660" y="36" fill="#454745" font-family="Inter, sans-serif" font-weight="600" font-size="12">Fitur Presensi</text>
+  <text x="765" y="36" fill="#454745" font-family="Inter, sans-serif" font-weight="600" font-size="12">Alur Sistem</text>
+  <text x="850" y="36" fill="#454745" font-family="Inter, sans-serif" font-weight="600" font-size="12">Peran Pengguna</text>
 
-  <!-- Hero Section -->
-  <rect x="80" y="125" width="310" height="32" rx="16" fill="#1e293b" stroke="#3b82f6" stroke-width="1" />
-  <circle cx="98" cy="141" r="5" fill="#10b981" />
-  <text x="114" y="146" fill="#60a5fa" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Sistem Presensi Generasi 4.0 Terpadu</text>
+  <!-- Right Action: Masuk Portal Pill -->
+  <rect x="1270" y="14" width="130" height="36" rx="18" fill="#ffffff" stroke="#163300" stroke-width="1.5" />
+  <text x="1335" y="37" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">Masuk Portal →</text>
 
-  <text x="80" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="44">Presensi Pintar Terintegrasi</text>
-  <text x="80" y="260" fill="url(#accentGrad)" font-family="Arial, sans-serif" font-weight="bold" font-size="44">IoT RFID, QR &amp; Geofencing PKL</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- HERO SECTION                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Left Hero Content (7 Cols) -->
+  <g transform="translate(80, 115)">
+    <!-- Wise Headline Shout (Ultra-heavy 900) -->
+    <text x="0" y="65" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="900" font-size="56" letter-spacing="-2">PRESENSI GERBANG</text>
+    <text x="0" y="130" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="900" font-size="56" letter-spacing="-2">SECEPAT KEDIPAN</text>
+    <text x="0" y="195" fill="#163300" font-family="Inter, sans-serif" font-weight="900" font-size="56" letter-spacing="-2">MATA.</text>
 
-  <text x="80" y="305" fill="#94a3b8" font-family="Arial, sans-serif" font-size="16">Solusi kehadiran digital terpadu SMK NU Wargabinangun. Mendukung tap fisik RFID gerbang,</text>
-  <text x="80" y="330" fill="#94a3b8" font-family="Arial, sans-serif" font-size="16">validasi barcode guru, presensi mandiri magang PKL anti-fraud, dan asistensi kecerdasan AI.</text>
+    <!-- Body Copy in Warm Charcoal -->
+    <text x="0" y="245" fill="#454745" font-family="Inter, sans-serif" font-size="17">Menghubungkan gerbang sekolah, guru kelas, dan orang tua murid secara</text>
+    <text x="0" y="272" fill="#454745" font-family="Inter, sans-serif" font-size="17">transparan. Tap kartu instan RFID, kode QR pelajar cadangan, presensi</text>
+    <text x="0" y="299" fill="#454745" font-family="Inter, sans-serif" font-size="17">mandiri magang PKL anti-fraud, serta pemberitahuan otomatis ke orang tua.</text>
 
-  <rect x="80" y="370" width="180" height="48" rx="8" fill="url(#btnGrad)" />
-  <text x="170" y="400" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15" text-anchor="middle">Akses Dashboard</text>
-  <rect x="280" y="370" width="170" height="48" rx="8" fill="#1e293b" stroke="#475569" stroke-width="1" />
-  <text x="365" y="400" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14" text-anchor="middle">Panduan Siswa</text>
-
-  <!-- Hero Right Mockup Card -->
-  <g filter="url(#cardShadow)">
-    <rect x="800" y="120" width="560" height="360" rx="16" fill="#1e293b" stroke="#334155" stroke-width="1" />
-    <rect x="800" y="120" width="560" height="44" rx="16" fill="#0f172a" />
-    <circle cx="825" cy="142" r="6" fill="#ef4444" />
-    <circle cx="845" cy="142" r="6" fill="#f59e0b" />
-    <circle cx="865" cy="142" r="6" fill="#10b981" />
-    <rect x="910" y="132" width="280" height="20" rx="10" fill="#1e293b" />
-    <text x="1050" y="146" fill="#64748b" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">https://absensi.smknuwargabinangun.sch.id</text>
-
-    <!-- Mini Stats -->
-    <rect x="825" y="185" width="160" height="75" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="840" y="208" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Kehadiran Hari Ini</text>
-    <text x="840" y="240" fill="#10b981" font-family="Arial, sans-serif" font-weight="bold" font-size="24">98.4%</text>
-
-    <rect x="1000" y="185" width="160" height="75" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="1015" y="208" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Siswa PKL Aktif</text>
-    <text x="1015" y="240" fill="#3b82f6" font-family="Arial, sans-serif" font-weight="bold" font-size="24">48 Siswa</text>
-
-    <rect x="1175" y="185" width="160" height="75" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="1190" y="208" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Gerbang RFID</text>
-    <text x="1190" y="240" fill="#a855f7" font-family="Arial, sans-serif" font-weight="bold" font-size="24">ONLINE</text>
-
-    <!-- Live Stream Simulation -->
-    <rect x="825" y="275" width="510" height="180" rx="8" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="845" y="302" fill="#e2e8f0" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Log Presensi Terkini (Realtime Stream)</text>
+    <!-- Action Group: Filled Lime CTA + Text Link Button -->
+    <rect x="0" y="340" width="250" height="52" rx="26" fill="#9fe870" />
+    <text x="125" y="372" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="15" text-anchor="middle">Masuk ke Portal Presensi →</text>
     
-    <text x="845" y="335" fill="#38bdf8" font-family="Arial, sans-serif" font-size="12">06:58:12</text>
-    <text x="915" y="335" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Ahmad Fauzi (XII RPL 1)</text>
-    <text x="1150" y="335" fill="#10b981" font-family="Arial, sans-serif" font-size="11">RFID Tap (0.15s)</text>
-    <text x="1275" y="335" fill="#4ade80" font-family="Arial, sans-serif" font-weight="bold" font-size="11">HADIR</text>
+    <text x="285" y="372" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="15" text-decoration="underline">Pelajari Fitur Sistem ↓</text>
 
-    <text x="845" y="370" fill="#38bdf8" font-family="Arial, sans-serif" font-size="12">07:02:40</text>
-    <text x="915" y="370" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Siti Aisyah (XII TKJ 2)</text>
-    <text x="1150" y="370" fill="#3b82f6" font-family="Arial, sans-serif" font-size="11">PKL GPS (14m DUDI)</text>
-    <text x="1275" y="370" fill="#60a5fa" font-family="Arial, sans-serif" font-weight="bold" font-size="11">PKL HADIR</text>
+    <!-- Benefits Checklist -->
+    <line x1="0" y1="435" x2="680" y2="435" stroke="#e8ebe6" stroke-width="1" />
+    <g transform="translate(0, 460)" font-family="Inter, sans-serif" font-size="12" font-weight="bold" fill="#163300">
+      <circle cx="8" cy="6" r="7" fill="#e2f6d5" />
+      <text x="8" y="10" fill="#163300" font-size="9" text-anchor="middle">✓</text>
+      <text x="22" y="10">Notifikasi Otomatis Orang Tua</text>
 
-    <text x="845" y="405" fill="#38bdf8" font-family="Arial, sans-serif" font-size="12">07:05:19</text>
-    <text x="915" y="405" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Budi Santoso, S.Kom (Guru)</text>
-    <text x="1150" y="405" fill="#f59e0b" font-family="Arial, sans-serif" font-size="11">Barcode QR Scan</text>
-    <text x="1275" y="405" fill="#4ade80" font-family="Arial, sans-serif" font-weight="bold" font-size="11">HADIR</text>
+      <circle cx="218" cy="6" r="7" fill="#e2f6d5" />
+      <text x="218" y="10" fill="#163300" font-size="9" text-anchor="middle">✓</text>
+      <text x="232" y="10">Kartu Fisik &amp; QR Siswa</text>
+
+      <circle cx="400" cy="6" r="7" fill="#e2f6d5" />
+      <text x="400" y="10" fill="#163300" font-size="9" text-anchor="middle">✓</text>
+      <text x="414" y="10">Rekap Real-time</text>
+
+      <circle cx="540" cy="6" r="7" fill="#e2f6d5" />
+      <text x="540" y="10" fill="#163300" font-size="9" text-anchor="middle">✓</text>
+      <text x="554" y="10">Geofence PKL</text>
+    </g>
   </g>
 
-  <!-- Features Grid 4 Cards -->
-  <g transform="translate(80, 520)">
-    <rect x="0" y="0" width="300" height="200" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-    <circle cx="40" cy="40" r="22" fill="#4f46e5" opacity="0.3" />
-    <text x="40" y="46" fill="#818cf8" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">💳</text>
-    <text x="24" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">RFID Gate Scanner</text>
-    <text x="24" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Presensi gerbang sekolah dengan</text>
-    <text x="24" y="135" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">kartu pelajar pintar RFID frekuensi</text>
-    <text x="24" y="155" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">13.56 MHz latensi di bawah 0.2s.</text>
+  <!-- Right Hero Simulator Widget (Wise Style Dual Surface 28px card) -->
+  <g transform="translate(850, 105)" filter="url(#cardShadow)">
+    <rect x="0" y="0" width="510" height="490" rx="28" fill="#e8ebe6" stroke="#d5d9d2" stroke-width="1" />
+    
+    <!-- Simulator Top Header -->
+    <text x="30" y="42" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="900" font-size="13" letter-spacing="1">SIMULASI PRESENSI</text>
+    
+    <rect x="365" y="24" width="115" height="26" rx="13" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
+    <circle cx="378" cy="37" r="4" fill="#10b981" />
+    <text x="430" y="41" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="11" text-anchor="middle">Sistem Aktif</text>
 
-    <rect x="325" y="0" width="300" height="200" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-    <circle cx="365" cy="40" r="22" fill="#06b6d4" opacity="0.3" />
-    <text x="365" y="46" fill="#22d3ee" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">📍</text>
-    <text x="349" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Presensi Mandiri PKL</text>
-    <text x="349" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Khusus siswa magang di DUDI.</text>
-    <text x="349" y="135" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Dilengkapi geofencing Haversine &amp;</text>
-    <text x="349" y="155" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">swafoto kamera langsung anti-fraud.</text>
+    <!-- Interactive Mode Tabs -->
+    <rect x="30" y="65" width="450" height="38" rx="19" fill="#ffffff" />
+    <!-- Tab 1: Kartu Siswa (Active Lime) -->
+    <rect x="33" y="68" width="220" height="32" rx="16" fill="#9fe870" />
+    <text x="143" y="88" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">💳 Kartu Siswa (RFID)</text>
+    <text x="350" y="88" fill="#454745" font-family="Inter, sans-serif" font-weight="600" font-size="12" text-anchor="middle">📱 Kode QR Siswa</text>
 
-    <rect x="650" y="0" width="300" height="200" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-    <circle cx="690" cy="40" r="22" fill="#10b981" opacity="0.3" />
-    <text x="690" y="46" fill="#34d399" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">🤖</text>
-    <text x="674" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Telegram Realtime Bot</text>
-    <text x="674" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Setiap kehadiran siswa otomatis</text>
-    <text x="674" y="135" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">disiarkan ke bot Telegram kelas</text>
-    <text x="674" y="155" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">wali kelas dan grup orang tua murid.</text>
+    <!-- Simulated Card Screen Inner Box -->
+    <rect x="30" y="125" width="450" height="330" rx="18" fill="#ffffff" stroke="#d5d9d2" stroke-width="1" />
+    
+    <!-- Card Brand & Chip -->
+    <rect x="55" y="150" width="50" height="38" rx="6" fill="#fbbf24" stroke="#d97706" stroke-width="1" />
+    <text x="120" y="165" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="900" font-size="15">SMK NU WARGABINANGUN</text>
+    <text x="120" y="182" fill="#868685" font-family="Inter, sans-serif" font-size="11">KARTU PRESENSI PINTAR</text>
 
-    <rect x="975" y="0" width="300" height="200" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-    <circle cx="1015" cy="40" r="22" fill="#a855f7" opacity="0.3" />
-    <text x="1015" y="46" fill="#c084fc" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">🧠</text>
-    <text x="999" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Asisten Cerdas AI</text>
-    <text x="999" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Tanya jawab cerdas data absensi,</text>
-    <text x="999" y="135" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">rekapitulasi persentase, dan tren</text>
-    <text x="999" y="155" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">kehadiran berbasis AI terintegrasi.</text>
+    <text x="55" y="225" fill="#868685" font-family="Inter, sans-serif" font-size="10">NOMOR INDUK SISWA (NIS)</text>
+    <text x="55" y="248" fill="#0e0f0c" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="18">202410842</text>
+
+    <text x="55" y="280" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="bold" font-size="16">AHMAD FAUZI</text>
+    <text x="55" y="298" fill="#454745" font-family="Inter, sans-serif" font-size="12">Kelas XII Rekayasa Perangkat Lunak 1</text>
+
+    <!-- Tap Confirmation Banner -->
+    <rect x="55" y="325" width="400" height="52" rx="10" fill="#163300" />
+    <circle cx="80" cy="351" r="12" fill="#9fe870" />
+    <text x="80" y="356" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="14" text-anchor="middle">✓</text>
+    <text x="105" y="347" fill="#9fe870" font-family="Inter, sans-serif" font-weight="bold" font-size="13">TAP GERBANG BERHASIL</text>
+    <text x="105" y="365" fill="#ffffff" font-family="'JetBrains Mono', monospace" font-size="11">06:42:15 WIB • Notifikasi terkirim ke Orang Tua</text>
+
+    <!-- RFID Reader Sensor Wave Simulation -->
+    <rect x="55" y="395" width="400" height="42" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1" />
+    <text x="75" y="420" fill="#15803d" font-family="Inter, sans-serif" font-weight="bold" font-size="11">● RC522 Hardware Gate 1: Latensi 0.12s (Optimal)</text>
   </g>
 
-  <!-- Footer -->
-  <rect x="0" y="800" width="1440" height="100" fill="#0f172a" />
-  <line x1="0" y1="800" x2="1440" y2="800" stroke="#1e293b" stroke-width="1" />
-  <text x="80" y="845" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">© 2026 SMK NU Wargabinangun — Sistem Absensi RFID &amp; PKL V4.0. Semua Hak Dilindungi.</text>
-  <text x="80" y="870" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Teknologi: PHP Native MVC, MySQL Relational, IoT ESP32 RFID, Leaflet GPS, WebRTC, Groq LLM Cloud.</text>
-  <text x="1220" y="855" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Versi Stabil 4.2.0</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 4 FEATURES GRID SECTION (Wise Style Surfaces)                  -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <g transform="translate(80, 640)">
+    <!-- Feature 1 -->
+    <rect x="0" y="0" width="300" height="195" rx="16" fill="#f8fafc" stroke="#e8ebe6" stroke-width="1" />
+    <rect x="24" y="24" width="44" height="44" rx="22" fill="#e2f6d5" />
+    <text x="46" y="52" fill="#163300" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">💳</text>
+    <text x="24" y="98" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="bold" font-size="16">Mesin RFID Gerbang</text>
+    <text x="24" y="125" fill="#454745" font-family="Inter, sans-serif" font-size="13">Tap kartu pintar frekuensi</text>
+    <text x="24" y="145" fill="#454745" font-family="Inter, sans-serif" font-size="13">13.56 MHz, bebas antrean &amp;</text>
+    <text x="24" y="165" fill="#454745" font-family="Inter, sans-serif" font-size="13">terkoneksi langsung ke server.</text>
+
+    <!-- Feature 2 -->
+    <rect x="325" y="0" width="300" height="195" rx="16" fill="#f8fafc" stroke="#e8ebe6" stroke-width="1" />
+    <rect x="349" y="24" width="44" height="44" rx="22" fill="#e2f6d5" />
+    <text x="371" y="52" fill="#163300" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">📍</text>
+    <text x="349" y="98" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="bold" font-size="16">Presensi Mandiri PKL</text>
+    <text x="349" y="125" fill="#454745" font-family="Inter, sans-serif" font-size="13">Khusus magang industri DUDI.</text>
+    <text x="349" y="145" fill="#454745" font-family="Inter, sans-serif" font-size="13">Kalkulasi Haversine GPS &amp;</text>
+    <text x="349" y="165" fill="#454745" font-family="Inter, sans-serif" font-size="13">swafoto kamera langsung anti-fraud.</text>
+
+    <!-- Feature 3 -->
+    <rect x="650" y="0" width="300" height="195" rx="16" fill="#f8fafc" stroke="#e8ebe6" stroke-width="1" />
+    <rect x="674" y="24" width="44" height="44" rx="22" fill="#e2f6d5" />
+    <text x="696" y="52" fill="#163300" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">📱</text>
+    <text x="674" y="98" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="bold" font-size="16">Telegram &amp; WhatsApp</text>
+    <text x="674" y="125" fill="#454745" font-family="Inter, sans-serif" font-size="13">Notifikasi kehadiran siswa</text>
+    <text x="674" y="145" fill="#454745" font-family="Inter, sans-serif" font-size="13">terkirim otomatis dan realtime</text>
+    <text x="674" y="165" fill="#454745" font-family="Inter, sans-serif" font-size="13">ke bot grup wali kelas &amp; wali murid.</text>
+
+    <!-- Feature 4 -->
+    <rect x="975" y="0" width="300" height="195" rx="16" fill="#f8fafc" stroke="#e8ebe6" stroke-width="1" />
+    <rect x="999" y="24" width="44" height="44" rx="22" fill="#e2f6d5" />
+    <text x="1021" y="52" fill="#163300" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">🤖</text>
+    <text x="999" y="98" fill="#0e0f0c" font-family="Inter, sans-serif" font-weight="bold" font-size="16">Asisten Cerdas AI</text>
+    <text x="999" y="125" fill="#454745" font-family="Inter, sans-serif" font-size="13">Tanya jawab data kehadiran</text>
+    <text x="999" y="145" fill="#454745" font-family="Inter, sans-serif" font-size="13">terintegrasi database sekolah,</text>
+    <text x="999" y="165" fill="#454745" font-family="Inter, sans-serif" font-size="13">mematuhi SOP resmi sekolah.</text>
+  </g>
+
+  <!-- Bottom Footer Line -->
+  <line x1="0" y1="860" x2="1440" y2="860" stroke="#e8ebe6" stroke-width="1" />
+  <text x="80" y="885" fill="#868685" font-family="Inter, sans-serif" font-size="12">© 2026 SMK NU Wargabinangun • Sistem Absensi Terpadu IoT RFID &amp; PKL</text>
+  <text x="1260" y="885" fill="#163300" font-family="Inter, sans-serif" font-weight="bold" font-size="12">Wise Design System</text>
 </svg>
   </g>
 
   <!-- 02. Dashboard Admin -->
-  <g transform="translate(1600, 180)" filter="url(#megaShadow)">
-    <text x="0" y="-20" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="20">02. DASHBOARD ADMINISTRATOR &amp; IOT (1440 x 900)</text>
+  <g transform="translate(1600, 160)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">02. DASHBOARD ADMINISTRATOR &amp; IOT GATE</text>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
+  <defs>
+    <filter id="dashShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="1" stdDeviation="3" flood-color="#000000" flood-opacity="0.05"/>
+    </filter>
+  </defs>
+
   <rect width="1440" height="900" fill="#f8fafc" />
 
-  <!-- Sidebar -->
-  <rect x="0" y="0" width="260" height="900" fill="#0f172a" />
-  <!-- Brand -->
-  <rect x="24" y="24" width="36" height="36" rx="8" fill="#4f46e5" />
-  <text x="42" y="48" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="18" text-anchor="middle">A</text>
-  <text x="70" y="42" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15">ABSENSI RFID</text>
-  <text x="70" y="56" fill="#64748b" font-family="Arial, sans-serif" font-size="10">PANEL ADMINISTRATOR</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SIDEBAR (Forest Dark: #163300 / #0e2400)                        -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="0" y="0" width="250" height="900" fill="#163300" />
+  
+  <!-- Brand Header -->
+  <circle cx="45" cy="40" r="18" fill="#9fe870" />
+  <text x="45" y="46" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="16" text-anchor="middle">NU</text>
+  <text x="75" y="38" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13">ABSENSI RFID</text>
+  <text x="75" y="52" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="10">SMK NU WARGABINANGUN</text>
 
-  <!-- Nav items -->
-  <g font-family="Arial, sans-serif" font-size="13">
-    <!-- Active Item: Dashboard -->
-    <rect x="16" y="90" width="228" height="42" rx="8" fill="#1e293b" />
-    <rect x="16" y="90" width="4" height="42" rx="2" fill="#38bdf8" />
-    <text x="45" y="116" fill="#38bdf8" font-weight="bold">📊 Dashboard Utama</text>
+  <!-- Sidebar Nav Items -->
+  <g transform="translate(14, 85)" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">
+    <!-- Active Item: Statistik Presensi -->
+    <rect x="0" y="0" width="222" height="40" rx="8" fill="#285804" />
+    <text x="38" y="25" fill="#9fe870" font-weight="bold">📊 Statistik Presensi</text>
 
-    <text x="45" y="160" fill="#94a3b8">👥 Kelola Siswa &amp; Kelas</text>
-    <text x="45" y="202" fill="#94a3b8">👨‍🏫 Master Guru &amp; Staf</text>
-    <text x="45" y="244" fill="#94a3b8">🏢 Kelompok &amp; DUDI PKL</text>
-    <text x="45" y="286" fill="#94a3b8">📟 Perangkat IoT RFID</text>
-    <text x="45" y="328" fill="#94a3b8">📅 Jadwal Masuk &amp; Libur</text>
-    <text x="45" y="370" fill="#94a3b8">📈 Rekapitulasi Presensi</text>
-    <text x="45" y="412" fill="#94a3b8">📱 Konfigurasi Telegram</text>
-    <text x="45" y="454" fill="#94a3b8">⚙️ Pengaturan Sistem</text>
+    <text x="38" y="65" fill="#d1d5db">👥 Kelola Siswa</text>
+    <text x="38" y="105" fill="#d1d5db">👨‍🏫 Master Guru</text>
+    <text x="38" y="145" fill="#9fe870" font-weight="bold">🏢 Kelompok PKL</text>
+    <text x="38" y="185" fill="#d1d5db">📟 Perangkat IoT</text>
+    <text x="38" y="225" fill="#d1d5db">📅 Jadwal Siswa &amp; Guru</text>
+    <text x="38" y="265" fill="#d1d5db">📈 Rekapitulasi</text>
+    <text x="38" y="305" fill="#d1d5db">📱 Bot Telegram</text>
+    <text x="38" y="345" fill="#d1d5db">💬 Asisten Cerdas AI</text>
+    <text x="38" y="385" fill="#d1d5db">⚙️ Pengaturan Aplikasi</text>
   </g>
 
-  <!-- Top Navbar -->
-  <rect x="260" y="0" width="1180" height="70" fill="#ffffff" />
-  <line x1="260" y1="70" x2="1440" y2="70" stroke="#e2e8f0" stroke-width="1" />
-  <text x="290" y="42" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="18">Dashboard Ringkasan Eksekutif &amp; Infrastruktur IoT</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- TOP NAVBAR                                                      -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <rect x="250" y="0" width="1190" height="64" fill="#ffffff" />
+  <line x1="250" y1="64" x2="1440" y2="64" stroke="#e2e8f0" stroke-width="1" />
 
-  <rect x="1100" y="16" width="40" height="38" rx="8" fill="#f1f5f9" />
-  <text x="1120" y="40" fill="#64748b" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">🔔</text>
-  <circle cx="1132" cy="22" r="4" fill="#ef4444" />
+  <text x="280" y="38" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">Statistik Presensi</text>
+  <rect x="445" y="22" width="75" height="22" rx="4" fill="#ecfdf5" stroke="#a7f3d0" stroke-width="1" />
+  <circle cx="456" cy="33" r="3" fill="#10b981" />
+  <text x="488" y="37" fill="#047857" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">Realtime</text>
 
-  <!-- Admin Profile -->
-  <rect x="1160" y="14" width="240" height="42" rx="21" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
-  <circle cx="1182" cy="35" r="14" fill="#4f46e5" />
-  <text x="1182" y="40" fill="#ffffff" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">AD</text>
-  <text x="1205" y="32" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Administrator Utama</text>
-  <text x="1205" y="46" fill="#10b981" font-family="Arial, sans-serif" font-size="10">● Superadmin Online</text>
+  <!-- Right Actions Header -->
+  <rect x="910" y="17" width="120" height="32" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+  <text x="970" y="37" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">📟 Perangkat IoT</text>
 
-  <!-- Metric Stat Cards (4 items) -->
-  <g transform="translate(290, 95)">
-    <!-- Stat 1 -->
-    <rect x="0" y="0" width="260" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="20" y="32" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Total Siswa Terdaftar</text>
-    <text x="20" y="68" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="28">1.240</text>
-    <text x="20" y="92" fill="#10b981" font-family="Arial, sans-serif" font-size="11">↑ 100% Memiliki Kartu RFID</text>
-    <rect x="195" y="20" width="45" height="45" rx="8" fill="#eff6ff" />
-    <text x="217" y="48" fill="#3b82f6" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">🎓</text>
+  <rect x="1040" y="17" width="120" height="32" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+  <text x="1100" y="37" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">📥 Rekap Absensi</text>
 
-    <!-- Stat 2 -->
-    <rect x="285" y="0" width="260" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="305" y="32" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Tingkat Hadir Hari Ini</text>
-    <text x="305" y="68" fill="#10b981" font-family="Arial, sans-serif" font-weight="bold" font-size="28">97.8%</text>
-    <text x="305" y="92" fill="#10b981" font-family="Arial, sans-serif" font-size="11">1.213 Hadir / 15 Sakit / 12 Izin</text>
-    <rect x="480" y="20" width="45" height="45" rx="8" fill="#ecfdf5" />
-    <text x="502" y="48" fill="#10b981" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">✅</text>
+  <rect x="1170" y="17" width="105" height="32" rx="6" fill="#163300" />
+  <text x="1222" y="37" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">⟳ Muat Ulang</text>
 
-    <!-- Stat 3 -->
-    <rect x="570" y="0" width="260" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="590" y="32" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Siswa PKL Aktif</text>
-    <text x="590" y="68" fill="#6366f1" font-family="Arial, sans-serif" font-weight="bold" font-size="28">48 Siswa</text>
-    <text x="590" y="92" fill="#6366f1" font-family="Arial, sans-serif" font-size="11">12 DUDI Mitra • 100% Geofenced</text>
-    <rect x="765" y="20" width="45" height="45" rx="8" fill="#eef2ff" />
-    <text x="787" y="48" fill="#6366f1" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">📍</text>
+  <!-- User Profile Chip -->
+  <circle cx="1310" cy="33" r="15" fill="#e2f6d5" />
+  <text x="1310" y="38" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" text-anchor="middle">AD</text>
+  <text x="1335" y="37" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Admin</text>
 
-    <!-- Stat 4 -->
-    <rect x="855" y="0" width="260" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="875" y="32" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Status Node IoT RFID</text>
-    <text x="875" y="68" fill="#0ea5e9" font-family="Arial, sans-serif" font-weight="bold" font-size="28">8 / 8 Online</text>
-    <text x="875" y="92" fill="#10b981" font-family="Arial, sans-serif" font-size="11">Avg Latency 14ms (Normal)</text>
-    <rect x="1050" y="20" width="45" height="45" rx="8" fill="#f0f9ff" />
-    <text x="1072" y="48" fill="#0ea5e9" font-family="Arial, sans-serif" font-size="20" text-anchor="middle">⚡</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- 4 STATISTIC CARDS (Exact match to lines 94-150 in admin.php)   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <g transform="translate(280, 85)" filter="url(#dashShadow)">
+    <!-- Card 1: Siswa Hadir -->
+    <rect x="0" y="0" width="265" height="115" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="20" y="28" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" letter-spacing="0.5">SISWA HADIR HARI INI</text>
+    <text x="20" y="65" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="30">1.213</text>
+    <text x="115" y="65" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="14">/ 1.240</text>
+    <text x="20" y="95" fill="#10b981" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">97.8% Presensi Aktif (RFID &amp; PKL)</text>
+    <rect x="205" y="20" width="42" height="42" rx="8" fill="#ecfdf5" />
+    <text x="226" y="47" fill="#10b981" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">🎓</text>
+
+    <!-- Card 2: Guru Hadir -->
+    <rect x="285" y="0" width="265" height="115" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="305" y="28" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" letter-spacing="0.5">GURU HADIR HARI INI</text>
+    <text x="305" y="65" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="30">63</text>
+    <text x="355" y="65" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="14">/ 64</text>
+    <text x="305" y="95" fill="#10b981" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">98.4% Kehadiran Pengajar (QR)</text>
+    <rect x="490" y="20" width="42" height="42" rx="8" fill="#eff6ff" />
+    <text x="511" y="47" fill="#3b82f6" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">👨‍🏫</text>
+
+    <!-- Card 3: Siswa PKL Aktif -->
+    <rect x="570" y="0" width="265" height="115" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="590" y="28" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" letter-spacing="0.5">SISWA PKL AKTIF (DUDI)</text>
+    <text x="590" y="65" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="30">48</text>
+    <text x="640" y="65" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="14">Siswa</text>
+    <text x="590" y="95" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">12 DUDI Mitra • 100% Geofenced</text>
+    <rect x="775" y="20" width="42" height="42" rx="8" fill="#e0f2fe" />
+    <text x="796" y="47" fill="#0284c7" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">📍</text>
+
+    <!-- Card 4: Perangkat IoT Hardware Gate -->
+    <rect x="855" y="0" width="265" height="115" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="875" y="28" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" letter-spacing="0.5">STATUS IOT RFID GATE</text>
+    <text x="875" y="65" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="30">8 / 8</text>
+    <text x="945" y="65" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="14">Online</text>
+    <text x="875" y="95" fill="#10b981" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">Avg Latensi 14ms (Lancar)</text>
+    <rect x="1060" y="20" width="42" height="42" rx="8" fill="#ecfdf5" />
+    <text x="1081" y="47" fill="#10b981" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">⚡</text>
   </g>
 
-  <!-- Main Content Layout (Table & IoT Gate status) -->
-  <!-- Left Section: Realtime Attendance Feed Table -->
-  <g transform="translate(290, 230)">
-    <rect x="0" y="0" width="750" height="630" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="24" y="36" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Aktivitas Presensi Realtime Terkini</text>
-    <text x="24" y="56" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Aliran data transaksi masuk via RFID Gate, QR Scanner Guru &amp; Swafoto PKL</text>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MAIN CHARTS & REALTIME ATTENDANCE FEED                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <g transform="translate(280, 220)" filter="url(#dashShadow)">
+    <!-- Realtime Attendance Table Card (Exact columns from app) -->
+    <rect x="0" y="0" width="740" height="640" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="24" y="35" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">Aktivitas Presensi Masuk Terkini</text>
+    <text x="24" y="55" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Aliran data transaksi masuk via RFID Gate, QR Scanner Guru &amp; Swafoto PKL</text>
 
     <!-- Table Header -->
-    <rect x="20" y="80" width="710" height="38" rx="6" fill="#f8fafc" />
-    <text x="35" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">WAKTU</text>
-    <text x="110" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">NAMA SISWA / GURU</text>
-    <text x="290" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">KELAS / JABATAN</text>
-    <text x="440" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">METODE</text>
-    <text x="560" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">STATUS</text>
-    <text x="660" y="104" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11">NOTIF</text>
+    <rect x="20" y="80" width="700" height="38" rx="6" fill="#f8fafc" />
+    <text x="35" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">WAKTU</text>
+    <text x="110" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">NAMA SISWA / GURU</text>
+    <text x="290" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">KELAS / JABATAN</text>
+    <text x="440" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">METODE</text>
+    <text x="560" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">STATUS</text>
+    <text x="650" y="104" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">NOTIF</text>
 
-    <!-- Row 1 -->
-    <line x1="20" y1="165" x2="730" y2="165" stroke="#f1f5f9" stroke-width="1" />
-    <text x="35" y="145" fill="#0f172a" font-family="Courier, monospace" font-size="12">06:58:12</text>
-    <text x="110" y="145" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Muhammad Rizky</text>
-    <text x="290" y="145" fill="#64748b" font-family="Arial, sans-serif" font-size="12">XII RPL 1</text>
-    <text x="440" y="145" fill="#4f46e5" font-family="Arial, sans-serif" font-size="11">RFID Gerbang 1</text>
-    <rect x="560" y="130" width="70" height="22" rx="4" fill="#dcfce7" />
-    <text x="595" y="145" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HADIR</text>
-    <text x="675" y="145" fill="#0284c7" font-family="Arial, sans-serif" font-size="12">Telegram ✓</text>
+    <!-- Row 1 (RFID Siswa) -->
+    <line x1="20" y1="165" x2="720" y2="165" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="145" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">06:58:12</text>
+    <text x="110" y="145" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Ahmad Fauzi</text>
+    <text x="290" y="145" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">XII RPL 1</text>
+    <text x="440" y="145" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">RFID Gerbang 1</text>
+    <rect x="560" y="130" width="65" height="22" rx="4" fill="#dcfce7" />
+    <text x="592" y="145" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HADIR</text>
+    <text x="660" y="145" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Telegram ✓</text>
 
-    <!-- Row 2 -->
-    <line x1="20" y1="215" x2="730" y2="215" stroke="#f1f5f9" stroke-width="1" />
-    <text x="35" y="195" fill="#0f172a" font-family="Courier, monospace" font-size="12">07:01:45</text>
-    <text x="110" y="195" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Dewi Lestari</text>
-    <text x="290" y="195" fill="#64748b" font-family="Arial, sans-serif" font-size="12">XII TKJ 2</text>
-    <text x="440" y="195" fill="#0284c7" font-family="Arial, sans-serif" font-size="11">PKL (PT Telkom)</text>
-    <rect x="560" y="180" width="70" height="22" rx="4" fill="#e0f2fe" />
-    <text x="595" y="195" fill="#0369a1" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">PKL HADIR</text>
-    <text x="675" y="195" fill="#0284c7" font-family="Arial, sans-serif" font-size="12">Telegram ✓</text>
+    <!-- Row 2 (PKL Siswa) -->
+    <line x1="20" y1="215" x2="720" y2="215" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="195" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">07:01:45</text>
+    <text x="110" y="195" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Dewi Lestari</text>
+    <text x="290" y="195" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">XII TKJ 2</text>
+    <text x="440" y="195" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">PKL (PT Telkom)</text>
+    <rect x="560" y="180" width="65" height="22" rx="4" fill="#e0f2fe" />
+    <text x="592" y="195" fill="#0369a1" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">PKL</text>
+    <text x="660" y="195" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Telegram ✓</text>
 
-    <!-- Row 3 -->
-    <line x1="20" y1="265" x2="730" y2="215" stroke="#f1f5f9" stroke-width="1" />
-    <text x="35" y="245" fill="#0f172a" font-family="Courier, monospace" font-size="12">07:04:10</text>
-    <text x="110" y="245" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Drs. H. Mulyadi</text>
-    <text x="290" y="245" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Guru PAI</text>
-    <text x="440" y="245" fill="#d97706" font-family="Arial, sans-serif" font-size="11">QR Scan Kamera</text>
-    <rect x="560" y="230" width="70" height="22" rx="4" fill="#dcfce7" />
-    <text x="595" y="245" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HADIR</text>
-    <text x="675" y="245" fill="#64748b" font-family="Arial, sans-serif" font-size="12">-</text>
+    <!-- Row 3 (QR Guru) -->
+    <line x1="20" y1="265" x2="720" y2="265" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="245" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">07:04:10</text>
+    <text x="110" y="245" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Budi Santoso, S.Kom</text>
+    <text x="290" y="245" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Guru Produktif RPL</text>
+    <text x="440" y="245" fill="#d97706" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Barcode Scanner</text>
+    <rect x="560" y="230" width="65" height="22" rx="4" fill="#dcfce7" />
+    <text x="592" y="245" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HADIR</text>
+    <text x="660" y="245" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">-</text>
 
-    <!-- Row 4 -->
-    <line x1="20" y1="315" x2="730" y2="315" stroke="#f1f5f9" stroke-width="1" />
-    <text x="35" y="295" fill="#0f172a" font-family="Courier, monospace" font-size="12">07:18:02</text>
-    <text x="110" y="295" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Fajar Ramadhan</text>
-    <text x="290" y="295" fill="#64748b" font-family="Arial, sans-serif" font-size="12">XI TSM 1</text>
-    <text x="440" y="295" fill="#4f46e5" font-family="Arial, sans-serif" font-size="11">RFID Gerbang 2</text>
-    <rect x="560" y="280" width="70" height="22" rx="4" fill="#fef3c7" />
-    <text x="595" y="295" fill="#b45309" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">TERLAMBAT</text>
-    <text x="675" y="295" fill="#0284c7" font-family="Arial, sans-serif" font-size="12">Telegram ✓</text>
+    <!-- Row 4 (Terlambat) -->
+    <line x1="20" y1="315" x2="720" y2="315" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="295" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">07:18:02</text>
+    <text x="110" y="295" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Fajar Ramadhan</text>
+    <text x="290" y="295" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">XI TSM 1</text>
+    <text x="440" y="295" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">RFID Gerbang 2</text>
+    <rect x="560" y="280" width="75" height="22" rx="4" fill="#fef3c7" />
+    <text x="597" y="295" fill="#b45309" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">TERLAMBAT</text>
+    <text x="660" y="295" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Telegram ✓</text>
   </g>
 
-  <!-- Right Section: Node Hardware Status & Quick Config -->
-  <g transform="translate(1065, 230)">
-    <rect x="0" y="0" width="345" height="630" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="20" y="36" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Status Gerbang &amp; Hardware</text>
+  <!-- Right Section: IoT Node Health & Cloud AI Status -->
+  <g transform="translate(1040, 220)" filter="url(#dashShadow)">
+    <rect x="0" y="0" width="370" height="640" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="20" y="35" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">Infrastruktur Node Gerbang</text>
 
     <!-- Node 1 -->
-    <rect x="20" y="65" width="305" height="110" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
-    <circle cx="40" cy="90" r="6" fill="#10b981" />
-    <text x="55" y="94" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Gerbang RFID Siswa A</text>
-    <text x="55" y="114" fill="#64748b" font-family="Arial, sans-serif" font-size="11">Lokasi: Pintu Masuk Depan</text>
-    <text x="55" y="132" fill="#64748b" font-family="Arial, sans-serif" font-size="11">IP: 192.168.1.101 • RC522 Reader</text>
-    <rect x="55" y="142" width="80" height="20" rx="4" fill="#dcfce7" />
-    <text x="95" y="156" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">ONLINE</text>
+    <rect x="20" y="65" width="330" height="105" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+    <circle cx="40" cy="90" r="5" fill="#10b981" />
+    <text x="55" y="94" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">Gerbang RFID Siswa A</text>
+    <text x="55" y="114" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Pintu Masuk Utama • ESP32 + RC522</text>
+    <text x="55" y="132" fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="11">IP: 192.168.1.101 • Latensi 12ms</text>
+    <rect x="55" y="142" width="70" height="18" rx="4" fill="#dcfce7" />
+    <text x="90" y="155" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="9" text-anchor="middle">ONLINE</text>
 
     <!-- Node 2 -->
-    <rect x="20" y="190" width="305" height="110" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
-    <circle cx="40" cy="215" r="6" fill="#10b981" />
-    <text x="55" y="219" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Gerbang RFID Siswa B</text>
-    <text x="55" y="239" fill="#64748b" font-family="Arial, sans-serif" font-size="11">Lokasi: Pintu Samping Parkir</text>
-    <text x="55" y="257" fill="#64748b" font-family="Arial, sans-serif" font-size="11">IP: 192.168.1.102 • RC522 Reader</text>
-    <rect x="55" y="267" width="80" height="20" rx="4" fill="#dcfce7" />
-    <text x="95" y="281" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">ONLINE</text>
+    <rect x="20" y="185" width="330" height="105" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+    <circle cx="40" cy="210" r="5" fill="#10b981" />
+    <text x="55" y="214" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">Gerbang RFID Siswa B</text>
+    <text x="55" y="234" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Pintu Parkir Samping • ESP32 + RC522</text>
+    <text x="55" y="252" fill="#64748b" font-family="'JetBrains Mono', monospace" font-size="11">IP: 192.168.1.102 • Latensi 15ms</text>
+    <rect x="55" y="262" width="70" height="18" rx="4" fill="#dcfce7" />
+    <text x="90" y="275" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="9" text-anchor="middle">ONLINE</text>
 
-    <!-- Node 3: AI Engine -->
-    <rect x="20" y="315" width="305" height="130" rx="8" fill="#faf5ff" stroke="#e9d5ff" stroke-width="1" />
-    <text x="40" y="342" fill="#7e22ce" font-family="Arial, sans-serif" font-weight="bold" font-size="14">🧠 Cloud AI Assistant Engine</text>
-    <text x="40" y="364" fill="#6b21a8" font-family="Arial, sans-serif" font-size="11">Provider Utama: Groq (Llama-3.3-70b)</text>
-    <text x="40" y="382" fill="#6b21a8" font-family="Arial, sans-serif" font-size="11">Fallback Model: Gemini 1.5 Flash</text>
-    <text x="40" y="400" fill="#6b21a8" font-family="Arial, sans-serif" font-size="11">Status Guardrail: SOP Sekolah Aktif</text>
-    <rect x="40" y="412" width="130" height="22" rx="4" fill="#7e22ce" />
-    <text x="105" y="427" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">STATUS: READY</text>
+    <!-- AI Assistant Health -->
+    <rect x="20" y="305" width="330" height="135" rx="8" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1" />
+    <text x="40" y="332" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="14">🤖 Chatbot AI Assistant</text>
+    <text x="40" y="354" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Engine: Groq Cloud (Llama-3.3-70b)</text>
+    <text x="40" y="372" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Koneksi Database: Grounded Context</text>
+    <text x="40" y="390" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Guardrail Sekolah: SOP Aktif</text>
+    <rect x="40" y="402" width="115" height="22" rx="4" fill="#163300" />
+    <text x="97" y="417" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">READY &amp; CONNECTED</text>
   </g>
 </svg>
   </g>
 
-  <!-- 03. Fitur Presensi PKL Mobile -->
-  <g transform="translate(3100, 180)" filter="url(#megaShadow)">
-    <text x="0" y="-20" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="20">03. MOBILE VIEW: PRESENSI MANDIRI PKL (390 x 844)</text>
+  <!-- 03. Presensi PKL Mobile -->
+  <g transform="translate(3100, 160)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">03. PRESENSI MANDIRI PKL (Mobile 390x844)</text>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844">
-  <defs>
-    <linearGradient id="camGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b" />
-      <stop offset="100%" stop-color="#0f172a" />
-    </linearGradient>
-  </defs>
+  <!-- iPhone 15 frame -->
+  <rect width="390" height="844" rx="40" fill="#f8fafc" stroke="#163300" stroke-width="4" />
 
-  <!-- Mobile Frame Background -->
-  <rect width="390" height="844" rx="40" fill="#0f172a" />
-
-  <!-- Mobile Status Bar -->
-  <text x="32" y="34" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">07:15</text>
-  <text x="320" y="34" fill="#ffffff" font-family="Arial, sans-serif" font-size="12">5G 📶 100%</text>
+  <!-- Status Bar -->
+  <rect x="0" y="0" width="390" height="44" rx="40" fill="#163300" />
+  <rect x="0" y="24" width="390" height="20" fill="#163300" />
+  <text x="32" y="30" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">07:15</text>
+  <text x="325" y="30" fill="#ffffff" font-family="Arial, sans-serif" font-size="11">📶 5G 100%</text>
 
   <!-- App Header -->
-  <rect x="0" y="50" width="390" height="60" fill="#1e293b" />
-  <text x="24" y="86" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Presensi Mandiri PKL</text>
-  <rect x="270" y="68" width="96" height="24" rx="12" fill="#065f46" />
-  <text x="318" y="84" fill="#6ee7b7" font-family="Arial, sans-serif" font-weight="bold" font-size="10" text-anchor="middle">● HARI AKTIF</text>
+  <rect x="0" y="44" width="390" height="56" fill="#163300" />
+  <text x="20" y="78" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="16">Presensi Mandiri PKL</text>
+  <rect x="260" y="60" width="110" height="24" rx="12" fill="#285804" />
+  <circle cx="272" cy="72" r="3.5" fill="#9fe870" />
+  <text x="320" y="76" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HARI AKTIF DUDI</text>
 
   <!-- DUDI Card Info -->
-  <rect x="20" y="125" width="350" height="85" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-  <text x="36" y="150" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Tempat Penugasan Magang (DUDI):</text>
-  <text x="36" y="172" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15">PT Telkom Akses Cirebon</text>
-  <text x="36" y="192" fill="#38bdf8" font-family="Arial, sans-serif" font-size="11">Jl. Pagongan No. 12 • Jam Kerja: 07:30 - 16:30</text>
+  <g transform="translate(16, 112)">
+    <rect x="0" y="0" width="358" height="80" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="18" y="26" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">LOKASI PENEMPATAN MAGANG (DUDI)</text>
+    <text x="18" y="48" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">PT Telkom Akses Cirebon</text>
+    <text x="18" y="66" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Jl. Pagongan No. 12 • Jam Operasional: 07:30 - 16:30 WIB</text>
+  </g>
 
-  <!-- Live Camera Viewfinder Box -->
-  <rect x="20" y="225" width="350" height="300" rx="16" fill="url(#camGrad)" stroke="#3b82f6" stroke-width="2" />
-  
-  <!-- Viewfinder Overlay Elements -->
-  <!-- Target Face Outline -->
-  <ellipse cx="195" cy="360" rx="80" ry="105" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6,4" />
-  <circle cx="195" cy="340" r="30" fill="#334155" opacity="0.6" />
-  <text x="195" y="346" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">👤</text>
-  <text x="195" y="445" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">Posisikan wajah di dalam bingkai</text>
+  <!-- Live WebRTC Camera Viewfinder -->
+  <g transform="translate(16, 204)">
+    <rect x="0" y="0" width="358" height="280" rx="16" fill="#0f172a" stroke="#163300" stroke-width="2" />
+    
+    <!-- Face Oval Guide -->
+    <ellipse cx="179" cy="135" rx="75" ry="95" fill="none" stroke="#9fe870" stroke-width="2" stroke-dasharray="6,4" />
+    <circle cx="179" cy="120" r="28" fill="#1e293b" opacity="0.6" />
+    <text x="179" y="126" fill="#94a3b8" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">👤</text>
+    <text x="179" y="215" fill="#e2e8f0" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" text-anchor="middle">Posisikan wajah di dalam bingkai oval</text>
 
-  <!-- Top Viewfinder Badge -->
-  <rect x="36" y="240" width="130" height="26" rx="13" fill="#0f172a" opacity="0.8" />
-  <circle cx="50" cy="253" r="4" fill="#ef4444" />
-  <text x="62" y="257" fill="#ffffff" font-family="Arial, sans-serif" font-size="10">LIVE WebRTC CAM</text>
+    <!-- Top Left Live Badge -->
+    <rect x="14" y="14" width="135" height="24" rx="6" fill="#163300" opacity="0.9" />
+    <circle cx="26" cy="26" r="3.5" fill="#ef4444" />
+    <text x="78" y="30" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="9" text-anchor="middle">LIVE WebRTC CAMERA</text>
+  </g>
 
   <!-- GPS Geofence Radar Card -->
-  <rect x="20" y="540" width="350" height="120" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
-  <circle cx="50" cy="575" r="18" fill="#065f46" />
-  <text x="50" y="581" fill="#34d399" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">📍</text>
-  <text x="80" y="568" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Verifikasi Titik Geofencing</text>
-  
-  <text x="80" y="590" fill="#94a3b8" font-family="Arial, sans-serif" font-size="12">Jarak saat ini: <tspan fill="#4ade80" font-weight="bold">18 meter</tspan> dari kantor DUDI</text>
-  <text x="80" y="608" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Radius toleransi maksimal: 50 meter</text>
+  <g transform="translate(16, 496)">
+    <rect x="0" y="0" width="358" height="115" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <circle cx="36" cy="36" r="18" fill="#e2f6d5" />
+    <text x="36" y="42" fill="#163300" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">📍</text>
+    <text x="65" y="30" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">Verifikasi Geofencing Haversine</text>
+    <text x="65" y="48" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Jarak ke titik DUDI: <tspan fill="#16a34a" font-weight="bold">18 meter</tspan> (Radius: 50m)</text>
 
-  <rect x="36" y="625" width="318" height="24" rx="6" fill="#065f46" />
-  <text x="195" y="641" fill="#a7f3d0" font-family="Arial, sans-serif" font-weight="bold" font-size="11" text-anchor="middle">✓ LOKASI VALID DI DALAM RADIUS DUDI</text>
+    <!-- Success Badge -->
+    <rect x="18" y="70" width="322" height="30" rx="6" fill="#e2f6d5" />
+    <text x="179" y="90" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" text-anchor="middle">✓ KOORDINAT GPS VALID DI DALAM RADIUS DUDI</text>
+  </g>
 
-  <!-- Submit Action Button -->
-  <rect x="20" y="675" width="350" height="52" rx="14" fill="#4f46e5" />
-  <text x="195" y="707" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15" text-anchor="middle">📸 Ambil Swafoto &amp; Kirim Presensi</text>
+  <!-- Submit Button (Electric Lime #9fe870) -->
+  <g transform="translate(16, 625)">
+    <rect x="0" y="0" width="358" height="52" rx="26" fill="#9fe870" stroke="#163300" stroke-width="1" />
+    <text x="179" y="32" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="14" text-anchor="middle">📸 Ambil Swafoto &amp; Kirim Presensi</text>
+  </g>
 
   <!-- Riwayat Button -->
-  <rect x="20" y="740" width="350" height="44" rx="14" fill="#1e293b" stroke="#475569" stroke-width="1" />
-  <text x="195" y="767" fill="#cbd5e1" font-family="Arial, sans-serif" font-weight="bold" font-size="13" text-anchor="middle">Lihat Riwayat Presensi PKL</text>
+  <g transform="translate(16, 688)">
+    <rect x="0" y="0" width="358" height="44" rx="22" fill="#ffffff" stroke="#163300" stroke-width="1.5" />
+    <text x="179" y="27" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12" text-anchor="middle">Lihat Riwayat Presensi PKL</text>
+  </g>
 
-  <!-- Home Indicator -->
-  <rect x="135" y="830" width="120" height="5" rx="2.5" fill="#475569" />
+  <!-- Home Indicator Bar -->
+  <rect x="135" y="826" width="120" height="5" rx="2.5" fill="#94a3b8" />
 </svg>
   </g>
 
   <!-- ROW 2 -->
-  <!-- 04. Fitur Chatbot AI -->
-  <g transform="translate(100, 1250)" filter="url(#megaShadow)">
-    <text x="0" y="-20" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="20">04. FITUR ASISTEN CERDAS AI &amp; CHATBOT (1440 x 900)</text>
+  <!-- 04. Chatbot AI -->
+  <g transform="translate(100, 1220)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">04. ASISTEN CERDAS AI &amp; CHATBOT MODAL</text>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
-  <rect width="1440" height="900" fill="#0f172a" />
+  <!-- Backdrop -->
+  <rect width="1440" height="900" fill="#0f172a" opacity="0.6" />
 
-  <!-- Backdrop background dashboard faded -->
-  <rect x="0" y="0" width="1440" height="900" fill="#1e1b4b" opacity="0.3" />
+  <!-- Chatbot Window Centered -->
+  <g transform="translate(420, 50)">
+    <!-- Container -->
+    <rect x="0" y="0" width="600" height="800" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1" />
 
-  <!-- Chatbot Window Centered / Docked Right -->
-  <!-- Main Modal Card -->
-  <rect x="420" y="50" width="600" height="800" rx="16" fill="#ffffff" stroke="#334155" stroke-width="1" />
-  
-  <!-- Window Header -->
-  <rect x="420" y="50" width="600" height="70" rx="16" fill="#0f172a" />
-  <circle cx="455" cy="85" r="20" fill="#4f46e5" />
-  <text x="455" y="92" fill="#ffffff" font-family="Arial, sans-serif" font-size="18" text-anchor="middle">🤖</text>
-  <text x="490" y="78" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Asisten Cerdas Absensi &amp; PKL</text>
-  <text x="490" y="96" fill="#94a3b8" font-family="Arial, sans-serif" font-size="11">Powered by Groq Llama-3.3-70b • Konteks Database Terintegrasi</text>
-
-  <circle cx="985" cy="85" r="14" fill="#334155" />
-  <text x="985" y="90" fill="#ffffff" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">✕</text>
-
-  <!-- Chat Body Message Stream -->
-  <rect x="420" y="120" width="600" height="580" fill="#f8fafc" />
-
-  <!-- Bot Greeting Bubble -->
-  <g transform="translate(445, 140)">
-    <rect x="0" y="0" width="460" height="80" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="18" y="26" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">Halo! Saya Asisten AI Presensi SMK NU Wargabinangun.</text>
-    <text x="18" y="46" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">Silakan tanyakan rekapitulasi data kehadiran, status siswa PKL,</text>
-    <text x="18" y="66" fill="#0f172a" font-family="Arial, sans-serif" font-size="13">atau jadwal aktif sekolah hari ini.</text>
-  </g>
-
-  <!-- User Bubble 1 -->
-  <g transform="translate(560, 240)">
-    <rect x="0" y="0" width="435" height="55" rx="12" fill="#4f46e5" />
-    <text x="18" y="24" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="13">Berapa siswa kelas XII RPL 1 yang hadir dan</text>
-    <text x="18" y="44" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="13">sedang melaksanakan PKL hari ini?</text>
-  </g>
-
-  <!-- Bot Response Bubble 1 (Grounded with DB facts) -->
-  <g transform="translate(445, 315)">
-    <rect x="0" y="0" width="520" height="230" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
-    <text x="18" y="28" fill="#4f46e5" font-family="Arial, sans-serif" font-weight="bold" font-size="13">📊 Laporan Kehadiran Kelas XII RPL 1 (08 Nov 2026):</text>
+    <!-- Header (Forest Dark #163300) -->
+    <rect x="0" y="0" width="600" height="68" rx="16" fill="#163300" />
+    <rect x="0" y="50" width="600" height="18" fill="#163300" />
     
-    <text x="18" y="55" fill="#334155" font-family="Arial, sans-serif" font-size="12">• Total Siswa Kelas: <tspan font-weight="bold">36 Siswa</tspan></text>
-    <text x="18" y="78" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Hadir Reguler di Sekolah: 30 Siswa (Tap RFID)</text>
-    <text x="18" y="101" fill="#0284c7" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Presensi Mandiri PKL: 5 Siswa (Semua dalam radius DUDI)</text>
-    <text x="36" y="121" fill="#64748b" font-family="Arial, sans-serif" font-size="11">- 3 siswa di PT Telkom Akses (Jarak 12-24m)</text>
-    <text x="36" y="139" fill="#64748b" font-family="Arial, sans-serif" font-size="11">- 2 siswa di PT Inovasi Solusi (Jarak 18m)</text>
-    <text x="18" y="162" fill="#b45309" font-family="Arial, sans-serif" font-size="12">• Izin Sakit: 1 Siswa (Surat dokter telah diverifikasi Wali Kelas)</text>
-    <text x="18" y="185" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="12">• Alfa / Tanpa Keterangan: 0 Siswa</text>
+    <!-- FontAwesome Icon Circle -->
+    <circle cx="40" cy="34" r="18" fill="#9fe870" />
+    <text x="40" y="40" fill="#163300" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle">🤖</text>
+    <text x="70" y="30" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">Asisten Cerdas Absensi &amp; PKL</text>
+    <text x="70" y="48" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">SMK NU Wargabinangun • Konteks Database Terintegrasi</text>
+
+    <!-- Close button -->
+    <circle cx="565" cy="34" r="14" fill="#285804" />
+    <text x="565" y="39" fill="#ffffff" font-family="Arial, sans-serif" font-size="12" text-anchor="middle">✕</text>
+
+    <!-- Chat Message Stream Body -->
+    <rect x="0" y="68" width="600" height="610" fill="#f8fafc" />
+
+    <!-- Bot Bubble 1 (Greeting) -->
+    <g transform="translate(24, 90)">
+      <rect x="0" y="0" width="460" height="85" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="18" y="26" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Halo! Saya Asisten AI Presensi SMK NU Wargabinangun.</text>
+      <text x="18" y="48" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Saya ditugaskan untuk menjawab pertanyaan data absensi,</text>
+      <text x="18" y="68" fill="#475569" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">status kehadiran siswa, penugasan PKL, atau jadwal sekolah.</text>
+    </g>
+
+    <!-- User Bubble (Inquiry) -->
+    <g transform="translate(136, 195)">
+      <rect x="0" y="0" width="440" height="56" rx="12" fill="#163300" />
+      <text x="18" y="25" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Berapa siswa kelas XII RPL 1 yang hadir di sekolah</text>
+      <text x="18" y="44" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">dan berapa yang sedang melaksanakan PKL hari ini?</text>
+    </g>
+
+    <!-- Bot Response Bubble (Grounded with DB facts) -->
+    <g transform="translate(24, 270)">
+      <rect x="0" y="0" width="520" height="235" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+      <text x="18" y="28" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13">📊 Rekap Kehadiran Terkini — Kelas XII RPL 1 (08 Nov 2026):</text>
+      
+      <text x="18" y="55" fill="#334155" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">• Total Siswa Terdaftar: <tspan font-weight="bold">36 Siswa</tspan></text>
+      <text x="18" y="78" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Hadir di Sekolah: 30 Siswa (Tap Kartu RFID Gerbang)</text>
+      <text x="18" y="101" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Presensi Mandiri PKL: 5 Siswa (Valid Radius Geofence DUDI)</text>
+      <text x="36" y="121" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">- 3 siswa di PT Telkom Akses (Jarak 12-24 meter)</text>
+      <text x="36" y="139" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">- 2 siswa di PT Inovasi Solusi (Jarak 18 meter)</text>
+      <text x="18" y="162" fill="#b45309" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">• Izin Sakit: 1 Siswa (Surat dokter telah diverifikasi)</text>
+      <text x="18" y="185" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">• Alfa / Tanpa Keterangan: 0 Siswa</text>
+      <text x="18" y="214" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">Persentase kehadiran total kelas mencapai <tspan font-weight="bold" fill="#0f172a">97.2%</tspan>.</text>
+    </g>
+
+    <!-- Suggestion Pills -->
+    <g transform="translate(24, 520)">
+      <rect x="0" y="0" width="165" height="28" rx="14" fill="#e2f6d5" />
+      <text x="82" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Siswa terlambat hari ini</text>
+
+      <rect x="175" y="0" width="165" height="28" rx="14" fill="#e2f6d5" />
+      <text x="257" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Status bot Telegram kelas</text>
+
+      <rect x="350" y="0" width="155" height="28" rx="14" fill="#e2f6d5" />
+      <text x="427" y="18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="11" font-weight="bold" text-anchor="middle">Jadwal libur sekolah</text>
+    </g>
+
+    <!-- Input Footer -->
+    <rect x="24" y="565" width="552" height="60" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
+    <text x="42" y="601" fill="#94a3b8" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Ketik pertanyaan seputar absensi atau PKL...</text>
     
-    <text x="18" y="212" fill="#64748b" font-family="Arial, sans-serif" font-size="11">Tingkat kehadiran total kelas mencapai <tspan font-weight="bold" fill="#0f172a">97.2%</tspan>.</text>
+    <rect x="524" y="575" width="42" height="40" rx="8" fill="#163300" />
+    <text x="545" y="600" fill="#9fe870" font-family="Arial, sans-serif" font-size="14" text-anchor="middle">➤</text>
+
+    <!-- Guardrail Notice -->
+    <text x="300" y="650" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="10" text-anchor="middle">Sistem AI mematuhi SOP Sekolah. Hanya melayani pertanyaan presensi &amp; operasional sekolah.</text>
   </g>
-
-  <!-- Suggestion Prompt Pills -->
-  <g transform="translate(445, 570)">
-    <rect x="0" y="0" width="160" height="28" rx="14" fill="#e0e7ff" />
-    <text x="80" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Siswa terlambat hari ini</text>
-
-    <rect x="170" y="0" width="165" height="28" rx="14" fill="#e0e7ff" />
-    <text x="252" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Status bot Telegram kelas</text>
-
-    <rect x="345" y="0" width="160" height="28" rx="14" fill="#e0e7ff" />
-    <text x="425" y="18" fill="#4338ca" font-family="Arial, sans-serif" font-size="11" text-anchor="middle">Rekap PKL minggu ini</text>
-  </g>
-
-  <!-- Input Field Box -->
-  <rect x="445" y="615" width="550" height="65" rx="12" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" />
-  <text x="465" y="652" fill="#94a3b8" font-family="Arial, sans-serif" font-size="13">Ketik pertanyaan seputar absensi atau PKL...</text>
-  
-  <rect x="935" y="627" width="48" height="40" rx="8" fill="#4f46e5" />
-  <text x="959" y="652" fill="#ffffff" font-family="Arial, sans-serif" font-size="16" text-anchor="middle">➤</text>
-
-  <!-- Bottom Guardrail Notice -->
-  <text x="720" y="700" fill="#64748b" font-family="Arial, sans-serif" font-size="10" text-anchor="middle">Sistem AI mematuhi SOP Sekolah. Hanya melayani kueri data absensi &amp; PKL resmi.</text>
 </svg>
   </g>
 
-  <!-- 05. Design System Tokens Card -->
-  <g transform="translate(1600, 1250)" filter="url(#megaShadow)">
-    <text x="0" y="-20" fill="#38bdf8" font-family="Arial, sans-serif" font-weight="bold" font-size="20">05. DESIGN SYSTEM TOKENS &amp; PALET WARNA (1440 x 900)</text>
-    <rect width="1440" height="900" rx="16" fill="#0f172a" stroke="#334155" stroke-width="2" />
+  <!-- 05. Dashboard Siswa -->
+  <g transform="translate(1600, 1220)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">05. DASHBOARD SISWA &amp; KARTU RFID DIGITAL</text>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
+  <rect width="1440" height="900" fill="#f8fafc" />
+
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="250" height="900" fill="#163300" />
+  <circle cx="45" cy="40" r="18" fill="#9fe870" />
+  <text x="45" y="46" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="16" text-anchor="middle">NU</text>
+  <text x="75" y="38" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13">PORTAL SISWA</text>
+  <text x="75" y="52" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="10">SMK NU WARGABINANGUN</text>
+
+  <g transform="translate(14, 85)" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">
+    <rect x="0" y="0" width="222" height="40" rx="8" fill="#285804" />
+    <text x="38" y="25" fill="#9fe870" font-weight="bold">📊 Beranda Siswa</text>
+
+    <text x="38" y="65" fill="#d1d5db">💳 Kartu Digital RFID</text>
+    <text x="38" y="105" fill="#9fe870" font-weight="bold">📍 Presensi Mandiri PKL</text>
+    <text x="38" y="145" fill="#d1d5db">📈 Riwayat Kehadiran</text>
+    <text x="38" y="185" fill="#d1d5db">📝 Pengajuan Izin/Sakit</text>
+    <text x="38" y="225" fill="#d1d5db">💬 Catatan Wali Kelas</text>
+  </g>
+
+  <!-- Top Navbar -->
+  <rect x="250" y="0" width="1190" height="64" fill="#ffffff" />
+  <line x1="250" y1="64" x2="1440" y2="64" stroke="#e2e8f0" stroke-width="1" />
+  <text x="280" y="38" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">Portal Siswa &amp; Kartu RFID Pintar</text>
+
+  <!-- Digital ID Card Section -->
+  <g transform="translate(280, 85)">
+    <!-- Digital Card (Wise Style Forest #163300) -->
+    <rect x="0" y="0" width="460" height="260" rx="16" fill="#163300" stroke="#285804" stroke-width="2" />
+    <circle cx="400" cy="50" r="70" fill="#285804" opacity="0.3" />
+    <text x="35" y="45" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">KARTU TANDA PELAJAR DIGITAL (RFID)</text>
+    <text x="35" y="70" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="18">SMK NU WARGABINANGUN</text>
+
+    <!-- Chip Icon -->
+    <rect x="35" y="95" width="45" height="35" rx="6" fill="#fbbf24" stroke="#d97706" stroke-width="1" />
+    <text x="35" y="165" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="10">UID KARTU RFID FISIK</text>
+    <text x="35" y="185" fill="#ffffff" font-family="'JetBrains Mono', monospace" font-weight="bold" font-size="16">5A:8F:B3:9C:12</text>
+
+    <text x="35" y="225" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="15">AHMAD FAUZI</text>
+    <text x="35" y="242" fill="#d1d5db" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">NIS: 202410842 • Kelas XII RPL 1</text>
+
+    <rect x="340" y="195" width="95" height="34" rx="17" fill="#9fe870" />
+    <text x="387" y="217" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11" text-anchor="middle">AKTIF ✓</text>
+
+    <!-- Monthly Stats Summary -->
+    <rect x="490" y="0" width="630" height="260" rx="16" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="520" y="40" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="16">Akumulasi Kehadiran Bulan Ini (November 2026)</text>
     
-    <text x="60" y="80" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="28">Figma Design Tokens — Sistem Absensi RFID &amp; PKL</text>
-    <text x="60" y="115" fill="#94a3b8" font-family="Arial, sans-serif" font-size="16">Standar Desain UI: Typography Inter, Palet Warna Tailwind CSS, Border Radius 8-16px</text>
+    <g transform="translate(520, 70)">
+      <rect x="0" y="0" width="130" height="85" rx="8" fill="#e2f6d5" />
+      <text x="15" y="28" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Hadir Fisik</text>
+      <text x="15" y="65" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="28">22</text>
 
-    <!-- Palette Colors -->
-    <!-- Slate Core -->
-    <rect x="60" y="160" width="180" height="100" rx="10" fill="#0f172a" stroke="#334155" stroke-width="1" />
-    <text x="75" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Slate 900</text>
-    <text x="75" y="235" fill="#64748b" font-family="Arial, sans-serif" font-size="12">#0f172a (Dark Base)</text>
+      <rect x="145" y="0" width="130" height="85" rx="8" fill="#e0f2fe" />
+      <text x="160" y="28" fill="#075985" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Presensi PKL</text>
+      <text x="160" y="65" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="28">18</text>
 
-    <!-- Indigo Primary -->
-    <rect x="260" y="160" width="180" height="100" rx="10" fill="#4f46e5" />
-    <text x="275" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Indigo 600</text>
-    <text x="275" y="235" fill="#c7d2fe" font-family="Arial, sans-serif" font-size="12">#4f46e5 (Brand Primary)</text>
+      <rect x="290" y="0" width="130" height="85" rx="8" fill="#fef3c7" />
+      <text x="305" y="28" fill="#92400e" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Izin / Sakit</text>
+      <text x="305" y="65" fill="#b45309" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="28">1</text>
 
-    <!-- Emerald Success -->
-    <rect x="460" y="160" width="180" height="100" rx="10" fill="#10b981" />
-    <text x="475" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Emerald 500</text>
-    <text x="475" y="235" fill="#d1fae5" font-family="Arial, sans-serif" font-size="12">#10b981 (Status Hadir)</text>
+      <rect x="435" y="0" width="130" height="85" rx="8" fill="#fee2e2" />
+      <text x="450" y="28" fill="#991b1b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Alfa</text>
+      <text x="450" y="65" fill="#b91c1c" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="28">0</text>
+    </g>
 
-    <!-- Amber Warning -->
-    <rect x="660" y="160" width="180" height="100" rx="10" fill="#f59e0b" />
-    <text x="675" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Amber 500</text>
-    <text x="675" y="235" fill="#fef3c7" font-family="Arial, sans-serif" font-size="12">#f59e0b (Terlambat/Izin)</text>
+    <text x="520" y="195" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Persentase Kehadiran Total: <tspan fill="#163300" font-weight="bold">97.8%</tspan> (Sangat Baik)</text>
+    <rect x="520" y="210" width="570" height="12" rx="6" fill="#e8ebe6" />
+    <rect x="520" y="210" width="557" height="12" rx="6" fill="#9fe870" stroke="#163300" stroke-width="0.5" />
+  </g>
 
-    <!-- Rose Danger -->
-    <rect x="860" y="160" width="180" height="100" rx="10" fill="#ef4444" />
-    <text x="875" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Rose 500</text>
-    <text x="875" y="235" fill="#ffe4e6" font-family="Arial, sans-serif" font-size="12">#ef4444 (Alfa/Batal)</text>
+  <!-- PKL Action Banner (Forest & Lime) -->
+  <g transform="translate(280, 375)">
+    <rect x="0" y="0" width="1120" height="100" rx="12" fill="#163300" />
+    <text x="35" y="42" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">📍 Anda Sedang Ditugaskan Praktik Kerja Lapangan (PKL)</text>
+    <text x="35" y="68" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Lokasi Penempatan: PT Telkom Akses Cirebon • Radius Toleransi Geofence: 50 Meter</text>
+    <rect x="890" y="28" width="195" height="44" rx="22" fill="#9fe870" />
+    <text x="987" y="55" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13" text-anchor="middle">Buka Presensi PKL →</text>
+  </g>
+</svg>
+  </g>
 
-    <!-- Cyan PKL -->
-    <rect x="1060" y="160" width="180" height="100" rx="10" fill="#06b6d4" />
-    <text x="1075" y="210" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Cyan 500</text>
-    <text x="1075" y="235" fill="#cffafe" font-family="Arial, sans-serif" font-size="12">#06b6d4 (PKL Magang)</text>
+  <!-- 06. Rekapitulasi Presensi -->
+  <g transform="translate(3100, 1220)" filter="url(#megaShadow)">
+    <text x="0" y="-18" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">06. REKAPITULASI PRESENSI &amp; EKSPOR EXCEL</text>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
+  <rect width="1440" height="900" fill="#f8fafc" />
 
-    <!-- Typography Scale -->
-    <text x="60" y="320" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="20">Hierarki Tipografi (Font: Inter / Arial)</text>
-    <text x="60" y="365" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="32">Heading 1 (32px Bold) — Judul Dashboard</text>
-    <text x="60" y="410" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="24">Heading 2 (24px Bold) — Subjudul Halaman &amp; Kartu</text>
-    <text x="60" y="445" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="18">Heading 3 (18px Bold) — Header Tabel &amp; Modal</text>
-    <text x="60" y="475" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="14">Body Regular (14px) — Teks utama konten dan deskripsi</text>
-    <text x="60" y="500" fill="#94a3b8" font-family="Arial, sans-serif" font-size="12">Caption (12px) — Timestamp, notifikasi kecil, dan metadata tabel</text>
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="250" height="900" fill="#163300" />
+  <circle cx="45" cy="40" r="18" fill="#9fe870" />
+  <text x="45" y="46" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="900" font-size="16" text-anchor="middle">NU</text>
+  <text x="75" y="38" fill="#ffffff" font-family="'Plus Jakarta Sans', sans-serif" font-weight="800" font-size="13">REKAP PRESENSI</text>
+  <text x="75" y="52" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-size="10">LAPORAN &amp; EKSPOR</text>
 
-    <!-- Badges Preview -->
-    <text x="60" y="560" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="20">Komponen Badge Status Kehadiran</text>
-    <rect x="60" y="590" width="100" height="32" rx="6" fill="#dcfce7" />
-    <text x="110" y="611" fill="#15803d" font-family="Arial, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">✓ HADIR</text>
+  <!-- Top Navbar -->
+  <rect x="250" y="0" width="1190" height="64" fill="#ffffff" />
+  <line x1="250" y1="64" x2="1440" y2="64" stroke="#e2e8f0" stroke-width="1" />
+  <text x="280" y="38" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="18">Rekapitulasi Kehadiran Siswa &amp; Peserta PKL</text>
 
-    <rect x="180" y="590" width="120" height="32" rx="6" fill="#e0f2fe" />
-    <text x="240" y="611" fill="#0369a1" font-family="Arial, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">📍 PKL HADIR</text>
+  <!-- Filter Card -->
+  <g transform="translate(280, 85)">
+    <rect x="0" y="0" width="1120" height="90" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    
+    <text x="24" y="32" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">PILIH KELAS</text>
+    <rect x="24" y="40" width="180" height="38" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+    <text x="38" y="64" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">XII RPL 1</text>
 
-    <rect x="320" y="590" width="120" height="32" rx="6" fill="#fef3c7" />
-    <text x="380" y="611" fill="#b45309" font-family="Arial, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">⏱ TERLAMBAT</text>
+    <text x="224" y="32" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">RENTANG TANGGAL</text>
+    <rect x="224" y="40" width="220" height="38" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+    <text x="238" y="64" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">01 Nov 2026 - 08 Nov 2026</text>
 
-    <rect x="460" y="590" width="100" height="32" rx="6" fill="#f3e8ff" />
-    <text x="510" y="611" fill="#7e22ce" font-family="Arial, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">📋 IZIN</text>
+    <text x="464" y="32" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="11">STATUS KEHADIRAN</text>
+    <rect x="464" y="40" width="180" height="38" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1" />
+    <text x="478" y="64" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-size="13">Semua Status</text>
 
-    <rect x="580" y="590" width="100" height="32" rx="6" fill="#fee2e2" />
-    <text x="630" y="611" fill="#b91c1c" font-family="Arial, sans-serif" font-weight="bold" font-size="12" text-anchor="middle">✖ ALFA</text>
+    <rect x="670" y="40" width="130" height="38" rx="19" fill="#163300" />
+    <text x="735" y="64" fill="#9fe870" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13" text-anchor="middle">🔍 Tampilkan</text>
+
+    <rect x="910" y="40" width="185" height="38" rx="19" fill="#9fe870" />
+    <text x="1002" y="64" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="13" text-anchor="middle">📥 Ekspor Excel (.xlsx)</text>
+  </g>
+
+  <!-- Table Card -->
+  <g transform="translate(280, 195)">
+    <rect x="0" y="0" width="1120" height="670" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+
+    <!-- Table Header -->
+    <rect x="20" y="20" width="1080" height="42" rx="6" fill="#f8fafc" />
+    <text x="35" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">NO</text>
+    <text x="70" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">NIS</text>
+    <text x="160" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">NAMA SISWA</text>
+    <text x="360" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">KELAS</text>
+    <text x="480" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">TANGGAL</text>
+    <text x="590" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">JAM MASUK</text>
+    <text x="700" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">STATUS</text>
+    <text x="820" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">METODE</text>
+    <text x="960" y="46" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="11">LOKASI / DUDI</text>
+
+    <!-- Row 1 -->
+    <line x1="20" y1="110" x2="1100" y2="110" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="92" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">1</text>
+    <text x="70" y="92" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">202410842</text>
+    <text x="160" y="92" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Ahmad Fauzi</text>
+    <text x="360" y="92" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">XII RPL 1</text>
+    <text x="480" y="92" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">08-11-2026</text>
+    <text x="590" y="92" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">06:58:12</text>
+    <rect x="700" y="78" width="75" height="22" rx="4" fill="#dcfce7" />
+    <text x="737" y="93" fill="#15803d" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">HADIR</text>
+    <text x="820" y="92" fill="#163300" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">RFID Tap</text>
+    <text x="960" y="92" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Gerbang Utama</text>
+
+    <!-- Row 2 (PKL) -->
+    <line x1="20" y1="160" x2="1100" y2="160" stroke="#f1f5f9" stroke-width="1" />
+    <text x="35" y="142" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">2</text>
+    <text x="70" y="142" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">202410843</text>
+    <text x="160" y="142" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">Bagus Pratama</text>
+    <text x="360" y="142" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">XII RPL 1</text>
+    <text x="480" y="142" fill="#64748b" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">08-11-2026</text>
+    <text x="590" y="142" fill="#0f172a" font-family="'JetBrains Mono', monospace" font-size="12">07:15:20</text>
+    <rect x="700" y="128" width="75" height="22" rx="4" fill="#e0f2fe" />
+    <text x="737" y="143" fill="#0369a1" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="10" text-anchor="middle">PKL</text>
+    <text x="820" y="142" fill="#0284c7" font-family="'Plus Jakarta Sans', sans-serif" font-size="12">Swafoto GPS</text>
+    <text x="960" y="142" fill="#0f172a" font-family="'Plus Jakarta Sans', sans-serif" font-weight="bold" font-size="12">PT Telkom (18m)</text>
+  </g>
+</svg>
   </g>
 </svg>
