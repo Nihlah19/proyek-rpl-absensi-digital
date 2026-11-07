@@ -32,10 +32,10 @@
     <link rel="icon" type="image/png" sizes="192x192" href="<?= BASEURL; ?>/assets/img/icon-192.png?v=3">
     <link rel="shortcut icon" href="<?= BASEURL; ?>/assets/img/logo.png?v=3" type="image/png">
     
-    <!-- Google Fonts: Inter, JetBrains Mono -->
+    <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono (Professional Balanced Dashboard Typography) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Local Vendor Libraries (Offline Ready) -->
     <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
@@ -88,10 +88,10 @@
                         info: '#0ea5e9'
                     },
                     fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        headline: ['Inter', 'sans-serif'],
-                        body: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace']
+                        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+                        headline: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        body: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
                     },
                     borderRadius: {
                         xs: '4px',
@@ -112,17 +112,32 @@
         /* ========== Clean & Calm Design System Tokens ========== */
         *, *::before, *::after { box-sizing: border-box; }
         
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        body, button, input, select, textarea {
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            letter-spacing: -0.012em;
+        }
+
+        body {
             background-color: #f8faf7;
         }
 
-        /* Typography */
+        h1, h2, h3, h4, h5, h6, .font-heading {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            letter-spacing: -0.022em;
+            font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+        }
+
+        /* Number tabular lining so dates, hours (WIB), metrics & IDs align cleanly */
+        table, .tabular-nums, .font-mono, code, pre {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Typography Monospace */
         code, pre, .font-mono {
             font-family: 'JetBrains Mono', monospace !important;
-            font-variant-numeric: tabular-nums;
         }
 
         /* ── Standardized Calm Dashboard Card ── */

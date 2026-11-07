@@ -41,7 +41,7 @@
         }
     </script>
     <style>
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         
         /* ── Kotak kamera & Frame Animasi ── */
         .camera-box { position:relative;width:100%;min-height:280px;aspect-ratio:1/1;max-width:320px;margin:0 auto;border-radius:16px;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center; }

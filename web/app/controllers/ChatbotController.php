@@ -38,10 +38,10 @@ class ChatbotController extends Controller {
         if ($blocked) {
             $botResponse = $blocked;
         } else {
-            // ── 2. Tolak permintaan mengerjakan soal tugas sekolah / PR ──
-            $homeworkBlock = $this->detectHomeworkRequest($message);
-            if ($homeworkBlock) {
-                $botResponse = $homeworkBlock;
+            // ── 2. Tolak hitungan matematika, coding, tugas sekolah, PR & soal umum ──
+            $restrictedBlock = $this->detectOffTopicOrRestrictedRequest($message);
+            if ($restrictedBlock) {
+                $botResponse = $restrictedBlock;
             } else {
                 // ── 3. Sapaan ringan & Pertanyaan Identitas (hemat kuota) ──
                 $lowerMsg = strtolower(trim(preg_replace('/[^a-zA-Z0-9\s]/u', '', $message)));
@@ -61,23 +61,7 @@ class ChatbotController extends Controller {
                               preg_match('/\bsiapa\s+(kamu|anda|bot|ai)\b/i', $message) ||
                               preg_match('/\b(nama|identitas|fungsi)\s+(kamu|anda|bot)\b/i', $message);
 
-                // Evaluasi hitungan matematika sederhana (misal: 1+1 berapa, 5*10, dsb)
-                $mathClean = trim(preg_replace('/\s*(berapa|hasilnya|sama dengan|itu berapa|\?|=)/i', '', trim($message)));
-                if (preg_match('~^(\d+(?:\.\d+)?)\s*([\+\-\*/xX:])\s*(\d+(?:\.\d+)?)$~i', $mathClean, $mMath)) {
-                    $num1 = (float)$mMath[1];
-                    $operator = strtolower($mMath[2]);
-                    $num2 = (float)$mMath[3];
-                    $calcRes = match($operator) {
-                        '+' => $num1 + $num2,
-                        '-' => $num1 - $num2,
-                        '*', 'x' => $num1 * $num2,
-                        '/', ':' => ($num2 != 0 ? round($num1 / $num2, 4) : 'tidak terdefinisi (pembagian dengan nol)'),
-                        default => null
-                    };
-                    if ($calcRes !== null) {
-                        $botResponse = "Hasil dari **{$mMath[1]} {$operator} {$mMath[3]}** adalah **{$calcRes}**.";
-                    }
-                } elseif (in_array($lowerMsg, $greetings)) {
+                if (in_array($lowerMsg, $greetings)) {
                     $nama = $_SESSION['name'] ?? 'Pengguna';
                     $roleLabel = match($userRole) {
                         'siswa'      => 'Siswa',
@@ -194,6 +178,52 @@ class ChatbotController extends Controller {
     // =========================================================
     // DETEKSI & TOLAK PERMINTAAN TUGAS SEKOLAH / PR / CODING
     // =========================================================
+    /**
+     * Kebijakan Larangan: Menolak Soal Hitungan / Matematika, Coding / Scripting,
+     * serta Soal Tugas Siswa / PR / Pertanyaan di luar Presensi & Data Sekolah.
+     */
+    private function detectOffTopicOrRestrictedRequest($message) {
+        $lower = strtolower(trim($message));
+
+        // Exception: Jangan tolak jika query secara eksplisit menanyakan data sekolah / guru / mapel / jadwal / presensi / rfid
+        $isSchoolQuery = (bool)preg_match('/\b(guru|pengajar|pendidik|wali|wali_kelas|mapel|mata\s+pelajaran|jadwal|kbm|absen|absensi|kehadiran|pkl|prakerin|rfid|kartu|scanner|iot|siswa|murid|kelas)\b/i', $lower);
+
+        $refusalMessage = "Maaf, saya bukan ditugaskan untuk menjawab pertanyaan tersebut. Saya adalah asisten khusus presensi dan informasi data sekolah SMK NU Wargabinangun. Silakan tanyakan data siswa, guru, jadwal pelajaran, kelas, atau presensi PKL!";
+
+        // 1. Deteksi Soal Hitungan / Matematika Sederhana maupun Kompleks (misal: "1+1 berapa", "5*10", "hitung 10+20")
+        $mathClean = trim(preg_replace('/\s*(berapa|hasilnya|sama dengan|itu berapa|\?|=)/i', '', $lower));
+        $isMathExpr = (bool)preg_match('~^(\d+(?:\.\d+)?)\s*([\+\-\*/xX:])\s*(\d+(?:\.\d+)?)$~i', $mathClean);
+        $isMathWords = (bool)preg_match('/\b(hitung|hitunglah|berapakah\s+hasil|hasil\s+dari|kalkulator|akar\s+kuadrat|persamaan|aljabar|trigonometri|kalkulus|integral|turunan|diferensial)\b.*(\d|\+|\-|\*|\/)/i', $lower);
+
+        if ($isMathExpr || $isMathWords) {
+            return $refusalMessage;
+        }
+
+        // 2. Deteksi Masalah Coding / Pemrograman / Script
+        $isCoding = (bool)preg_match('/\b(coding|koding|ngoding|codingan|kodingan)\b/i', $lower) ||
+                    (bool)preg_match('/\b(python|javascript|java\b|c\+\+|cpp|c#|csharp|php|html|css|pascal|scratch|golang|rust|dart|kotlin|swift)\b.*(program|script|skrip|kode|syntax|sintaks|loop|looping|perulangan|fungsi|def |class |array|variabel|algoritma|buat|bikin|tulis)/i', $lower) ||
+                    (bool)preg_match('/\b(buat|buatkan|buatin|bikin|tulis|tuliskan|kerjakan)\b.*(program|source code|kode program|script|skrip)/i', $lower) ||
+                    (bool)preg_match('/\b(script|source code|syntax code)\b/i', $lower);
+
+        if ($isCoding && !$isSchoolQuery) {
+            return $refusalMessage;
+        }
+
+        // 3. Deteksi Permintaan Mengerjakan Soal Tugas Siswa, PR, Ujian, atau Kuis Non-Sekolah
+        $isHomework = (bool)preg_match('/\b(kerjakan|selesaikan|jawabkan|jawab|isi|isikan|bantu\s+kerjakan|tolong\s+kerjakan)\s+.*(pr\b|tugas|soal|ujian|ulangan|pekerjaan rumah|latihan)/i', $lower) ||
+                      (bool)preg_match('/\b(jawaban|kunci jawaban)\s+.*(soal|nomor|tugas|pr\b|ujian|ulangan)/i', $lower) ||
+                      (bool)preg_match('/\b(tugas|pr|soal)\s+(matematika|fisika|kimia|biologi|sejarah|bahasa|agama|ipa|ips|pkn|tik|ekonomi|geografi)\b/i', $lower) ||
+                      (bool)preg_match('/\b(jawab|kerjakan)\s+soal\s*(nomor|no)?/i', $lower) ||
+                      (bool)preg_match('/\b(rumus|teorema|hukum)\s+(fisika|kimia|biologi|matematika|newton|pythagoras|pitagoras)/i', $lower) ||
+                      (bool)preg_match('/\b(siapa presiden|ibu kota|resep masakan|buatkan puisi|buatkan cerpen|pantun)\b/i', $lower);
+
+        if ($isHomework && !$isSchoolQuery) {
+            return $refusalMessage;
+        }
+
+        return false;
+    }
+
     private function detectHomeworkRequest($message) {
         $lower = strtolower(trim($message));
 
