@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="base-url" content="<?= BASEURL; ?>">
+    <meta name="description" content="Sistem Presensi RFID dan QR Code Terpadu SMK NU Wargabinangun.">
     <title><?= $data['judul'] ?? 'ABSENSI SMK NU WARGABINANGUN' ?></title>
     
     <!-- Theme Flash Prevention (FOUC) Script -->
@@ -44,12 +45,22 @@
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
     <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
-    <!-- Chart.js (Deferred) -->
+    <!-- Conditional Module Loading (Only load heavy JS on pages that actually use them to boost performance) -->
+    <?php
+    $curUrl = $_GET['url'] ?? '';
+    $isDash = empty($curUrl) || str_starts_with($curUrl, 'dashboard');
+    $isScan = str_contains($curUrl, 'scan');
+    $isQr   = str_contains($curUrl, 'barcode') || str_contains($curUrl, 'profile') || $isDash;
+    ?>
+    <?php if ($isDash || !empty($data['load_chart'])): ?>
     <script defer src="<?= BASEURL; ?>/assets/vendor/chartjs/chart.min.js"></script>
-    <!-- HTML5 QR Code Scanner (Deferred) -->
+    <?php endif; ?>
+    <?php if ($isScan || $isDash || !empty($data['load_scanner'])): ?>
     <script defer src="<?= BASEURL; ?>/assets/vendor/html5-qrcode/html5-qrcode.min.js"></script>
-    <!-- QRCodeJS (Deferred) -->
-    <script defer src="<?= BASEURL; ?>/assets/vendor/qrcodejs/qrcode.min.js"></script>    
+    <?php endif; ?>
+    <?php if ($isQr || !empty($data['load_qrcode'])): ?>
+    <script defer src="<?= BASEURL; ?>/assets/vendor/qrcodejs/qrcode.min.js"></script>
+    <?php endif; ?>    
 
     <script>
         tailwind.config = {
