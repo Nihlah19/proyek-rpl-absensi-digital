@@ -359,12 +359,8 @@
 </style>
 
 <!-- ── FAB Button ── -->
-<button id="cw-btn" onclick="cwOpen()" aria-label="Buka AI Chatbot" title="Tanya Asisten AI Absensi">
-    <svg class="cw-fab-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 13.9878 3.64436 15.8251 4.73977 17.3106L3.5 21.5L7.86938 20.3542C9.14175 20.7684 10.5367 21 12 21Z" fill="rgba(255, 255, 255, 0.18)" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 7L12.8 9.7L15.5 10.5L12.8 11.3L12 14L11.2 11.3L8.5 10.5L11.2 9.7L12 7Z" fill="white"/>
-        <circle cx="15.8" cy="14.8" r="1.3" fill="#6ee7b7"/>
-    </svg>
+<button id="cw-btn" onclick="cwOpen()" aria-label="Buka Asisten Layanan" title="Tanya Informasi Presensi">
+    <i class="fa-solid fa-headset text-2xl text-white"></i>
 </button>
 
 <!-- ── Jendela Chat ── -->
@@ -373,17 +369,14 @@
     <!-- Header -->
     <div id="cw-header">
         <div class="cw-header-info">
-            <div class="cw-avatar">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 21C16.9706 21 21 16.9706 21 12C21 7.02944 16.9706 3 12 3C7.02944 3 3 7.02944 3 12C3 13.9878 3.64436 15.8251 4.73977 17.3106L3.5 21.5L7.86938 20.3542C9.14175 20.7684 10.5367 21 12 21Z" fill="rgba(255, 255, 255, 0.2)" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 7.5L12.7 9.8L15 10.5L12.7 11.2L12 13.5L11.3 11.2L9 10.5L11.3 9.8L12 7.5Z" fill="white"/>
-                </svg>
+            <div class="cw-avatar" style="background:#047857; color:#fff; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-headset text-sm"></i>
             </div>
             <div>
-                <div class="cw-title">SMK Assistant</div>
+                <div class="cw-title">Layanan Informasi Presensi</div>
                 <div class="cw-status">
                     <span class="cw-status-dot"></span>
-                    AI Chatbot Aktif
+                    Online • Database Terhubung
                 </div>
             </div>
         </div>
@@ -401,12 +394,12 @@
     <div id="cw-msgs">
         <!-- Pesan awal dari bot -->
         <div class="cw-row bot">
-            <div class="cw-bot-av"><i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i></div>
+            <div class="cw-bot-av"><i class="fa-solid fa-comments text-[11px]"></i></div>
             <div class="cw-bubble-bot-wrap">
-                <div class="cw-bot-label">AI Assistant</div>
+                <div class="cw-bot-label">Asisten Presensi</div>
                 <div class="cw-bubble-bot">
-                    Halo! Saya siap membantu seputar <strong>sistem absensi RFID</strong>.<br>
-                    Ada yang ingin ditanyakan?
+                    Halo! Saya siap membantu memberikan informasi data <strong>siswa, guru, kelas, dan presensi</strong> SMK NU Wargabinangun.<br>
+                    Silakan ketik pertanyaan Anda seputar database sekolah!
                 </div>
             </div>
         </div>
@@ -414,7 +407,7 @@
 
     <!-- Typing Indicator -->
     <div id="cw-typing">
-        <div class="cw-bot-av"><i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i></div>
+        <div class="cw-bot-av"><i class="fa-solid fa-comments text-[11px]"></i></div>
         <div class="cw-typing-dots">
             <span class="cw-dot"></span>
             <span class="cw-dot"></span>
@@ -430,7 +423,7 @@
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
-        <p class="cw-footer-note">Asisten AI • SMK NU Wargabinangun</p>
+        <p class="cw-footer-note">Layanan Presensi • SMK NU Wargabinangun</p>
     </div>
 </div>
 
@@ -476,7 +469,7 @@
             <div class="cw-row bot">
                 <div class="cw-bot-av"><i class="fa-solid fa-robot"></i></div>
                 <div class="cw-bubble-bot-wrap">
-                    <div class="cw-bot-label">AI Assistant</div>
+                    <div class="cw-bot-label">Asisten Presensi</div>
                     <div class="cw-bubble-bot">
                         Halo! Saya siap membantu seputar <strong>sistem absensi RFID</strong>.<br>
                         Ada yang ingin ditanyakan?
@@ -544,14 +537,14 @@
         } else {
             var av = document.createElement('div');
             av.className = 'cw-bot-av';
-            av.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>';
+            av.innerHTML = '<i class="fa-solid fa-comments text-[11px]"></i>';
 
             var wrap = document.createElement('div');
             wrap.className = 'cw-bubble-bot-wrap';
 
             var lbl = document.createElement('div');
             lbl.className = 'cw-bot-label';
-            lbl.textContent = 'AI Assistant';
+            lbl.textContent = 'Asisten Presensi';
 
             var bub = document.createElement('div');
             bub.className = 'cw-bubble-bot' + (isErr ? ' is-err' : '');

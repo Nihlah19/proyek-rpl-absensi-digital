@@ -496,10 +496,13 @@
                     });
 
                     if (isFirstLoad) {
-                        // Di first load: jika ada notifikasi unread terbaru yang belum pernah ditampilkan di sesi ini
+                        // Di first load: jangan pop-up suara / banner untuk notifikasi lama yang sudah berhari-hari
+                        // Hanya pop-up jika notifikasi benar-benar baru (kurang dari 5 menit lalu)
                         if (unreadItems.length > 0) {
                             const topUnread = unreadItems[0];
-                            if (shownIds.indexOf(topUnread.id) === -1) {
+                            const notifTime = topUnread.created_at ? new Date(topUnread.created_at.replace(' ', 'T')).getTime() : 0;
+                            const isVeryRecent = notifTime > 0 && ((Date.now() - notifTime) < (5 * 60 * 1000));
+                            if (isVeryRecent && shownIds.indexOf(topUnread.id) === -1) {
                                 recordShownId(topUnread.id);
                                 showDevicePopUp(topUnread);
                             }

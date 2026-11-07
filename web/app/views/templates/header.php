@@ -1116,8 +1116,8 @@ function downloadHeaderQr() {
                             <li>
                                 <a href="<?= BASEURL; ?>/dashboard/admin#ai-config" onclick="if(typeof openAiConfigModal === 'function'){ openAiConfigModal(); return false; }"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium">
-                                    <i class="fa-solid fa-robot text-xs w-4 text-center shrink-0 text-purple-600 dark:text-purple-400"></i>
-                                    <span class="truncate">Konfigurasi AI Chatbot</span>
+                                    <i class="fa-solid fa-sliders text-xs w-4 text-center shrink-0 text-emerald-600 dark:text-emerald-400"></i>
+                                    <span class="truncate">Pengaturan Chatbot</span>
                                 </a>
                             </li>
                         </ul>

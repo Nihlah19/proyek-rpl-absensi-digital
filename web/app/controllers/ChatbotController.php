@@ -280,6 +280,12 @@ class ChatbotController extends Controller {
             return $dateAttendanceResponse;
         }
 
+        // ── 0.0.1 ENGINE DATABASE MENYELURUH (PKL, GURU, WALI KELAS, SISWA, KELAS, IOT) ──
+        $deepDbResponse = $this->handleDeepDatabaseQuery($message, $userId, $userRole, $db);
+        if ($deepDbResponse !== false) {
+            return $deepDbResponse;
+        }
+
         $today    = date('Y-m-d');
         $bulanIni = date('Y-m');
         $hariIni  = $this->hariIndonesia(date('l'));
@@ -2306,7 +2312,7 @@ class ChatbotController extends Controller {
             if ($localFallback !== false) {
                 return $localFallback;
             }
-            return "Halo! Kunci API AI (Groq / Grok / Gemini) belum dikonfigurasi oleh Administrator pada Pengaturan AI.\n\nNamun saya tetap dapat membantu Anda melihat data kehadiran hari ini, daftar guru/siswa, jadwal sekolah, dan panduan fitur sistem absensi. Silakan tanyakan data yang ingin Anda ketahui!";
+            return $this->handleSmartFuzzySearch($message, $userId, $role, $db);
         }
 
         $db = new Database();
@@ -2428,7 +2434,7 @@ class ChatbotController extends Controller {
             return $localFallback;
         }
 
-        return "Maaf, koneksi ke server AI (" . strtoupper($provider) . ") sedang mengalami antrean padat. Anda tetap dapat menanyakan data kehadiran, absensi PKL, dan informasi sekolah lainnya!";
+        return $this->handleSmartFuzzySearch($message, $userId, $role, $db);
     }
 
     // =========================================================
@@ -2534,4 +2540,526 @@ class ChatbotController extends Controller {
 
         return null;
     }
+
+
+    // =========================================================================
+    // ENGINE DATABASE PINTAR: MENJAWAB PERTANYAAN TENTANG SELURUH DATABASE SEKOLAH
+    // =========================================================================
+    private function handleDeepDatabaseQuery($message, $userId, $userRole, $db) {
+        $lower = strtolower(trim($message));
+        $today = date('Y-m-d');
+        $hariIni = $this->hariIndonesia(date('l'));
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 1. QUERY KHUSUS PKL (PEMBIMBING, TEMPAT, SISWA, LOG PRESENSI)
+        // ─────────────────────────────────────────────────────────────────────
+        if (preg_match('/\b(pkl|prakerin|magang)\b/i', $lower)) {
+            // A. Pembimbing PKL
+            if (preg_match('/(pembimbing|guru\s+pembimbing|siapa\s+pembimbing|yang\s+bimbing)/i', $lower)) {
+                $db->query("SELECT ppk.*, u.name as guru_nama, g.nip, g.subject, k.nama_kelas, k.jurusan 
+                            FROM pkl_pembimbing_kelas ppk 
+                            JOIN users u ON ppk.user_id = u.id 
+                            JOIN guru g ON g.user_id = u.id 
+                            JOIN kelas k ON ppk.kelas_id = k.id 
+                            ORDER BY k.nama_kelas ASC");
+                $ppkRows = $db->resultSet();
+
+                // Tambahkan guru yang ditandai is_pembimbing_pkl
+                $db->query("SELECT g.id, g.nip, g.is_pembimbing_pkl, u.name, g.subject 
+                            FROM guru g 
+                            JOIN users u ON g.user_id = u.id 
+                            WHERE g.is_pembimbing_pkl != '' AND g.is_pembimbing_pkl != 'bukan'");
+                $extraGuru = $db->resultSet();
+
+                $respon = "**Guru Pembimbing PKL SMK NU Wargabinangun**\n\n";
+                if (!empty($ppkRows)) {
+                    $seen = [];
+                    foreach ($ppkRows as $i => $p) {
+                        $key = $p->guru_nama . '_' . $p->jurusan;
+                        if (isset($seen[$key])) continue;
+                        $seen[$key] = true;
+                        $no = count($seen);
+                        $nipStr = !empty($p->nip) ? " (NIP: `{$p->nip}`)" : "";
+                        $mapelStr = !empty($p->subject) ? " · Mapel: {$p->subject}" : "";
+                        $respon .= "{$no}. **{$p->guru_nama}** — Pembimbing Jurusan **{$p->jurusan}** (Kelas {$p->nama_kelas}){$mapelStr}{$nipStr}\n";
+                    }
+                } elseif (!empty($extraGuru)) {
+                    foreach ($extraGuru as $i => $eg) {
+                        $no = $i + 1;
+                        $nipStr = !empty($eg->nip) ? " (NIP: `{$eg->nip}`)" : "";
+                        $respon .= "{$no}. **{$eg->name}** — Pembimbing PKL{$nipStr}\n";
+                    }
+                } else {
+                    $respon .= "Saat ini belum ada data pembimbing PKL yang didaftarkan di sistem.\n";
+                }
+                $respon .= "\n_Guru pembimbing bertugas mengatur kelompok, memantau titik koordinat GPS, dan menerima notifikasi kehadiran PKL siswa._";
+                return $respon;
+            }
+
+            // B. Tempat / Lokasi / Kelompok PKL
+            if (preg_match('/(tempat|lokasi|kelompok|di\s+mana|bengkel|mitra|instansi|kantor|perusahaan)/i', $lower)) {
+                $db->query("SELECT pk.*, k.nama_kelas, u.name as pembimbing_nama_guru,
+                                   (SELECT COUNT(*) FROM pkl_kelompok_siswa pks WHERE pks.kelompok_id = pk.id) as total_siswa
+                            FROM pkl_kelompok pk 
+                            LEFT JOIN kelas k ON pk.kelas_id = k.id 
+                            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id 
+                            LEFT JOIN users u ON g.user_id = u.id 
+                            ORDER BY pk.id ASC");
+                $pkRows = $db->resultSet();
+
+                if (empty($pkRows)) {
+                    return "**Tempat & Kelompok PKL**\n\nBelum ada kelompok tempat PKL yang didaftarkan di sistem.";
+                }
+
+                $tot = count($pkRows);
+                $respon = "**Daftar Tempat & Kelompok PKL Siswa** (Total: {$tot} Kelompok)\n\n";
+                foreach ($pkRows as $i => $pk) {
+                    $no = $i + 1;
+                    $pembimbing = !empty($pk->pembimbing_nama_guru) ? $pk->pembimbing_nama_guru : (!empty($pk->pembimbing_nama) ? $pk->pembimbing_nama : 'Belum Ditentukan');
+                    $kelas = !empty($pk->nama_kelas) ? $pk->nama_kelas : '-';
+                    $lat = number_format((float)$pk->latitude, 6);
+                    $lng = number_format((float)$pk->longitude, 6);
+                    $radius = (int)($pk->radius_meter ?? 50);
+                    $jmlSiswa = (int)$pk->total_siswa;
+
+                    $respon .= "{$no}. **{$pk->nama_tempat}** (Kelompok: {$pk->nama_kelompok})\n"
+                             . "   - Kelas: **{$kelas}** · Anggota: **{$jmlSiswa} Siswa**\n"
+                             . "   - Pembimbing: **{$pembimbing}**\n"
+                             . "   - Radius GPS: {$radius} meter (`{$lat}, {$lng}`)\n\n";
+                }
+                return trim($respon);
+            }
+
+            // C. Siswa PKL (Daftar / Siapa Saja)
+            if (preg_match('/(siswa|murid|anak|siapa|daftar\s+siswa|peserta)/i', $lower)) {
+                $db->query("SELECT s.id, s.nis, u.name as nama_siswa, k.nama_kelas, pk.nama_tempat, pk.nama_kelompok 
+                            FROM siswa s 
+                            JOIN users u ON s.user_id = u.id 
+                            JOIN kelas k ON s.kelas_id = k.id 
+                            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id 
+                            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id 
+                            WHERE k.status = 'pkl' 
+                            ORDER BY k.nama_kelas ASC, u.name ASC");
+                $siswaPkl = $db->resultSet();
+
+                if (empty($siswaPkl)) {
+                    return "**Data Siswa PKL**\n\nSaat ini belum ada data siswa pada kelas dengan status PKL.";
+                }
+
+                $tot = count($siswaPkl);
+                $respon = "**Daftar Siswa Kelas PKL** (Total: {$tot} Siswa)\n\n";
+                $curKelas = '';
+                $num = 1;
+                foreach ($siswaPkl as $sp) {
+                    if ($curKelas !== $sp->nama_kelas) {
+                        $curKelas = $sp->nama_kelas;
+                        $respon .= "\n**Kelas {$curKelas}:**\n";
+                        $num = 1;
+                    }
+                    $lokasi = !empty($sp->nama_tempat) ? " → {$sp->nama_tempat} ({$sp->nama_kelompok})" : " _(Belum Masuk Kelompok)_";
+                    $respon .= "{$num}. **{$sp->nama_siswa}** (NIS: {$sp->nis}){$lokasi}\n";
+                    $num++;
+                }
+                return trim($respon);
+            }
+
+            // D. Log Presensi / Kehadiran Siswa PKL Hari Ini
+            $db->query("SELECT a.jam_datang, a.jam_pulang, a.status, a.jarak_meter, u.name, k.nama_kelas, pk.nama_tempat 
+                        FROM absensi_siswa a 
+                        JOIN siswa s ON a.siswa_id = s.id 
+                        JOIN users u ON s.user_id = u.id 
+                        JOIN kelas k ON s.kelas_id = k.id 
+                        LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id 
+                        LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id 
+                        WHERE a.tanggal = :tgl AND k.status = 'pkl' 
+                        ORDER BY a.jam_datang ASC");
+            $db->bind(':tgl', $today);
+            $absenPklRows = $db->resultSet();
+
+            $totHadir = count($absenPklRows);
+            $respon = "**Presensi Siswa PKL Hari Ini** (" . $this->formatTanggalIndo($today) . ")\n\n";
+            $respon .= "Tercatat **{$totHadir} siswa PKL** telah melakukan presensi hari ini:\n\n";
+
+            if ($totHadir > 0) {
+                foreach ($absenPklRows as $i => $ap) {
+                    $no = $i + 1;
+                    $jamDatang = !empty($ap->jam_datang) ? substr($ap->jam_datang, 0, 5) . ' WIB' : '-';
+                    $jamPulang = !empty($ap->jam_pulang) ? ' · Pulang: ' . substr($ap->jam_pulang, 0, 5) . ' WIB' : ' · _(Sedang PKL)_';
+                    $jarak = ($ap->jarak_meter !== null) ? ' · Radius GPS: ' . number_format((float)$ap->jarak_meter, 1) . 'm' : '';
+                    $tempat = !empty($ap->nama_tempat) ? " di {$ap->nama_tempat}" : "";
+                    $respon .= "{$no}. **{$ap->name}** ({$ap->nama_kelas}){$tempat}\n"
+                             . "   - Datang: {$jamDatang}{$jamPulang}{$jarak}\n";
+                }
+            } else {
+                $respon .= "- Belum ada siswa PKL yang melakukan presensi hari ini.\n";
+            }
+            return trim($respon);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 2. QUERY WALI KELAS (SEMUA KELAS ATAU KELAS TERTENTU)
+        // ─────────────────────────────────────────────────────────────────────
+        if (preg_match('/\b(wali\s+kelas|walikelas)\b/i', $lower)) {
+            // Cek apakah menanyakan kelas spesifik
+            if (preg_match('/(10|11|12)\s*(tkj|tkr|tsm)/i', $lower, $mK)) {
+                $targetK = strtoupper($mK[1] . ' ' . $mK[2]);
+                $db->query("SELECT k.nama_kelas, k.tingkat, k.jurusan, k.status, u.name as wali_nama, g.nip, g.subject 
+                            FROM kelas k 
+                            LEFT JOIN users u ON k.wali_kelas_id = u.id 
+                            LEFT JOIN guru g ON g.user_id = u.id 
+                            WHERE UPPER(k.nama_kelas) LIKE :k LIMIT 1");
+                $db->bind(':k', '%' . $targetK . '%');
+                $kRow = $db->single();
+                if ($kRow) {
+                    $wali = !empty($kRow->wali_nama) ? $kRow->wali_nama : 'Belum Ditentukan';
+                    $nip = !empty($kRow->nip) ? " (NIP: `{$kRow->nip}`)" : "";
+                    $mapel = !empty($kRow->subject) ? " · Guru Mapel: {$kRow->subject}" : "";
+                    $status = ($kRow->status === 'pkl') ? " [Status: Sedang PKL]" : " [Status: Reguler]";
+                    return "Wali kelas untuk **Kelas {$kRow->nama_kelas}**{$status} adalah Bapak/Ibu **{$wali}**{$nip}{$mapel}.";
+                }
+            }
+
+            // Jika umum / daftar seluruh wali kelas
+            $db->query("SELECT k.nama_kelas, k.tingkat, k.jurusan, k.status, u.name as wali_nama, g.nip 
+                        FROM kelas k 
+                        LEFT JOIN users u ON k.wali_kelas_id = u.id 
+                        LEFT JOIN guru g ON g.user_id = u.id 
+                        ORDER BY k.nama_kelas ASC");
+            $allKelas = $db->resultSet();
+
+            $respon = "**Daftar Wali Kelas SMK NU Wargabinangun**\n\n";
+            foreach ($allKelas as $i => $k) {
+                $no = $i + 1;
+                $wali = !empty($k->wali_nama) ? $k->wali_nama : 'Belum Ditentukan';
+                $nip = (!empty($k->nip) && $k->nip !== '-') ? " (`{$k->nip}`)" : "";
+                $pklBadge = ($k->status === 'pkl') ? " _(PKL)_" : "";
+                $respon .= "{$no}. Kelas **{$k->nama_kelas}**{$pklBadge} : **{$wali}**{$nip}\n";
+            }
+            return trim($respon);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 3. QUERY GURU & MATA PELAJARAN (MAPEL)
+        // ─────────────────────────────────────────────────────────────────────
+        if (preg_match('/(guru|pengajar|siapa\s+yang\s+mengajar|siapa\s+guru|mapel)\s+.*?(aswaja|matematika|bindo|indonesia|inggris|pjok|penjas|agama|pai|ipas|produktif|tkj|tkr|tsm|pkn|sejarah|bunda|bk|fisika|kimia)/i', $lower, $mMapel)) {
+            $subjectKey = trim($mMapel[2]);
+            $db->query("SELECT u.name, g.nip, g.subject, k.nama_kelas as wali_kelas 
+                        FROM guru g 
+                        JOIN users u ON g.user_id = u.id 
+                        LEFT JOIN kelas k ON k.wali_kelas_id = u.id 
+                        WHERE LOWER(g.subject) LIKE :sub OR LOWER(u.name) LIKE :sub2 
+                        ORDER BY u.name ASC");
+            $db->bind(':sub', '%' . $subjectKey . '%');
+            $db->bind(':sub2', '%' . $subjectKey . '%');
+            $mapelGurus = $db->resultSet();
+
+            if (!empty($mapelGurus)) {
+                $respon = "**Guru Pengampu Mata Pelajaran " . ucfirst($subjectKey) . "**\n\n";
+                foreach ($mapelGurus as $i => $mg) {
+                    $no = $i + 1;
+                    $nipStr = (!empty($mg->nip) && $mg->nip !== '-') ? " · NIP: `{$mg->nip}`" : "";
+                    $waliStr = !empty($mg->wali_kelas) ? " · [Wali Kelas {$mg->wali_kelas}]" : "";
+                    $respon .= "{$no}. **{$mg->name}** (Mapel: {$mg->subject}){$nipStr}{$waliStr}\n";
+                }
+                return trim($respon);
+            }
+        }
+
+        // Kehadiran Guru Hari Ini
+        if (preg_match('/(guru.*(hadir|datang|masuk|absen).*hari\s+ini|kehadiran\s+guru|siapa\s+guru\s+belum)/i', $lower)) {
+            $db->query("SELECT u.name, g.subject, ag.jam_datang, ag.jam_pulang, ag.status, ag.keterangan 
+                        FROM absensi_guru ag 
+                        JOIN guru g ON ag.guru_id = g.id 
+                        JOIN users u ON g.user_id = u.id 
+                        WHERE ag.tanggal = :tgl 
+                        ORDER BY ag.jam_datang ASC");
+            $db->bind(':tgl', $today);
+            $absenGurus = $db->resultSet();
+
+            $totHadir = count($absenGurus);
+            $db->query("SELECT COUNT(*) as total FROM guru");
+            $totTotal = (int)($db->single()->total ?? 0);
+
+            $respon = "**Kehadiran Guru Hari Ini** (" . $this->formatTanggalIndo($today) . ")\n\n";
+            $respon .= "Tercatat **{$totHadir} dari {$totTotal} guru** telah hadir di sekolah:\n\n";
+
+            if ($totHadir > 0) {
+                foreach ($absenGurus as $i => $ag) {
+                    $no = $i + 1;
+                    $jamMsk = !empty($ag->jam_datang) ? substr($ag->jam_datang, 0, 5) . ' WIB' : '-';
+                    $mapel = (!empty($ag->subject) && $ag->subject !== '-') ? " · {$ag->subject}" : "";
+                    $respon .= "{$no}. **{$ag->name}**{$mapel} — Masuk: {$jamMsk} ({$ag->status})\n";
+                }
+            } else {
+                $respon .= "- Belum ada guru yang melakukan presensi hari ini.\n";
+            }
+            return trim($respon);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 4. QUERY SISWA PER KELAS / CARI SISWA
+        // ─────────────────────────────────────────────────────────────────────
+        // A. Siswa per kelas (misal: "siswa 10 tkj", "daftar siswa 11 tkr")
+        if (preg_match('/(siswa|murid|daftar\s+siswa|anak)\s+.*?(10|11|12)\s*(tkj|tkr|tsm)/i', $lower, $mSiswaK)) {
+            $searchK = strtoupper($mSiswaK[2] . ' ' . $mSiswaK[3]);
+            $db->query("SELECT s.nis, u.name, s.rfid_uid, k.nama_kelas, k.status as status_kelas 
+                        FROM siswa s 
+                        JOIN users u ON s.user_id = u.id 
+                        JOIN kelas k ON s.kelas_id = k.id 
+                        WHERE UPPER(k.nama_kelas) LIKE :k 
+                        ORDER BY u.name ASC");
+            $db->bind(':k', '%' . $searchK . '%');
+            $sList = $db->resultSet();
+
+            if (empty($sList)) {
+                return "**Data Siswa Kelas {$searchK}**\n\nTidak ditemukan siswa yang terdaftar di kelas **{$searchK}**.";
+            }
+
+            $tot = count($sList);
+            $respon = "**Daftar Siswa Kelas {$searchK}** (Total: {$tot} Siswa)\n\n";
+            foreach ($sList as $i => $s) {
+                $no = $i + 1;
+                $rfidStr = !empty($s->rfid_uid) ? " [RFID: `{$s->rfid_uid}`]" : " _(Tanpa Kartu)_";
+                $respon .= "{$no}. **{$s->name}** (NIS: {$s->nis}){$rfidStr}\n";
+            }
+            return trim($respon);
+        }
+
+        // B. Cari Siswa Berdasarkan Nama atau NIS
+        if (preg_match('/(cari\s+siswa|siapa\s+siswa|profil\s+siswa|nis\s+siswa|data\s+siswa)\s+([a-zA-Z0-9\s]{3,})/i', $lower, $mCariS)) {
+            $q = trim($mCariS[2]);
+            $db->query("SELECT s.nis, s.rfid_uid, u.name, k.nama_kelas, k.status as status_kelas,
+                               (SELECT pk.nama_tempat FROM pkl_kelompok_siswa pks JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id WHERE pks.siswa_id = s.id LIMIT 1) as tempat_pkl
+                        FROM siswa s 
+                        JOIN users u ON s.user_id = u.id 
+                        JOIN kelas k ON s.kelas_id = k.id 
+                        WHERE LOWER(u.name) LIKE :q OR s.nis LIKE :q2 
+                        LIMIT 5");
+            $db->bind(':q', '%' . $q . '%');
+            $db->bind(':q2', '%' . $q . '%');
+            $foundSiswa = $db->resultSet();
+
+            if (!empty($foundSiswa)) {
+                $respon = "**Hasil Pencarian Siswa: '{$q}'**\n\n";
+                foreach ($foundSiswa as $i => $fs) {
+                    $no = $i + 1;
+                    $rfid = !empty($fs->rfid_uid) ? "`{$fs->rfid_uid}`" : "Belum didaftarkan";
+                    $status = ($fs->status_kelas === 'pkl') ? " (Kelas PKL)" : "";
+                    $pklInfo = !empty($fs->tempat_pkl) ? "\n   - Tempat PKL: **{$fs->tempat_pkl}**" : "";
+                    $respon .= "{$no}. **{$fs->name}**\n"
+                             . "   - NIS: `{$fs->nis}` · Kelas: **{$fs->nama_kelas}**{$status}\n"
+                             . "   - Kartu RFID: {$rfid}{$pklInfo}\n\n";
+                }
+                return trim($respon);
+            }
+        }
+
+        // C. Siswa yang belum absen hari ini
+        if (preg_match('/(siswa.*belum\s+(absen|hadir|masuk)|siapa.*belum\s+absen)/i', $lower)) {
+            $db->query("SELECT s.nis, u.name, k.nama_kelas 
+                        FROM siswa s 
+                        JOIN users u ON s.user_id = u.id 
+                        JOIN kelas k ON s.kelas_id = k.id 
+                        WHERE k.status != 'pkl' 
+                          AND s.id NOT IN (SELECT siswa_id FROM absensi_siswa WHERE tanggal = :tgl)
+                        ORDER BY k.nama_kelas ASC, u.name ASC LIMIT 25");
+            $db->bind(':tgl', $today);
+            $unAbsen = $db->resultSet();
+
+            $totBelum = count($unAbsen);
+            if ($totBelum === 0) {
+                return "**Presensi Siswa Hari Ini**\n\nLuar biasa! Seluruh siswa kelas reguler telah melakukan tap kartu presensi hari ini.";
+            }
+
+            $respon = "**Daftar Siswa Belum Absen Hari Ini** (Sampel {$totBelum} Siswa)\n\n";
+            foreach ($unAbsen as $i => $ua) {
+                $no = $i + 1;
+                $respon .= "{$no}. **{$ua->name}** ({$ua->nama_kelas}) · NIS: {$ua->nis}\n";
+            }
+            $respon .= "\n_Segera ingatkan siswa untuk melakukan tap kartu RFID di gerbang scanner sekolah._";
+            return trim($respon);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 5. QUERY DAFTAR KELAS & JURUSAN
+        // ─────────────────────────────────────────────────────────────────────
+        if (preg_match('/(daftar\s+kelas|ada\s+kelas\s+apa\s+saja|kelas\s+apa\s+saja|semua\s+kelas)/i', $lower)) {
+            $db->query("SELECT k.nama_kelas, k.tingkat, k.jurusan, k.status, u.name as wali_nama,
+                               (SELECT COUNT(*) FROM siswa s WHERE s.kelas_id = k.id) as total_siswa 
+                        FROM kelas k 
+                        LEFT JOIN users u ON k.wali_kelas_id = u.id 
+                        ORDER BY k.nama_kelas ASC");
+            $kelasList = $db->resultSet();
+
+            $tot = count($kelasList);
+            $respon = "**Daftar Kelas SMK NU Wargabinangun** (Total: {$tot} Kelas)\n\n";
+            foreach ($kelasList as $i => $k) {
+                $no = $i + 1;
+                $wali = !empty($k->wali_nama) ? $k->wali_nama : 'Belum Ada Wali';
+                $statusBadge = ($k->status === 'pkl') ? " · **[Sedang PKL]**" : " · _[Reguler]_";
+                $respon .= "{$no}. **{$k->nama_kelas}** ({$k->total_siswa} Siswa){$statusBadge}\n"
+                         . "   - Wali Kelas: {$wali}\n";
+            }
+            return trim($respon);
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // 6. QUERY PERANGKAT IOT SCANNER RFID
+        // ─────────────────────────────────────────────────────────────────────
+        if (preg_match('/\b(iot|alat|scanner|perangkat|mesin\s+absensi)\b/i', $lower)) {
+            $db->query("SELECT device_name, location, status, ip_address, last_seen FROM iot_devices ORDER BY id ASC");
+            $devices = $db->resultSet();
+
+            if (empty($devices)) {
+                return "**Perangkat IoT Scanner RFID**\n\nBelum ada perangkat IoT yang terdaftar di sistem.";
+            }
+
+            $respon = "**Status Perangkat IoT Scanner RFID**\n\n";
+            foreach ($devices as $i => $d) {
+                $no = $i + 1;
+                $stEmoji = (strtolower($d->status) === 'online') ? '🟢 Online' : '🔴 Offline';
+                $ip = !empty($d->ip_address) ? "IP: `{$d->ip_address}`" : "IP belum terdeteksi";
+                $loc = !empty($d->location) ? "Lokasi: {$d->location}" : "Gerbang Sekolah";
+                $last = !empty($d->last_seen) ? $d->last_seen : '-';
+
+                $respon .= "{$no}. **{$d->device_name}** ({$stEmoji})\n"
+                         . "   - {$loc} · {$ip}\n"
+                         . "   - Terakhir Aktif: {$last}\n\n";
+            }
+            return trim($respon);
+        }
+
+        return false;
+    }
+
+
+    // =========================================================================
+    // SMART FUZZY SEARCH: PENCARIAN CERDAS DATABASE JIKA POLA TIDAK SPESIFIK
+    // =========================================================================
+    private function handleSmartFuzzySearch($message, $userId, $userRole, $db) {
+        $clean = trim(preg_replace('/[^a-zA-Z0-9\s]/u', ' ', $message));
+        $lower = strtolower($clean);
+        $words = preg_split('/\s+/', $lower, -1, PREG_SPLIT_NO_EMPTY);
+        $today = date('Y-m-d');
+
+        // Kata-kata umum yang diabaikan dalam pencarian nama
+        $stopwords = ['apakah', 'siapa', 'berapa', 'gimana', 'bagaimana', 'tolong', 'info', 'data', 'cek', 'lihat', 'cari', 'ada', 'dari', 'yang', 'dan', 'atau', 'di', 'ke', 'ini', 'itu', 'saya', 'kamu', 'kami', 'kita', 'halo', 'hai', 'dong', 'ya', 'kah'];
+        $searchWords = array_values(array_filter($words, function($w) use ($stopwords) {
+            return strlen($w) >= 3 && !in_array($w, $stopwords);
+        }));
+
+        if (!empty($searchWords)) {
+            $keyword = implode(' ', $searchWords);
+
+            // 1. Cek di tabel users (Guru, Siswa, Wali Kelas)
+            $db->query("SELECT u.id, u.name, u.role, u.username,
+                               g.nip, g.subject, g.is_pembimbing_pkl,
+                               s.id as siswa_id, s.nis, s.rfid_uid, k.nama_kelas, k.status as status_kelas 
+                        FROM users u 
+                        LEFT JOIN guru g ON g.user_id = u.id 
+                        LEFT JOIN siswa s ON s.user_id = u.id 
+                        LEFT JOIN kelas k ON s.kelas_id = k.id 
+                        WHERE LOWER(u.name) LIKE :q OR LOWER(u.username) LIKE :q2 OR g.nip LIKE :q3 OR s.nis LIKE :q4 
+                        LIMIT 4");
+            $db->bind(':q', '%' . $keyword . '%');
+            $db->bind(':q2', '%' . $keyword . '%');
+            $db->bind(':q3', '%' . $keyword . '%');
+            $db->bind(':q4', '%' . $keyword . '%');
+            $usersFound = $db->resultSet();
+
+            if (!empty($usersFound)) {
+                $respon = "**Hasil Pencarian Data Sekolah ('{$keyword}'):**\n\n";
+                foreach ($usersFound as $i => $uf) {
+                    $no = $i + 1;
+                    $roleLabel = ucfirst($uf->role);
+                    if ($uf->role === 'guru') {
+                        $mapel = !empty($uf->subject) ? " · Mapel: **{$uf->subject}**" : "";
+                        $nip = (!empty($uf->nip) && $uf->nip !== '-') ? " · NIP: `{$uf->nip}`" : "";
+                        $pemb = ($uf->is_pembimbing_pkl == 1) ? " · **[Pembimbing PKL]**" : "";
+
+                        // Cek presensi hari ini
+                        $db->query("SELECT jam_datang, status FROM absensi_guru WHERE guru_id = (SELECT id FROM guru WHERE user_id = :uid) AND tanggal = :tgl");
+                        $db->bind(':uid', $uf->id);
+                        $db->bind(':tgl', $today);
+                        $absenG = $db->single();
+                        $statusAbsen = $absenG ? " · Kehadiran Hari Ini: **{$absenG->status}** ({$absenG->jam_datang} WIB)" : " · Kehadiran: _Belum Absen_";
+
+                        $respon .= "{$no}. **{$uf->name}** ({$roleLabel}){$mapel}{$nip}{$pemb}{$statusAbsen}\n";
+                    } elseif ($uf->role === 'siswa') {
+                        $kelas = !empty($uf->nama_kelas) ? " · Kelas: **{$uf->nama_kelas}**" : "";
+                        $nis = !empty($uf->nis) ? " · NIS: `{$uf->nis}`" : "";
+                        $rfid = !empty($uf->rfid_uid) ? " · RFID: `{$uf->rfid_uid}`" : "";
+
+                        // Cek presensi hari ini
+                        $db->query("SELECT jam_datang, jam_pulang, status FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :tgl");
+                        $db->bind(':sid', $uf->siswa_id);
+                        $db->bind(':tgl', $today);
+                        $absenS = $db->single();
+                        $statusAbsen = $absenS ? " · Status Hari Ini: **{$absenS->status}** (Masuk " . substr($absenS->jam_datang, 0, 5) . " WIB)" : " · Status: _Belum Absen_";
+
+                        $respon .= "{$no}. **{$uf->name}** ({$roleLabel}){$kelas}{$nis}{$rfid}{$statusAbsen}\n";
+                    } else {
+                        $respon .= "{$no}. **{$uf->name}** (Peran: {$roleLabel} · Username: `{$uf->username}`)\n";
+                    }
+                }
+                return trim($respon);
+            }
+
+            // 2. Cek di tempat / kelompok PKL
+            $db->query("SELECT pk.*, k.nama_kelas, u.name as pembimbing_nama 
+                        FROM pkl_kelompok pk 
+                        LEFT JOIN kelas k ON pk.kelas_id = k.id 
+                        LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id 
+                        LEFT JOIN users u ON g.user_id = u.id 
+                        WHERE LOWER(pk.nama_tempat) LIKE :q OR LOWER(pk.nama_kelompok) LIKE :q2 
+                        LIMIT 3");
+            $db->bind(':q', '%' . $keyword . '%');
+            $db->bind(':q2', '%' . $keyword . '%');
+            $pklFound = $db->resultSet();
+
+            if (!empty($pklFound)) {
+                $respon = "**Hasil Pencarian Tempat PKL ('{$keyword}'):**\n\n";
+                foreach ($pklFound as $i => $pf) {
+                    $no = $i + 1;
+                    $pemb = !empty($pf->pembimbing_nama) ? $pf->pembimbing_nama : 'Belum Ditentukan';
+                    $respon .= "{$no}. **{$pf->nama_tempat}** (Kelompok: {$pf->nama_kelompok})\n"
+                             . "   - Kelas: {$pf->nama_kelas} · Pembimbing: **{$pemb}**\n"
+                             . "   - Koordinat: `{$pf->latitude}, {$pf->longitude}` (Radius: {$pf->radius_meter}m)\n";
+                }
+                return trim($respon);
+            }
+        }
+
+        // 3. Fallback Ringkasan Direktori Data Sekolah
+        $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswa = (int)($db->single()->t ?? 0);
+        $db->query("SELECT COUNT(*) as t FROM guru");  $totGuru  = (int)($db->single()->t ?? 0);
+        $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelas = (int)($db->single()->t ?? 0);
+        $db->query("SELECT COUNT(*) as t FROM pkl_kelompok"); $totPkl = (int)($db->single()->t ?? 0);
+
+        $db->query("SELECT COUNT(*) as t FROM absensi_siswa WHERE tanggal = :tgl");
+        $db->bind(':tgl', $today);
+        $hadirSiswa = (int)($db->single()->t ?? 0);
+
+        $db->query("SELECT COUNT(*) as t FROM absensi_guru WHERE tanggal = :tgl");
+        $db->bind(':tgl', $today);
+        $hadirGuru = (int)($db->single()->t ?? 0);
+
+        $tglIndo = $this->formatTanggalIndo($today);
+
+        return "**Pusat Data Sistem Absensi SMK NU Wargabinangun**\n"
+             . "_{$tglIndo}_\n\n"
+             . "📊 **Ringkasan Data Sekolah:**\n"
+             . "- **Siswa Terdaftar** : {$totSiswa} siswa ({$hadirSiswa} hadir hari ini)\n"
+             . "- **Guru Terdaftar** : {$totGuru} guru ({$hadirGuru} hadir hari ini)\n"
+             . "- **Total Kelas** : {$totKelas} kelas (Jurusan TKJ, TKR, TSM)\n"
+             . "- **Kelompok PKL** : {$totPkl} tempat industri mitra aktif\n\n"
+             . "💡 **Pertanyaan yang dapat Anda tanyakan:**\n"
+             . "1. `siapa pembimbing pkl` — Daftar guru pembimbing PKL tiap jurusan\n"
+             . "2. `tempat pkl` — Daftar lokasi, kelompok, dan titik GPS tempat PKL\n"
+             . "3. `daftar guru` atau `guru aswaja` — Data guru dan mata pelajaran\n"
+             . "4. `daftar wali kelas` atau `wali kelas 10 tkj` — Wali kelas tiap tingkat\n"
+             . "5. `siswa 10 tkj` atau `cari siswa [nama]` — Data siswa dan kartu RFID\n"
+             . "6. `kehadiran guru hari ini` atau `siapa belum absen` — Monitoring presensi real-time";
+    }
+
 }

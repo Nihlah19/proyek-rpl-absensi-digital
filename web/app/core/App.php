@@ -49,9 +49,21 @@ class App {
             return explode('/', $url);
         }
 
-        // Prioritas 2: Fallback membaca REQUEST_URI (Vercel Serverless Function / Caddy / Nginx)
+        // Prioritas 2: Fallback membaca REQUEST_URI (Vercel Serverless Function / Caddy / Nginx / Apache subdirektori)
         $reqUri = $_SERVER['REQUEST_URI'] ?? '/';
         $path = parse_url($reqUri, PHP_URL_PATH) ?? '/';
+
+        // Buang prefix subdirektori jika aplikasi berjalan di folder (misal /AbsensiRFID/web/public atau /web/public)
+        $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+        $scriptDir  = dirname($scriptName);
+        if ($scriptDir !== '/' && $scriptDir !== '.' && !empty($scriptDir)) {
+            if (str_starts_with($path, $scriptDir)) {
+                $path = substr($path, strlen($scriptDir));
+            }
+        }
+
+        // Buang awalan index.php jika ada di URL
+        $path = preg_replace('#^/index\.php#', '', $path);
         $path = preg_replace('#^/(web/public|api)#', '', $path);
         $path = trim($path, '/');
         if (!empty($path)) {

@@ -275,10 +275,17 @@
 
         <!-- Right Action: Outlined Pill Login Portal -->
         <div class="flex items-center gap-3">
+            <?php if (!empty($data['isLoggedIn'])): ?>
+            <a href="<?= BASEURL; ?>/dashboard" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-forest bg-forest text-lime hover:bg-spruce text-xs font-bold transition-all shadow-sm">
+                <i class="fa-solid fa-gauge text-xs"></i>
+                <span>Ke Dashboard (<?= htmlspecialchars(explode(' ', $data['userName'] ?? '')[0]) ?>)</span>
+            </a>
+            <?php else: ?>
             <a href="<?= BASEURL; ?>/auth/login" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-forest bg-paper hover:bg-forest hover:text-lime text-forest text-xs font-bold transition-all">
                 <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
                 <span>Masuk Portal</span>
             </a>
+            <?php endif; ?>
 
             <!-- Mobile Hamburger Toggle -->
             <button onclick="toggleMobileNav()" class="lg:hidden w-9 h-9 rounded-full bg-fog border border-pebble/40 text-forest flex items-center justify-center" aria-label="Toggle Navigation">
@@ -294,9 +301,15 @@
     <a href="#fitur" onclick="toggleMobileNav()" class="block py-2 text-sm font-bold text-forest border-b border-fog">Fitur Presensi</a>
     <a href="#alur-kerja" onclick="toggleMobileNav()" class="block py-2 text-sm font-bold text-forest border-b border-fog">Alur Sistem</a>
     <a href="#akses-peran" onclick="toggleMobileNav()" class="block py-2 text-sm font-bold text-forest border-b border-fog">Peran Pengguna</a>
+    <?php if (!empty($data['isLoggedIn'])): ?>
+    <a href="<?= BASEURL; ?>/dashboard" class="block py-2 text-sm font-bold text-forest">
+        <i class="fa-solid fa-gauge mr-2"></i> Buka Dashboard
+    </a>
+    <?php else: ?>
     <a href="<?= BASEURL; ?>/auth/login" class="block py-2 text-sm font-bold text-spruce">
         <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i> Buka Portal Login
     </a>
+    <?php endif; ?>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->

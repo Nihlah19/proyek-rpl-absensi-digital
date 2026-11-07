@@ -11,10 +11,10 @@ $savedProvider = $currentAiConfig['provider'] ?? 'groq';
         <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/90">
             <div class="flex items-center gap-2.5">
                 <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-base border border-emerald-200 dark:border-emerald-800/40">
-                    <i class="fa-solid fa-robot"></i>
+                    <i class="fa-solid fa-sliders"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">Konfigurasi AI Chatbot</h3>
+                    <h3 class="font-bold text-slate-900 dark:text-white text-sm">Pengaturan Integrasi Chatbot</h3>
                     <p class="text-xs text-slate-500 dark:text-slate-400">Atur Provider (Groq / xAI Grok / Gemini), API Key, dan Model AI</p>
                 </div>
             </div>
@@ -31,10 +31,10 @@ $savedProvider = $currentAiConfig['provider'] ?? 'groq';
                     Provider AI <span class="text-rose-500">*</span>
                 </label>
                 <select id="ai_provider_select" onchange="onProviderChanged()" class="vh-input w-full text-xs font-semibold">
-                    <option value="groq" <?= ($savedProvider === 'groq') ? 'selected' : '' ?>>⚡ Groq (Llama 3.3, Llama 3.1, Mixtral) — Cepat &amp; Hemat (Rekomendasi)</option>
-                    <option value="grok" <?= ($savedProvider === 'grok') ? 'selected' : '' ?>>🤖 xAI Grok (Grok 2, Grok Beta)</option>
-                    <option value="gemini" <?= ($savedProvider === 'gemini') ? 'selected' : '' ?>>🌐 Google Gemini (Gemini 2.5 Flash, 2.0 Flash)</option>
-                    <option value="auto">🔍 Deteksi Otomatis (Dari Format API Key)</option>
+                    <option value="groq" <?= ($savedProvider === 'groq') ? 'selected' : '' ?>>Groq Cloud (Llama 3.3, Llama 3.1) — Cepat &amp; Efisien (Rekomendasi)</option>
+                    <option value="grok" <?= ($savedProvider === 'grok') ? 'selected' : '' ?>>xAI Grok (Grok 2, Grok Beta)</option>
+                    <option value="gemini" <?= ($savedProvider === 'gemini') ? 'selected' : '' ?>>Google Gemini (Gemini 2.5 Flash, 2.0 Flash)</option>
+                    <option value="auto">Deteksi Otomatis dari Awalan API Key</option>
                 </select>
             </div>
 
@@ -277,7 +277,7 @@ async function saveAiConfig() {
         const json = await res.json();
 
         if (json.success) {
-            alert(json.message || 'Konfigurasi AI Chatbot berhasil disimpan!');
+            alert(json.message || 'Pengaturan Integrasi Chatbot berhasil disimpan!');
             closeAiConfigModal();
         } else {
             alert(json.message || 'Gagal menyimpan konfigurasi.');
