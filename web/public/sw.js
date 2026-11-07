@@ -1,8 +1,9 @@
-const CACHE_NAME = 'absensi-smk-v1.4';
+const CACHE_NAME = 'absensi-smk-v2.0';
 const STATIC_ASSETS = [
     './offline.html',
     './manifest.json',
     './assets/img/logo.png',
+    './assets/img/logo.webp',
     './assets/img/icon-192.png',
     './assets/img/icon-512.png',
     './assets/img/apple-touch-icon.png',

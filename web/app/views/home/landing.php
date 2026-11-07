@@ -23,9 +23,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Local Vendor Libraries -->
-    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Vendor Libraries (Compiled CSS first for instant paint, JS deferred) -->
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
+    <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
 
     <!-- Wise Design Tokens via Tailwind CSS -->
     <script>
@@ -261,7 +265,7 @@
         
         <!-- Brand / Identity -->
         <a href="<?= BASEURL; ?>" class="flex items-center gap-3 group">
-            <img src="<?= BASEURL; ?>/assets/img/logo.png?v=3" alt="Logo SMK NU Wargabinangun" class="h-10 w-auto object-contain shrink-0">
+            <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" fetchpriority="high">
             <span class="block text-sm font-extrabold tracking-tight text-obsidian uppercase font-sans leading-none">SMK NU WARGABINANGUN</span>
         </a>
 
@@ -767,7 +771,7 @@
         
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-fog">
             <div class="flex items-center gap-3">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=3" alt="Logo SMK NU Wargabinangun" class="h-10 w-auto object-contain shrink-0">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" loading="lazy" decoding="async">
                 <div>
                     <h4 class="text-sm font-extrabold text-obsidian uppercase leading-none font-sans">SMK NU WARGABINANGUN</h4>
                     <p class="text-xs text-slate mt-1">Jl. Lapangan Bola Wargabinangun, Cirebon, Jawa Barat</p>

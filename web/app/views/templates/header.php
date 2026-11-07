@@ -37,16 +37,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Local Vendor Libraries (Offline Ready) -->
-    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Vendor Libraries (Precompiled CSS first, JS non-blocking defer) -->
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
-    <!-- Chart.js -->
-    <script src="<?= BASEURL; ?>/assets/vendor/chartjs/chart.min.js"></script>
-    <!-- HTML5 QR Code Scanner -->
-    <script src="<?= BASEURL; ?>/assets/vendor/html5-qrcode/html5-qrcode.min.js"></script>
-    <!-- QRCodeJS -->
-    <script src="<?= BASEURL; ?>/assets/vendor/qrcodejs/qrcode.min.js"></script>    
+    <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <!-- Chart.js (Deferred) -->
+    <script defer src="<?= BASEURL; ?>/assets/vendor/chartjs/chart.min.js"></script>
+    <!-- HTML5 QR Code Scanner (Deferred) -->
+    <script defer src="<?= BASEURL; ?>/assets/vendor/html5-qrcode/html5-qrcode.min.js"></script>
+    <!-- QRCodeJS (Deferred) -->
+    <script defer src="<?= BASEURL; ?>/assets/vendor/qrcodejs/qrcode.min.js"></script>    
 
     <script>
         tailwind.config = {
@@ -589,7 +592,7 @@
                 <i id="sidebarToggleIcon" class="fa-solid fa-bars text-base"></i>
             </button>
             <a href="<?= BASEURL; ?>/dashboard" class="flex items-center gap-3 group transition-all">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=3" alt="Logo SMK NU Wargabinangun" class="h-9 w-auto object-contain shrink-0">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="36" height="36" class="h-9 w-9 object-contain shrink-0" fetchpriority="high">
                 <div class="hidden sm:block">
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-headline">SMK NU WARGABINANGUN</h2>
                     <p class="text-[10.5px] text-[#2e6d22] dark:text-[#9fe870] font-semibold tracking-wider uppercase leading-tight flex items-center gap-1.5">

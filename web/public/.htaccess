@@ -2,6 +2,92 @@ Options -Indexes
 Options +FollowSymLinks
 RewriteEngine On
 
+# ══════════════════════════════════════════════════════════════
+# 1. GZIP / DEFLATE TEXT COMPRESSION (Menghemat transfer 75-85%)
+# ══════════════════════════════════════════════════════════════
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/x-font-otf
+    AddOutputFilterByType DEFLATE application/x-font-truetype
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    AddOutputFilterByType DEFLATE font/woff
+    AddOutputFilterByType DEFLATE font/woff2
+    AddOutputFilterByType DEFLATE image/svg+xml
+    AddOutputFilterByType DEFLATE image/x-icon
+</IfModule>
+
+# ══════════════════════════════════════════════════════════════
+# 2. BROWSER CACHING HEADERS (Lighthouse: Efficient Cache Policy)
+# ══════════════════════════════════════════════════════════════
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+
+    # HTML: Selalu revalidasi agar info dashboard/presensi/notif selalu real-time
+    ExpiresByType text/html "access plus 0 seconds"
+
+    # CSS & JavaScript: 1 tahun cache (file statis)
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType application/x-javascript "access plus 1 year"
+    ExpiresByType text/javascript "access plus 1 year"
+
+    # Gambar & WebP: 1 tahun cache
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+
+    # Webfonts: 1 tahun cache
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/opentype "access plus 1 year"
+    ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+
+    # Audio notifikasi
+    ExpiresByType audio/mpeg "access plus 1 month"
+    ExpiresByType audio/wav "access plus 1 month"
+</IfModule>
+
+# ══════════════════════════════════════════════════════════════
+# 3. HTTP HEADERS (Cache-Control Immutable & Performance)
+# ══════════════════════════════════════════════════════════════
+<IfModule mod_headers.c>
+    # Static Assets: Cache 1 Tahun + immutable
+    <FilesMatch "\.(css|js|woff2|woff|ttf|eot|svg|webp|png|jpg|jpeg|gif|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+        Header unset ETag
+    </FilesMatch>
+
+    # Keamanan & Optimasi Jaringan
+    Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# Disable ETag
+FileETag None
+
+# ══════════════════════════════════════════════════════════════
+# 4. MVC URL REWRITING (Core Routing)
+# ══════════════════════════════════════════════════════════════
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]

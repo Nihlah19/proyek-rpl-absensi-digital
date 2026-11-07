@@ -22,9 +22,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Local Vendor Libraries -->
-    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <!-- Preload Critical Icon WebFont -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
+
+    <!-- Local Vendor Libraries (Compiled CSS first, JS deferred) -->
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
+    <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
 
     <!-- Wise Design Tokens -->
     <script>
@@ -175,7 +179,7 @@
         <div class="text-center space-y-2">
             <!-- Direct Logo without green box -->
             <a href="<?= BASEURL; ?>" class="inline-block hover:opacity-95 transition-opacity">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=3" alt="Logo SMK NU Wargabinangun" class="h-16 w-auto object-contain mx-auto mb-2 logo-smooth">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="64" height="64" class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" fetchpriority="high">
             </a>
 
             <h1 class="wise-headline text-2xl sm:text-[28px] uppercase">

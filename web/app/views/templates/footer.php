@@ -2,7 +2,7 @@
     <footer class="w-full mt-auto py-6 px-4 sm:px-8 border-t border-[#e3e8e1]/70 dark:border-[#233527]/70 bg-white/50 dark:bg-[#141f17]/40 backdrop-blur-xs">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div class="flex items-center gap-2.5">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=3" alt="Logo SMK" class="h-6 w-auto object-contain shrink-0 opacity-80 hover:opacity-100 transition-opacity">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK" width="24" height="24" class="h-6 w-6 object-contain shrink-0 opacity-80 hover:opacity-100 transition-opacity" loading="lazy" decoding="async">
                 <span class="font-bold text-[#163300] dark:text-emerald-400 font-headline uppercase tracking-tight text-[11px]">
                     SMK NU Wargabinangun
                 </span>

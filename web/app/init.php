@@ -1,4 +1,12 @@
 <?php
+// Aktifkan kompresi output GZIP otomatis (Mengurangi payload transfer 75-85% dan mempercepat TTFB/LCP)
+if (!headers_sent() && extension_loaded('zlib')) {
+    if (!ini_get('zlib.output_compression')) {
+        @ini_set('zlib.output_compression', 'On');
+        @ini_set('zlib.output_compression_level', '6');
+    }
+}
+
 // Konfigurasi cookie sesi sebelum session_start()
 // agar kompatibel dengan ngrok (HTTPS), Vercel, maupun localhost (HTTP).
 if (!session_id()) {
