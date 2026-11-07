@@ -26,43 +26,65 @@
     <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
     <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
 
-    <!-- Wise Design Tokens for Tailwind CSS Runtime (Defined on window before script loads) -->
+    <!-- Local Vendor Libraries -->
+    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
+
+    <!-- Wise Design Tokens via Tailwind CSS -->
     <script>
-        window.tailwind = {
-            config: {
-                theme: {
-                    extend: {
-                        colors: {
-                            forest: '#163300',     // Dominant brand dark
-                            lime: '#9fe870',       // Electric lime voltage (CTA & active states)
-                            spruce: '#054d28',     // Secondary dark green
-                            linen: '#e2f6d5',      // Pale green wash / badges
-                            charcoal: '#454745',   // Body text, dense UI
-                            obsidian: '#0e0f0c',   // Display headlines, high contrast
-                            pebble: '#868685',     // Muted secondary text, borders
-                            slate: '#6a6c6a',      // Supporting body text
-                            fog: '#e8ebe6',        // Card surfaces & soft dividers
-                            paper: '#ffffff',      // Page canvas & white cards
-                        },
-                        fontFamily: {
-                            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                            mono: ['JetBrains Mono', 'monospace'],
-                        },
-                        borderRadius: {
-                            pill: '9999px',
-                            card: '10px',
-                            largeCard: '28px',
-                        }
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        forest: '#163300',     // Dominant brand dark
+                        lime: '#9fe870',       // Electric lime voltage (CTA & active states)
+                        spruce: '#054d28',     // Secondary dark green
+                        linen: '#e2f6d5',      // Pale green wash / badges
+                        charcoal: '#454745',   // Body text, dense UI
+                        obsidian: '#0e0f0c',   // Display headlines, high contrast
+                        pebble: '#868685',     // Muted secondary text, borders
+                        slate: '#6a6c6a',      // Supporting body text
+                        fog: '#e8ebe6',        // Card surfaces & soft dividers
+                        paper: '#ffffff',      // Page canvas & white cards
+                    },
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    borderRadius: {
+                        pill: '9999px',
+                        card: '10px',
+                        largeCard: '28px',
                     }
                 }
             }
         };
     </script>
-    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
+
+        /* Wise Design System Core Tokens (Instant First-Paint Fallback) */
+        .bg-forest { background-color: #163300; }
+        .text-forest { color: #163300; }
+        .border-forest { border-color: #163300; }
+        .bg-lime { background-color: #9fe870; }
+        .text-lime { color: #9fe870; }
+        .border-lime { border-color: #9fe870; }
+        .bg-spruce { background-color: #054d28; }
+        .text-spruce { color: #054d28; }
+        .bg-linen { background-color: #e2f6d5; }
+        .text-charcoal { color: #454745; }
+        .text-obsidian { color: #0e0f0c; }
+        .bg-obsidian { background-color: #0e0f0c; }
+        .text-pebble { color: #868685; }
+        .text-slate { color: #6a6c6a; }
+        .bg-fog { background-color: #e8ebe6; }
+        .border-fog { border-color: #e8ebe6; }
+        .bg-paper { background-color: #ffffff; }
+        .rounded-pill { border-radius: 9999px; }
+        .rounded-card { border-radius: 10px; }
+        .rounded-largeCard { border-radius: 28px; }
         
         html {
             scroll-behavior: smooth;
