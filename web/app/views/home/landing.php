@@ -26,41 +26,40 @@
     <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
     <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
 
-    <!-- Local Vendor Libraries (Compiled CSS first for instant paint, JS deferred) -->
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
-    <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
-
-    <!-- Wise Design Tokens via Tailwind CSS -->
+    <!-- Wise Design Tokens for Tailwind CSS Runtime (Defined on window before script loads) -->
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        forest: '#163300',     // Dominant brand dark
-                        lime: '#9fe870',       // Electric lime voltage (CTA & active states)
-                        spruce: '#054d28',     // Secondary dark green
-                        linen: '#e2f6d5',      // Pale green wash / badges
-                        charcoal: '#454745',   // Body text, dense UI
-                        obsidian: '#0e0f0c',   // Display headlines, high contrast
-                        pebble: '#868685',     // Muted secondary text, borders
-                        slate: '#6a6c6a',      // Supporting body text
-                        fog: '#e8ebe6',        // Card surfaces & soft dividers
-                        paper: '#ffffff',      // Page canvas & white cards
-                    },
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    borderRadius: {
-                        pill: '9999px',
-                        card: '10px',
-                        largeCard: '28px',
+        window.tailwind = {
+            config: {
+                theme: {
+                    extend: {
+                        colors: {
+                            forest: '#163300',     // Dominant brand dark
+                            lime: '#9fe870',       // Electric lime voltage (CTA & active states)
+                            spruce: '#054d28',     // Secondary dark green
+                            linen: '#e2f6d5',      // Pale green wash / badges
+                            charcoal: '#454745',   // Body text, dense UI
+                            obsidian: '#0e0f0c',   // Display headlines, high contrast
+                            pebble: '#868685',     // Muted secondary text, borders
+                            slate: '#6a6c6a',      // Supporting body text
+                            fog: '#e8ebe6',        // Card surfaces & soft dividers
+                            paper: '#ffffff',      // Page canvas & white cards
+                        },
+                        fontFamily: {
+                            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                            mono: ['JetBrains Mono', 'monospace'],
+                        },
+                        borderRadius: {
+                            pill: '9999px',
+                            card: '10px',
+                            largeCard: '28px',
+                        }
                     }
                 }
             }
-        }
+        };
     </script>
+    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }

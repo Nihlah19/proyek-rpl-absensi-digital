@@ -1,5 +1,5 @@
 </main>
-    <footer class="w-full mt-auto py-6 px-4 sm:px-8 border-t border-[#e3e8e1]/70 dark:border-[#233527]/70 bg-white/50 dark:bg-[#141f17]/40 backdrop-blur-xs">
+    <footer class="w-full mt-auto py-6 px-4 sm:px-8 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 ">
         <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div class="flex items-center gap-2.5">
                 <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK" width="24" height="24" class="h-6 w-6 object-contain shrink-0 opacity-80 hover:opacity-100 transition-opacity" loading="lazy" decoding="async">
@@ -30,42 +30,27 @@
     bottom: 1.5rem;
     right: 1.5rem;
     z-index: 9999;
-    width: 58px;
-    height: 58px;
+    width: 52px;
+    height: 52px;
     border-radius: 9999px;
-    background: linear-gradient(135deg, #10b981 0%, #059669 55%, #047857 100%);
-    color: #fff;
-    border: 2px solid rgba(255, 255, 255, 0.35);
+    background: #059669;
+    color: #ffffff;
+    border: 1px solid #10b981;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 25px -4px rgba(5, 150, 105, 0.48), 0 4px 10px -2px rgba(0, 0, 0, 0.1);
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, opacity 0.15s ease;
+    box-shadow: 0 4px 14px 0 rgba(0, 0, 0, 0.18);
+    transition: transform 0.15s ease, background-color 0.15s ease;
 }
 #cw-btn:hover {
-    transform: scale(1.1) translateY(-2px);
-    box-shadow: 0 14px 32px -4px rgba(5, 150, 105, 0.6), 0 6px 14px rgba(0, 0, 0, 0.12);
+    background: #047857;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px 0 rgba(0, 0, 0, 0.22);
 }
 #cw-btn:active {
     transform: scale(0.96);
 }
-
-/* Dot aktif di FAB */
-#cw-btn::after {
-    content: '';
-    position: absolute;
-    top: 1px;
-    right: 1px;
-    width: 13px;
-    height: 13px;
-    background: #34d399;
-    border-radius: 50%;
-    border: 2.5px solid #fff;
-    animation: cwPulse 1.8s ease-in-out infinite;
-    box-shadow: 0 0 8px rgba(52, 211, 153, 0.8);
-}
-@keyframes cwPulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.3);opacity:.6} }
 
 /* ── Jendela Chat ── */
 #cw-win {
@@ -77,7 +62,7 @@
     max-width: calc(100vw - 1.5rem);
     height: 520px;
     max-height: calc(100vh - 7rem);
-    background: #f8fafc;
+    background: #ffffff;
     border-radius: 20px;
     border: 1px solid rgba(203,213,225,.8);
     box-shadow: 0 12px 40px rgba(0,0,0,.14);
@@ -280,7 +265,7 @@
     flex: 1;
     min-width: 0;
     padding: .6rem 1rem;
-    background: #f8fafc;
+    background: #ffffff;
     border: 1.5px solid #e2e8f0;
     border-radius: 12px;
     font-size: .8125rem;
@@ -320,7 +305,7 @@
     background: #334155;
 }
 .dark .cw-bubble-bot {
-    background: #1e293b;
+    background: #0f172a;
     border-color: #334155;
     color: #f1f5f9;
     box-shadow: 0 1px 4px rgba(0,0,0,.25);
@@ -333,11 +318,11 @@
     color: #34d399;
 }
 .dark .cw-typing-dots {
-    background: #1e293b;
+    background: #0f172a;
     border-color: #334155;
 }
 .dark #cw-input-bar {
-    background: #1e293b;
+    background: #0f172a;
     border-color: #334155;
 }
 .dark #cw-input {

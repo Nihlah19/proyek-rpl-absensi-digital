@@ -166,12 +166,12 @@
             border-color: #cbd5c8;
         }
         html.dark .dashboard-card, html.dark .vh-card, html.dark .gd-card {
-            background-color: #141f17 !important;
-            border-color: #233527 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
             box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.4);
         }
         html.dark .dashboard-card:hover, html.dark .vh-card:hover, html.dark .gd-card:hover {
-            border-color: #3b5440 !important;
+            border-color: #475569 !important;
         }
 
         /* ── Hover Lift Animation (Micro-interaction) ── */
@@ -184,7 +184,7 @@
             border-color: #cbd5c8;
         }
         html.dark .hover-lift:hover {
-            border-color: #3b5440 !important;
+            border-color: #475569 !important;
             box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.6) !important;
         }
 
@@ -200,12 +200,12 @@
             border-color: #cbd5e1;
         }
         html.dark .dashboard-card, html.dark .vh-card, html.dark .gd-card, html.dark .apex-card {
-            background-color: #141f17 !important;
-            border-color: #233527 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
             box-shadow: none;
         }
         html.dark .dashboard-card:hover, html.dark .vh-card:hover, html.dark .gd-card:hover, html.dark .apex-card:hover {
-            border-color: #3b5440 !important;
+            border-color: #475569 !important;
         }
 
         /* Clean KPI Metric Card */
@@ -224,11 +224,11 @@
             border-color: #cbd5e1;
         }
         html.dark .apex-metric-card {
-            background-color: #141f17 !important;
-            border-color: #233527 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
         }
         html.dark .apex-metric-card:hover {
-            border-color: #3b5440 !important;
+            border-color: #475569 !important;
         }
 
         /* Metric Icon Box */
@@ -303,8 +303,8 @@
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
         }
         html.dark .apex-hero-banner {
-            background-color: #141f17 !important;
-            border-color: #233527 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
         }
 
         /* Professional Clean Buttons */
@@ -375,7 +375,7 @@
             border-radius: 10px !important;
             padding: 8px 14px !important;
             font-size: 13px !important;
-            color: #0e1410 !important;
+            color: #0f172a !important;
             transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
         }
         .vh-input::placeholder, .gd-input::placeholder {
@@ -391,38 +391,38 @@
            DUAL-THEME MASTER DESIGN SYSTEM (CALM LIGHT & COHESIVE DARK)
            ══════════════════════════════════════════════════════════════════════ */
         html.dark body {
-            background-color: #0e1410 !important;
+            background-color: #0f172a !important;
             color: #f1f5f9 !important;
             color-scheme: dark;
         }
 
         /* Harmonisasi Container & Card bg-white di seluruh halaman */
         html.dark .bg-white:not(.keep-white) {
-            background-color: #141f17 !important;
-            border-color: #233527 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
             color: #f1f5f9 !important;
         }
 
         html.dark .bg-white\/90,
         html.dark .bg-white\/95,
         html.dark .bg-white\/80 {
-            background-color: rgba(20, 30, 48, 0.94) !important;
-            border-color: #243044 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
         }
 
         html.dark .bg-slate-50,
         html.dark .bg-slate-50\/80,
         html.dark .bg-slate-50\/50 {
-            background-color: #0d1524 !important;
-            border-color: #243044 !important;
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
         }
 
         html.dark .bg-slate-100,
         html.dark .bg-slate-100\/90,
         html.dark .bg-slate-100\/80,
         html.dark .bg-slate-100\/70 {
-            background-color: #182338 !important;
-            border-color: #29384f !important;
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
             color: #e2e8f0 !important;
         }
 
@@ -450,13 +450,13 @@
         html.dark .border-slate-200\/60,
         html.dark .border-slate-200\/50,
         html.dark .border-slate-300 {
-            border-color: #243044 !important;
+            border-color: #334155 !important;
         }
 
         html.dark .divide-slate-100 > * + *,
         html.dark .divide-slate-100\/80 > * + *,
         html.dark .divide-slate-200 > * + * {
-            border-color: #243044 !important;
+            border-color: #334155 !important;
         }
 
         /* Global Inputs, Selects & Textareas */
@@ -465,8 +465,8 @@
         html.dark textarea,
         html.dark .vh-input,
         html.dark .gd-input {
-            background-color: #0d1524 !important;
-            border-color: #2b3a52 !important;
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
             color: #f8fafc !important;
         }
 
@@ -485,9 +485,9 @@
         /* Table Components in Dark Mode */
         html.dark table thead tr,
         html.dark table thead th {
-            background-color: #0d1524 !important;
+            background-color: #0f172a !important;
             color: #94a3b8 !important;
-            border-color: #243044 !important;
+            border-color: #334155 !important;
         }
 
         html.dark table tbody tr {
@@ -506,23 +506,23 @@
         html.dark #modalImportExcel .bg-white,
         html.dark #modalResetPassword .bg-white,
         html.dark [id*="modal"] .bg-white {
-            background-color: #141e30 !important;
-            border-color: #243044 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
             color: #f8fafc !important;
         }
 
         /* Tom Select Plugin Dark Styling */
         html.dark .ts-wrapper .ts-control {
-            background-color: #0d1524 !important;
-            border-color: #2b3a52 !important;
+            background-color: #0f172a !important;
+            border-color: #334155 !important;
             color: #f8fafc !important;
         }
         html.dark .ts-wrapper.single .ts-control {
-            background-color: #0d1524 !important;
+            background-color: #0f172a !important;
         }
         html.dark .ts-dropdown {
-            background-color: #141e30 !important;
-            border-color: #2b3a52 !important;
+            background-color: #1e293b !important;
+            border-color: #334155 !important;
             color: #f8fafc !important;
         }
         html.dark .ts-dropdown .option {
@@ -530,7 +530,7 @@
         }
         html.dark .ts-dropdown .option:hover,
         html.dark .ts-dropdown .active {
-            background-color: #1e2d42 !important;
+            background-color: #334155 !important;
             color: #34d399 !important;
         }
 
@@ -550,7 +550,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        html.dark ::-webkit-scrollbar-thumb { background: #2b3a52; }
+        html.dark ::-webkit-scrollbar-thumb { background: #334155; }
         html.dark ::-webkit-scrollbar-thumb:hover { background: #3b4e6b; }
         html { scroll-behavior: smooth; }
 
@@ -589,13 +589,13 @@
         button { cursor: pointer; }
     </style>
 </head>
-<body class="bg-[#f8faf7] dark:bg-[#0e1410] font-sans antialiased flex min-h-screen overflow-x-hidden text-slate-800 dark:text-slate-100 transition-colors duration-150">
+<body class="bg-slate-50 dark:bg-slate-950 font-sans antialiased flex min-h-screen overflow-x-hidden text-slate-800 dark:text-slate-100 transition-colors duration-150">
 
 <!-- Overlay Mobile -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-xs z-30 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
+<div id="sidebarOverlay" class="fixed inset-0 bg-slate-900/40 dark:bg-black/60  z-30 hidden md:hidden transition-opacity" onclick="toggleSidebar()"></div>
 
 <!-- Navbar Atas -->
-<nav class="bg-white/95 dark:bg-[#141f17]/95 backdrop-blur-md border-b border-[#e3e8e1] dark:border-[#233527] fixed top-0 left-0 w-full z-50 h-16 flex items-center px-4 sm:px-6 transition-colors duration-150">
+<nav class="bg-white dark:bg-slate-900  border-b border-slate-200 dark:border-slate-800 fixed top-0 left-0 w-full z-50 h-16 flex items-center px-4 sm:px-6 transition-colors duration-150">
     <div class="flex items-center justify-between w-full">
         <!-- Kiri: Logo & Toggle Sidebar -->
         <div class="flex items-center gap-3">
@@ -607,7 +607,7 @@
                 <div class="hidden sm:block">
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-headline">SMK NU WARGABINANGUN</h2>
                     <p class="text-[10.5px] text-[#2e6d22] dark:text-[#9fe870] font-semibold tracking-wider uppercase leading-tight flex items-center gap-1.5">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#10b981] pulse-calm inline-block"></span> Presensi RFID &amp; AI
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#10b981]  inline-block"></span> Presensi RFID &amp; AI
                     </p>
                 </div>
             </a>
@@ -667,23 +667,23 @@
                     </button>
                     
                     <!-- Dropdown Panel (Responsive on Mobile & Desktop) -->
-                    <div id="notifDropdownMenu" class="hidden fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2.5 sm:w-96 bg-white dark:bg-[#141f17] rounded-2xl shadow-xl border border-slate-200/90 dark:border-[#233527] z-50 animate-fade-in overflow-hidden">
-                        <div class="px-4 py-3 border-b border-slate-100 dark:border-[#233527] flex items-center justify-between bg-slate-50/60 dark:bg-[#18261c]/50">
+                    <div id="notifDropdownMenu" class="hidden fixed inset-x-3 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2.5 sm:w-96 bg-white dark:bg-[#1e293b] rounded-2xl shadow-xl border border-slate-200/90 dark:border-[#334155] z-50 animate-fade-in overflow-hidden">
+                        <div class="px-4 py-3 border-b border-slate-100 dark:border-[#334155] flex items-center justify-between bg-slate-50/60 dark:bg-[#18261c]/50">
                             <div class="flex items-center gap-2">
                                 <span class="text-xs font-bold text-slate-900 dark:text-white">Pemberitahuan</span>
-                                <span class="text-[10px] font-bold bg-[#ecf6e8] dark:bg-[#1b2b1f] text-[#2e6d22] dark:text-[#9fe870] px-2 py-0.5 rounded-full border border-[#d2e5cc] dark:border-[#233527]">Realtime</span>
+                                <span class="text-[10px] font-bold bg-[#ecf6e8] dark:bg-[#1b2b1f] text-[#2e6d22] dark:text-[#9fe870] px-2 py-0.5 rounded-full border border-[#d2e5cc] dark:border-[#334155]">Realtime</span>
                             </div>
                             <button onclick="markAllNotifAsRead()" class="text-[11px] font-semibold text-[#2e6d22] dark:text-[#9fe870] hover:underline cursor-pointer">
                                 Tandai Dibaca
                             </button>
                         </div>
-                        <div id="notifDropdownList" class="max-h-[calc(70vh-80px)] sm:max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-[#233527]">
+                        <div id="notifDropdownList" class="max-h-[calc(70vh-80px)] sm:max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-[#334155]">
                             <div class="p-6 text-center text-slate-400 dark:text-slate-500">
                                 <i class="fa-solid fa-spinner fa-spin text-lg mb-2 text-emerald-600 dark:text-emerald-400"></i>
                                 <p class="text-xs">Memuat notifikasi...</p>
                             </div>
                         </div>
-                        <div class="px-4 py-2.5 border-t border-slate-100 dark:border-[#233527] bg-slate-50/60 dark:bg-[#18261c]/40 text-center">
+                        <div class="px-4 py-2.5 border-t border-slate-100 dark:border-[#334155] bg-slate-50/60 dark:bg-[#18261c]/40 text-center">
                             <p class="text-[11px] text-slate-400 dark:text-slate-500">Notifikasi presensi &amp; catatan sekolah</p>
                         </div>
                     </div>
@@ -717,7 +717,7 @@
                     </button>
 
                     <!-- Dropdown Panel Menu -->
-                    <div id="userDropdownMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#141f17] rounded-xl shadow-xl border border-slate-200 dark:border-[#233527] z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80 animate-fade-in">
+                    <div id="userDropdownMenu" class="hidden absolute right-0 top-full mt-2 w-64 bg-white dark:bg-[#1e293b] rounded-xl shadow-xl border border-slate-200 dark:border-[#334155] z-50 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/80 animate-fade-in">
                         <!-- User Identity Header -->
                         <div class="p-3.5 bg-slate-50/70 dark:bg-[#18261c]/60 flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center overflow-hidden shrink-0 font-bold text-sm border border-emerald-200 dark:border-emerald-800/60">
@@ -798,7 +798,7 @@
 
 <?php if (isset($headerBarcodeId) && $headerBarcodeId): ?>
 <!-- Modal QR Code -->
-<div id="headerQrModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70 backdrop-blur-xs hidden flex items-center justify-center p-4">
+<div id="headerQrModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70  hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-6 text-center animate-fade-in">
         <h3 class="text-base font-bold text-slate-900 dark:text-white font-headline">QR Code Presensi Guru</h3>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4"><?= htmlspecialchars(SessionHelper::get('name')) ?></p>
@@ -860,7 +860,7 @@ function downloadHeaderQr() {
 <?php endif; ?>
 
 <!-- Sidebar Menu (Clean, Consistent & Dual-Theme Ready) -->
-<aside id="sidebarMenu" class="fixed top-16 left-0 z-40 w-64 bg-white dark:bg-[#141f17] border-r border-[#e3e8e1] dark:border-[#233527] flex flex-col h-[calc(100vh-4rem)] transition-colors duration-150">
+<aside id="sidebarMenu" class="fixed top-16 left-0 z-40 w-64 bg-white dark:bg-[#1e293b] border-r border-slate-200 dark:border-slate-800 flex flex-col h-[calc(100vh-4rem)] transition-colors duration-150">
     <div class="flex flex-col h-full">
         <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-6">
             <div>
@@ -1338,7 +1338,7 @@ function downloadHeaderQr() {
 </aside>
 
 <!-- Wrapper Utama Konten -->
-<div id="mainContent" class="flex-1 w-full pt-16 flex flex-col items-center bg-[#f8faf7] dark:bg-[#0e1410] min-h-screen transition-colors duration-150">
+<div id="mainContent" class="flex-1 w-full pt-16 flex flex-col items-center bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-150">
     <main class="w-full max-w-7xl px-3 sm:px-6 py-6 text-slate-800 dark:text-slate-100">
         <?php Flasher::flash(); ?>
         <?php if (SessionHelper::get('role') === 'admin') $this->view('templates/ai_modal'); ?>
