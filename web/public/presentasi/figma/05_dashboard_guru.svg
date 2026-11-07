@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
+  <rect width="1440" height="900" fill="#f8fafc" />
+
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="260" height="900" fill="#0f172a" />
+  <rect x="24" y="24" width="36" height="36" rx="8" fill="#10b981" />
+  <text x="42" y="48" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="18" text-anchor="middle">G</text>
+  <text x="70" y="42" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15">ABSENSI GURU</text>
+  <text x="70" y="56" fill="#64748b" font-family="Arial, sans-serif" font-size="10">PORTAL GURU &amp; PENGAJAR</text>
+
+  <g font-family="Arial, sans-serif" font-size="13">
+    <rect x="16" y="90" width="228" height="42" rx="8" fill="#1e293b" />
+    <rect x="16" y="90" width="4" height="42" rx="2" fill="#10b981" />
+    <text x="45" y="116" fill="#10b981" font-weight="bold">📊 Dashboard Guru</text>
+
+    <text x="45" y="160" fill="#94a3b8">📷 Presensi Scan Barcode</text>
+    <text x="45" y="202" fill="#94a3b8">📅 Jadwal Mengajar</text>
+    <text x="45" y="244" fill="#94a3b8">📝 Catatan dari Kepsek</text>
+    <text x="45" y="286" fill="#94a3b8">📋 Pengajuan Izin/Sakit</text>
+    <text x="45" y="328" fill="#94a3b8">📈 Riwayat Kehadiran</text>
+    <text x="45" y="370" fill="#94a3b8">👤 Profil Saya</text>
+  </g>
+
+  <!-- Top Navbar -->
+  <rect x="260" y="0" width="1180" height="70" fill="#ffffff" />
+  <line x1="260" y1="70" x2="1440" y2="70" stroke="#e2e8f0" stroke-width="1" />
+  <text x="290" y="42" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="18">Portal Mandiri Guru &amp; Pembimbing</text>
+
+  <!-- Profile badge -->
+  <rect x="1160" y="14" width="240" height="42" rx="21" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <circle cx="1182" cy="35" r="14" fill="#10b981" />
+  <text x="1182" y="40" fill="#ffffff" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">AF</text>
+  <text x="1205" y="32" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Ahmad Fauzi, S.Kom.</text>
+  <text x="1205" y="46" fill="#64748b" font-family="Arial, sans-serif" font-size="10">Guru Produktif RPL</text>
+
+  <!-- Main Content -->
+  <!-- Welcome Banner -->
+  <g transform="translate(290, 95)">
+    <rect x="0" y="0" width="1110" height="130" rx="12" fill="#0f172a" />
+    <text x="35" y="45" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="22">Selamat Pagi, Bapak Ahmad Fauzi, S.Kom.</text>
+    <text x="35" y="75" fill="#94a3b8" font-family="Arial, sans-serif" font-size="14">Status Hari Ini (08 Nov 2026): <tspan fill="#34d399" font-weight="bold">HADIR TEPAT WAKTU (06:55 WIB)</tspan> via Barcode Scanner Lobby.</text>
+    <text x="35" y="100" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Jadwal mengajar aktif hari ini: 4 Jam Pelajaran di Ruang Lab RPL 2.</text>
+
+    <rect x="890" y="38" width="180" height="50" rx="10" fill="#10b981" />
+    <text x="980" y="68" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="14" text-anchor="middle">📷 Scan QR Masuk/Pulang</text>
+  </g>
+
+  <!-- Schedule & Supervisor Notes Cards -->
+  <g transform="translate(290, 250)">
+    <!-- Schedule Card -->
+    <rect x="0" y="0" width="700" height="590" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="24" y="36" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Jadwal Mengajar &amp; Agenda Hari Ini</text>
+    
+    <!-- Item 1 -->
+    <rect x="24" y="65" width="652" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+    <rect x="24" y="65" width="6" height="90" rx="3" fill="#3b82f6" />
+    <text x="45" y="95" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Jam 07:30 - 09:30 | Pemrograman Web &amp; Perangkat Bergerak</text>
+    <text x="45" y="120" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Kelas: XII RPL 1 • Ruang Lab Komputer 1 • 36 Siswa (30 Hadir, 5 PKL)</text>
+    <rect x="560" y="90" width="95" height="28" rx="6" fill="#dbeafe" />
+    <text x="607" y="108" fill="#1e40af" font-family="Arial, sans-serif" font-weight="bold" font-size="11" text-anchor="middle">BERJALAN</text>
+
+    <!-- Item 2 -->
+    <rect x="24" y="170" width="652" height="90" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+    <rect x="24" y="170" width="6" height="90" rx="3" fill="#10b981" />
+    <text x="45" y="200" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Jam 10:00 - 12:00 | Basis Data &amp; SQL Query</text>
+    <text x="45" y="225" fill="#64748b" font-family="Arial, sans-serif" font-size="12">Kelas: XI RPL 2 • Ruang Teori 4 • 34 Siswa Terdaftar</text>
+    <rect x="560" y="195" width="95" height="28" rx="6" fill="#f1f5f9" />
+    <text x="607" y="213" fill="#64748b" font-family="Arial, sans-serif" font-weight="bold" font-size="11" text-anchor="middle">BERIKUTNYA</text>
+
+    <!-- Supervisi Card -->
+    <rect x="730" y="0" width="380" height="590" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="754" y="36" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Catatan Pembinaan Kepala Sekolah</text>
+    
+    <rect x="754" y="65" width="332" height="150" rx="8" fill="#fef3c7" stroke="#fde68a" stroke-width="1" />
+    <text x="770" y="95" fill="#92400e" font-family="Arial, sans-serif" font-weight="bold" font-size="13">📌 Catatan Supervisi Semester Ganjil</text>
+    <text x="770" y="120" fill="#78350f" font-family="Arial, sans-serif" font-size="12">"Perangkat ajar dan modul PKL RPL telah</text>
+    <text x="770" y="140" fill="#78350f" font-family="Arial, sans-serif" font-size="12">disetujui. Mohon pantau absensi mandiri</text>
+    <text x="770" y="160" fill="#78350f" font-family="Arial, sans-serif" font-size="12">siswa di PT Telkom secara berkala."</text>
+    <text x="770" y="190" fill="#92400e" font-family="Arial, sans-serif" font-size="11">— Drs. H. Ahmad Sanusi, M.Pd (Kepala Sekolah)</text>
+  </g>
+</svg>

@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 900" width="1440" height="900">
+  <rect width="1440" height="900" fill="#f8fafc" />
+
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="260" height="900" fill="#0f172a" />
+  <rect x="24" y="24" width="36" height="36" rx="8" fill="#d97706" />
+  <text x="42" y="48" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="18" text-anchor="middle">K</text>
+  <text x="70" y="42" fill="#ffffff" font-family="Arial, sans-serif" font-weight="bold" font-size="15">KEPALA SEKOLAH</text>
+  <text x="70" y="56" fill="#64748b" font-family="Arial, sans-serif" font-size="10">EXECUTIVE DASHBOARD</text>
+
+  <g font-family="Arial, sans-serif" font-size="13">
+    <rect x="16" y="90" width="228" height="42" rx="8" fill="#1e293b" />
+    <rect x="16" y="90" width="4" height="42" rx="2" fill="#d97706" />
+    <text x="45" y="116" fill="#fbbf24" font-weight="bold">📊 Ringkasan Eksekutif</text>
+
+    <text x="45" y="160" fill="#94a3b8">👨‍🏫 Monitoring Guru</text>
+    <text x="45" y="202" fill="#94a3b8">🎓 Monitoring Siswa</text>
+    <text x="45" y="244" fill="#38bdf8" font-weight="bold">📍 Supervisi DUDI PKL</text>
+    <text x="45" y="286" fill="#94a3b8">📝 Catatan Supervisi</text>
+    <text x="45" y="328" fill="#94a3b8">📥 Download Laporan</text>
+  </g>
+
+  <!-- Top Navbar -->
+  <rect x="260" y="0" width="1180" height="70" fill="#ffffff" />
+  <line x1="260" y1="70" x2="1440" y2="70" stroke="#e2e8f0" stroke-width="1" />
+  <text x="290" y="42" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="18">Dashboard Eksekutif Kepala Sekolah — SMK NU Wargabinangun</text>
+
+  <rect x="1160" y="14" width="240" height="42" rx="21" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1" />
+  <circle cx="1182" cy="35" r="14" fill="#d97706" />
+  <text x="1182" y="40" fill="#ffffff" font-family="Arial, sans-serif" font-size="11" font-weight="bold" text-anchor="middle">KS</text>
+  <text x="1205" y="32" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="12">Drs. H. Sanusi, M.Pd.</text>
+  <text x="1205" y="46" fill="#64748b" font-family="Arial, sans-serif" font-size="10">Kepala Sekolah</text>
+
+  <!-- Executive Stat Cards -->
+  <g transform="translate(290, 95)">
+    <rect x="0" y="0" width="350" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="24" y="34" fill="#64748b" font-family="Arial, sans-serif" font-size="13">Tingkat Kehadiran Guru Hari Ini</text>
+    <text x="24" y="72" fill="#10b981" font-family="Arial, sans-serif" font-weight="bold" font-size="32">98.4%</text>
+    <text x="24" y="94" fill="#10b981" font-family="Arial, sans-serif" font-size="11">63 Hadir / 1 Izin Dinas dari 64 Guru</text>
+
+    <rect x="380" y="0" width="350" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="404" y="34" fill="#64748b" font-family="Arial, sans-serif" font-size="13">Tingkat Kehadiran Siswa Total</text>
+    <text x="404" y="72" fill="#10b981" font-family="Arial, sans-serif" font-weight="bold" font-size="32">97.8%</text>
+    <text x="404" y="94" fill="#10b981" font-family="Arial, sans-serif" font-size="11">1.213 Hadir Fisik &amp; PKL dari 1.240 Siswa</text>
+
+    <rect x="760" y="0" width="350" height="110" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="784" y="34" fill="#64748b" font-family="Arial, sans-serif" font-size="13">Total Siswa Magang PKL Termonitor</text>
+    <text x="784" y="72" fill="#0284c7" font-family="Arial, sans-serif" font-weight="bold" font-size="32">48 Siswa</text>
+    <text x="784" y="94" fill="#0284c7" font-family="Arial, sans-serif" font-size="11">100% Tercatat Valid di 12 DUDI Mitra</text>
+  </g>
+
+  <!-- Comparison & Chart Area -->
+  <g transform="translate(290, 230)">
+    <rect x="0" y="0" width="1110" height="630" rx="12" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" />
+    <text x="24" y="36" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="16">Komparasi Kehadiran Antar Program Keahlian (Bulan Ini)</text>
+
+    <!-- RPL Bar -->
+    <text x="24" y="90" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Rekayasa Perangkat Lunak (RPL) — 98.2%</text>
+    <rect x="24" y="105" width="1050" height="24" rx="6" fill="#f1f5f9" />
+    <rect x="24" y="105" width="1031" height="24" rx="6" fill="#10b981" />
+
+    <!-- TKJ Bar -->
+    <text x="24" y="165" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Teknik Komputer &amp; Jaringan (TKJ) — 97.4%</text>
+    <rect x="24" y="180" width="1050" height="24" rx="6" fill="#f1f5f9" />
+    <rect x="24" y="180" width="1022" height="24" rx="6" fill="#3b82f6" />
+
+    <!-- TSM Bar -->
+    <text x="24" y="240" fill="#0f172a" font-family="Arial, sans-serif" font-weight="bold" font-size="14">Teknik &amp; Bisnis Sepeda Motor (TBSM) — 96.8%</text>
+    <rect x="24" y="255" width="1050" height="24" rx="6" fill="#f1f5f9" />
+    <rect x="24" y="255" width="1016" height="24" rx="6" fill="#f59e0b" />
+  </g>
+</svg>
