@@ -17,6 +17,11 @@ $spkl = (int)($statsSiswa->pkl ?? 0);
 $siswaGiat     = $sh + $st + $spkl;
 $pctSiswaGiat  = $ts > 0 ? round(($siswaGiat / $ts) * 100, 1) : 0;
 $pctSiswaTelat = $ts > 0 ? round(($st / $ts) * 100, 1) : 0;
+$pctSiswaTepat = $ts > 0 ? round(($sh / $ts) * 100, 1) : 0;
+$siswaIzinSakit = $si + $ss;
+$pctSiswaIzin  = $ts > 0 ? round(($siswaIzinSakit / $ts) * 100, 1) : 0;
+$pctSiswaAlfa  = $ts > 0 ? round(($sa / $ts) * 100, 1) : 0;
+$isSesiPagiWk  = ($siswaGiat === 0 && $siswaIzinSakit === 0);
 ?>
 
 <div id="pageContent" class="w-full space-y-6">
@@ -91,107 +96,147 @@ $pctSiswaTelat = $ts > 0 ? round(($st / $ts) * 100, 1) : 0;
         <?php $this->view('dashboard/panel_pembimbing_pkl', ['pkl' => $data['pklDashboard']]); ?>
     <?php endif; ?>
 
-    <!-- ── 5 METRIC STAT CARDS ROW ── -->
+    <!-- ── 5 METRIC STAT CARDS ROW (PROFESSIONAL EXECUTIVE DESIGN) ── -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <!-- 1. Total Siswa -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block">Total Siswa</span>
-                    <div class="mt-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums"><?= $ts ?></span>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col justify-between hover:shadow-sm transition-shadow">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Siswa</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm border border-slate-200 dark:border-slate-700">
+                        <i class="fa-solid fa-users"></i>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-sm">
-                    <i class="fa-solid fa-users"></i>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums"><?= $ts ?></span>
+                    <span class="text-xs text-slate-400 font-medium">siswa</span>
+                </div>
+                <div class="mt-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                        Rombel Kelas
+                    </span>
                 </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-400">Rombel</span>
-                <span class="text-slate-700 dark:text-slate-300 font-semibold font-mono text-[11px]">Kelas <?= $kelasNama ?></span>
+                <span class="text-slate-400">Kelas</span>
+                <span class="text-slate-800 dark:text-slate-200 font-semibold font-mono text-[11px]"><?= $kelasNama ?></span>
             </div>
         </div>
 
         <!-- 2. Hadir Tepat Waktu -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block">Hadir Tepat</span>
-                    <div class="mt-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight tabular-nums"><?= $sh ?></span>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col justify-between hover:border-emerald-300 dark:hover:border-emerald-800/80 transition-colors">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Hadir Tepat</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-sm border border-emerald-200/50 dark:border-emerald-800/40">
+                        <i class="fa-solid fa-user-check"></i>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-sm">
-                    <i class="fa-solid fa-user-check"></i>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white font-mono tracking-tight tabular-nums"><?= $sh ?></span>
+                    <span class="text-xs text-slate-400 font-medium">siswa</span>
+                </div>
+                <div class="mt-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                        <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> <?= $pctSiswaTepat ?>%
+                    </span>
                 </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-400">Persentase</span>
-                <span class="inline-flex items-center gap-1 font-mono font-semibold text-emerald-600 dark:text-emerald-400">
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> <?= $pctSiswaGiat ?>%
-                </span>
+                <span class="text-slate-400">Total Masuk</span>
+                <span class="font-semibold text-emerald-600 dark:text-emerald-400 font-mono text-[11px]"><?= $siswaGiat ?> Hadir</span>
             </div>
         </div>
 
         <!-- 3. Terlambat -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block">Terlambat</span>
-                    <div class="mt-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 font-mono tracking-tight tabular-nums"><?= $st ?></span>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col justify-between hover:border-amber-300 dark:hover:border-amber-800/80 transition-colors">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Terlambat</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 text-sm border border-amber-200/50 dark:border-amber-800/40">
+                        <i class="fa-solid fa-clock"></i>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 text-sm">
-                    <i class="fa-solid fa-clock"></i>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold <?= $st > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white' ?> font-mono tracking-tight tabular-nums"><?= $st ?></span>
+                    <span class="text-xs text-slate-400 font-medium">siswa</span>
+                </div>
+                <div class="mt-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold <?= $st > 0 ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' ?>">
+                        <?= $pctSiswaTelat ?>% rasio
+                    </span>
                 </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-400">Rasio Telat</span>
-                <span class="font-mono font-semibold <?= $st > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500' ?>">
-                    <?= $pctSiswaTelat ?>%
+                <span class="text-slate-400">Toleransi</span>
+                <span class="font-semibold <?= $st > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500' ?> text-[11px]">
+                    <?= $st > 0 ? 'Lewat Batas' : 'Nihil' ?>
                 </span>
             </div>
         </div>
 
         <!-- 4. Izin / Sakit -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block">Izin / Sakit</span>
-                    <div class="mt-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-sky-600 dark:text-sky-400 font-mono tracking-tight tabular-nums"><?= $si + $ss ?></span>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col justify-between hover:border-sky-300 dark:hover:border-sky-800/80 transition-colors">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Izin / Sakit</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 text-sm border border-sky-200/50 dark:border-sky-800/40">
+                        <i class="fa-solid fa-notes-medical"></i>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 text-sm">
-                    <i class="fa-solid fa-notes-medical"></i>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold <?= $siswaIzinSakit > 0 ? 'text-sky-600 dark:text-sky-400' : 'text-slate-900 dark:text-white' ?> font-mono tracking-tight tabular-nums"><?= $siswaIzinSakit ?></span>
+                    <span class="text-xs text-slate-400 font-medium">siswa</span>
+                </div>
+                <div class="mt-2">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold <?= $siswaIzinSakit > 0 ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' ?>">
+                        <?= $si ?> Izin &middot; <?= $ss ?> Sakit
+                    </span>
                 </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Rincian</span>
-                <span class="text-slate-600 dark:text-slate-400 font-mono text-[11px]">
-                    <?= $si ?> Izin &middot; <?= $ss ?> Sakit
-                </span>
+                <span class="text-slate-700 dark:text-slate-300 font-semibold font-mono text-[11px]"><?= $pctSiswaIzin ?>% dispensasi</span>
             </div>
         </div>
 
-        <!-- 5. Alfa / PKL -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs col-span-2 sm:col-span-1">
-            <div class="flex items-start justify-between">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 dark:text-slate-400 block">Alfa / Tanpa Ket.</span>
-                    <div class="mt-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-rose-600 dark:text-rose-400 font-mono tracking-tight tabular-nums"><?= $sa ?></span>
+        <!-- 5. Belum Presensi / Alfa / PKL -->
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 shadow-xs flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-colors col-span-2 sm:col-span-1">
+            <div>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Belum Presensi</span>
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center <?= $isSesiPagiWk ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' : ($sa > 0 ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/40' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 border border-emerald-200/50') ?> text-sm">
+                        <i class="fa-solid <?= $isSesiPagiWk ? 'fa-user-clock' : ($sa > 0 ? 'fa-user-xmark' : 'fa-check') ?>"></i>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 text-sm">
-                    <i class="fa-solid fa-ban"></i>
+                <div class="mt-3 flex items-baseline gap-2">
+                    <span class="text-2xl sm:text-3xl font-bold <?= $isSesiPagiWk ? 'text-slate-700 dark:text-slate-300' : ($sa > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400') ?> font-mono tracking-tight tabular-nums"><?= $sa ?></span>
+                    <span class="text-xs text-slate-400 font-medium">siswa</span>
+                </div>
+                <div class="mt-2">
+                    <?php if ($isSesiPagiWk): ?>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                            Sesi Pagi
+                        </span>
+                    <?php elseif ($spkl > 0): ?>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/40">
+                            <?= $spkl ?> PKL &middot; <?= $sa ?> Alfa
+                        </span>
+                    <?php elseif ($sa > 0): ?>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/40">
+                            <?= $pctSiswaAlfa ?>% belum hadir
+                        </span>
+                    <?php else: ?>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-mono font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                            Lengkap 100%
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Status</span>
-                <span class="font-semibold text-[11px] <?= $sa > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500' ?>">
-                    <?= $spkl > 0 ? "$spkl PKL" : ($sa > 0 ? 'Perlu Cek' : 'Lengkap') ?>
+                <span class="font-semibold text-[11px] <?= $isSesiPagiWk ? 'text-slate-500 dark:text-slate-400' : ($sa > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400') ?>">
+                    <?= $isSesiPagiWk ? 'Menunggu Tapping' : ($spkl > 0 ? "$spkl PKL Aktif" : ($sa > 0 ? 'Perlu Cek' : 'Lengkap')) ?>
                 </span>
             </div>
         </div>

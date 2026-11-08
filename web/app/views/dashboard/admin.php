@@ -25,6 +25,9 @@ $ga = (int)($data['statsGuru']->alfa ?? 0);
 $guruGiat = $gh + $gt;
 $pctGuruGiat = $tg > 0 ? round(($guruGiat / $tg) * 100, 1) : 0;
 $guruIzinSakit = $gi + $gs;
+$totalWargaSekolah = $ts + $tg;
+$totalBelumPresensi = $sa + $ga;
+$isSesiPagiAdmin = ($siswaGiat === 0 && $guruGiat === 0 && ($siswaIzinSakit + $guruIzinSakit) === 0);
 
 // Format data Trend 7 Hari
 $trendLabels = array_column($data['trendHarian'] ?? [], 'label');
@@ -90,10 +93,10 @@ if (!empty($data['statsPerKelas'])) {
         </a>
     </div>
 
-    <!-- ── 4 KARTU STATISTIK INTI ── -->
+    <!-- ── 4 KARTU STATISTIK INTI (EXECUTIVE DESIGN SYSTEM) ── -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- 1. Siswa Hadir -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-emerald-300 dark:hover:border-emerald-800/80 transition-colors">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Siswa Hadir Hari Ini</span>
@@ -104,20 +107,20 @@ if (!empty($data['statsPerKelas'])) {
                         <span class="text-xs text-slate-400">/ <?= $ts ?> siswa</span>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-sm border border-emerald-200/60 dark:border-emerald-800/50">
+                <div class="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-sm border border-emerald-200/50 dark:border-emerald-800/40">
                     <i class="fa-solid fa-user-graduate"></i>
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span class="text-slate-500 dark:text-slate-400">Tingkat Kehadiran</span>
-                <span class="apex-trend-badge apex-trend-up">
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> <?= $pctSiswaGiat ?>%
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                    <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> <?= $pctSiswaGiat ?>%
                 </span>
             </div>
         </div>
 
         <!-- 2. Dewan Guru Hadir -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-sky-300 dark:hover:border-sky-800/80 transition-colors">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Dewan Guru Hadir</span>
@@ -128,63 +131,73 @@ if (!empty($data['statsPerKelas'])) {
                         <span class="text-xs text-slate-400">/ <?= $tg ?> pengajar</span>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 flex items-center justify-center text-sm border border-sky-200/60 dark:border-sky-800/50">
+                <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm border border-sky-200/50 dark:border-sky-800/40">
                     <i class="fa-solid fa-chalkboard-user"></i>
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span class="text-slate-500 dark:text-slate-400">Tingkat Kehadiran</span>
-                <span class="apex-trend-badge apex-trend-up">
-                    <i class="fa-solid fa-arrow-trend-up text-[10px]"></i> <?= $pctGuruGiat ?>%
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/40">
+                    <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> <?= $pctGuruGiat ?>%
                 </span>
             </div>
         </div>
 
         <!-- 3. Izin & Sakit -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-amber-300 dark:hover:border-amber-800/80 transition-colors">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Total Izin &amp; Sakit</span>
                     <div class="mt-2.5 flex items-baseline gap-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-amber-700 dark:text-amber-400 font-mono tracking-tight tabular-nums">
+                        <span class="text-2xl sm:text-3xl font-bold <?= ($siswaIzinSakit + $guruIzinSakit) > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-900 dark:text-white' ?> font-mono tracking-tight tabular-nums">
                             <?= ($siswaIzinSakit + $guruIzinSakit) ?>
                         </span>
                         <span class="text-xs text-slate-400">Orang</span>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center text-sm border border-amber-200/60 dark:border-amber-800/50">
+                <div class="w-9 h-9 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm border border-amber-200/50 dark:border-amber-800/40">
                     <i class="fa-solid fa-notes-medical"></i>
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span class="text-slate-500 dark:text-slate-400">Rincian</span>
-                <span class="apex-trend-badge apex-trend-warn">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs <?= ($siswaIzinSakit + $guruIzinSakit) > 0 ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' ?>">
                     <?= $siswaIzinSakit ?> Siswa &middot; <?= $guruIzinSakit ?> Guru
                 </span>
             </div>
         </div>
 
         <!-- 4. Belum Presensi / Tanpa Keterangan -->
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl p-4 sm:p-5 flex flex-col justify-between shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
             <div class="flex items-start justify-between">
                 <div>
                     <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Belum Presensi</span>
                     <div class="mt-2.5 flex items-baseline gap-2">
-                        <span class="text-2xl sm:text-3xl font-bold text-rose-600 dark:text-rose-400 font-mono tracking-tight tabular-nums">
-                            <?= ($sa + $ga) ?>
+                        <span class="text-2xl sm:text-3xl font-bold <?= $isSesiPagiAdmin ? 'text-slate-700 dark:text-slate-300' : ($totalBelumPresensi > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400') ?> font-mono tracking-tight tabular-nums">
+                            <?= $totalBelumPresensi ?>
                         </span>
                         <span class="text-xs text-slate-400">Orang</span>
                     </div>
                 </div>
-                <div class="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-sm border border-rose-200/60 dark:border-rose-800/50">
-                    <i class="fa-solid fa-user-xmark"></i>
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-sm <?= $isSesiPagiAdmin ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700' : ($totalBelumPresensi > 0 ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/40' : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 border border-emerald-200/50') ?>">
+                    <i class="fa-solid <?= $isSesiPagiAdmin ? 'fa-user-clock' : ($totalBelumPresensi > 0 ? 'fa-user-xmark' : 'fa-check') ?>"></i>
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-500 dark:text-slate-400">Tanpa Keterangan</span>
-                <span class="apex-trend-badge apex-trend-down">
-                    <?= $sa ?> Siswa &middot; <?= $ga ?> Guru
-                </span>
+                <span class="text-slate-500 dark:text-slate-400"><?= $isSesiPagiAdmin ? 'Status Sesi' : 'Tanpa Keterangan' ?></span>
+                <?php if ($isSesiPagiAdmin): ?>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                        Menunggu Presensi Pagi
+                    </span>
+                <?php elseif ($totalBelumPresensi > 0): ?>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400 border border-rose-200/50 dark:border-rose-800/40">
+                        <?= $sa ?> Siswa &middot; <?= $ga ?> Guru
+                    </span>
+                <?php else: ?>
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-800/40">
+                        Lengkap 100%
+                    </span>
+                <?php endif; ?>
             </div>
         </div>
     </div>
