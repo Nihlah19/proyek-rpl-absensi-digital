@@ -149,6 +149,43 @@ class Pkl extends Model {
     /**
      * Ambil seluruh guru yang berstatus Pembimbing PKL
      */
+    /**
+     * Ambil Guru Pembimbing PKL berdasarkan kelas siswa
+     */
+    public function getPembimbingByKelasId($kelasId) {
+        if (empty($kelasId)) return null;
+
+        try {
+            // 1. Cek dari penugasan tabel pkl_pembimbing_kelas
+            $this->db->query("
+                SELECT g.*, u.id as user_id, u.name, u.telegram_chat_id
+                FROM pkl_pembimbing_kelas ppk
+                JOIN guru g ON ppk.guru_id = g.id
+                JOIN users u ON g.user_id = u.id
+                WHERE ppk.kelas_id = :kid
+                LIMIT 1
+            ");
+            $this->db->bind(':kid', $kelasId);
+            $res = $this->db->single();
+            if ($res) return $res;
+
+            // 2. Fallback cek dari kelompok PKL kelas tersebut
+            $this->db->query("
+                SELECT g.*, u.id as user_id, u.name, u.telegram_chat_id
+                FROM pkl_kelompok pk
+                JOIN guru g ON pk.pembimbing_guru_id = g.id
+                JOIN users u ON g.user_id = u.id
+                WHERE pk.kelas_id = :kid AND pk.pembimbing_guru_id IS NOT NULL
+                LIMIT 1
+            ");
+            $this->db->bind(':kid', $kelasId);
+            return $this->db->single();
+        } catch (Exception $e) {
+            error_log('[Pkl::getPembimbingByKelasId] Error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function getAllPembimbing() {
         $this->db->query("
             SELECT g.id, g.user_id, u.name as guru_nama, g.nip

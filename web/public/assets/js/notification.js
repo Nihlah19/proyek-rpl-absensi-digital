@@ -457,10 +457,12 @@
         }
     };
 
-    // Tracking ID notifikasi yang sudah dipopupkan di sesi ini
+    // Tracking ID notifikasi yang sudah pernah ditampilkan pop-up & dibunyikan
     function getShownIds() {
         try {
-            return JSON.parse(sessionStorage.getItem('absensi_shown_notif_ids') || '[]');
+            const raw = localStorage.getItem('absensi_shown_notif_ids') || '[]';
+            const arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr.map(Number) : [];
         } catch(e) {
             return [];
         }
@@ -468,11 +470,13 @@
 
     function recordShownId(id) {
         if (!id) return;
+        const numId = parseInt(id, 10);
+        if (isNaN(numId)) return;
         const shown = getShownIds();
-        if (shown.indexOf(id) === -1) {
-            shown.push(id);
-            if (shown.length > 50) shown.shift();
-            sessionStorage.setItem('absensi_shown_notif_ids', JSON.stringify(shown));
+        if (shown.indexOf(numId) === -1) {
+            shown.push(numId);
+            if (shown.length > 200) shown.shift();
+            localStorage.setItem('absensi_shown_notif_ids', JSON.stringify(shown));
         }
     }
 
@@ -481,49 +485,45 @@
         fetch(BASE + '/api/v1/notifikasi.php?action=list&limit=15')
             .then(function(res) { return res.json(); })
             .then(function(json) {
-                if (!json.ok) return;
+                if (!json || !json.ok) return;
 
                 updateBellBadge(json.count || 0);
 
                 if (Array.isArray(json.data) && json.data.length > 0) {
                     const shownIds = getShownIds();
                     const latestItem = json.data[0];
-                    const currentTopId = parseInt(latestItem.id, 10);
-
-                    // Filter item yang belum dibaca
-                    const unreadItems = json.data.filter(function(i) {
-                        return parseInt(i.is_read, 10) === 0;
-                    });
+                    const currentTopId = parseInt(latestItem.id, 10) || 0;
 
                     if (isFirstLoad) {
-                        // Di first load: jangan pop-up suara / banner untuk notifikasi lama yang sudah berhari-hari
-                        // Hanya pop-up jika notifikasi benar-benar baru (kurang dari 5 menit lalu)
-                        if (unreadItems.length > 0) {
-                            const topUnread = unreadItems[0];
-                            const notifTime = topUnread.created_at ? new Date(topUnread.created_at.replace(' ', 'T')).getTime() : 0;
-                            const isVeryRecent = notifTime > 0 && ((Date.now() - notifTime) < (5 * 60 * 1000));
-                            if (isVeryRecent && shownIds.indexOf(topUnread.id) === -1) {
-                                recordShownId(topUnread.id);
-                                showDevicePopUp(topUnread);
-                            }
+                        // Saat pertama kali halaman dimuat:
+                        // Tandai semua notifikasi yang sudah ada di database sebagai "sudah diketahui"
+                        // Agar TIDAK membunyikan suara atau memunculkan pop-up bertubi-tubi.
+                        // Informasi tetap tersaji rapi di dropdown lonceng notifikasi.
+                        json.data.forEach(function(item) {
+                            recordShownId(item.id);
+                        });
+                        if (currentTopId > lastNotifId) {
+                            lastNotifId = currentTopId;
+                            localStorage.setItem('absensi_last_notif_id', lastNotifId.toString());
                         }
                     } else {
-                        // Polling realtime: Tampilkan pop-up untuk setiap notifikasi baru
+                        // Polling realtime (saat sedang aktif di web):
+                        // HANYA pop-up dan bunyi 1 KALI untuk notifikasi yang benar-benar baru masuk
                         const newItems = json.data.filter(function(i) {
                             const id = parseInt(i.id, 10);
                             const unread = parseInt(i.is_read, 10) === 0;
-                            return unread && (id > lastNotifId || shownIds.indexOf(id) === -1);
+                            return unread && id > lastNotifId && shownIds.indexOf(id) === -1;
                         });
 
                         newItems.forEach(function(item) {
                             recordShownId(item.id);
-                            showDevicePopUp(item);
+                            showDevicePopUp(item); // Bunyi & toast hanya muncul 1x!
                         });
-                    }
 
-                    if (currentTopId > lastNotifId) {
-                        lastNotifId = currentTopId;
-                        localStorage.setItem('absensi_last_notif_id', lastNotifId.toString());
+                        if (currentTopId > lastNotifId) {
+                            lastNotifId = currentTopId;
+                            localStorage.setItem('absensi_last_notif_id', lastNotifId.toString());
+                        }
                     }
 
                     renderDropdownItems(json.data);

@@ -494,15 +494,23 @@ async function takeSnapshotAndSubmit(actionType) {
             })
         });
 
-        const res = await response.json();
-        if (res.success) {
+        const rawText = await response.text();
+        let res;
+        try {
+            res = JSON.parse(rawText);
+        } catch (jsonErr) {
+            console.error('Respon bukan JSON:', rawText);
+            throw new Error('Respon server tidak valid.');
+        }
+
+        if (res && res.success) {
             showModal(true, 'Presensi Berhasil', res.message);
         } else {
-            showModal(false, 'Presensi Gagal', res.message);
+            showModal(false, 'Presensi Gagal', (res && res.message) ? res.message : 'Gagal memproses presensi.');
         }
     } catch (err) {
         console.error(err);
-        showModal(false, 'Terjadi Kesalahan', 'Gagal menghubungi server. Pastikan koneksi internet Anda lancar.');
+        showModal(false, 'Terjadi Kesalahan', (err && err.message) ? err.message : 'Gagal menghubungi server. Pastikan koneksi internet Anda lancar.');
     } finally {
         if (btnSubmit) {
             btnSubmit.disabled = false;

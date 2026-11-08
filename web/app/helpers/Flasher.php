@@ -132,20 +132,13 @@ class Flasher {
 
 <script>
 (function() {
-    // Gunakan tag audio agar lebih tahan banting terhadap Autoplay Policy
+    // Gunakan tag audio, mainkan sekali tanpa looping
     var audio = new Audio("{$base64Audio}");
-    var playAttempt = setInterval(function() {
-        audio.play().then(() => {
-            clearInterval(playAttempt);
-        }).catch(function(e) {
-            // Jika diblokir autoplay, tunggu user berinteraksi (klik)
-            document.addEventListener('click', function handler() {
-                audio.play();
-                document.removeEventListener('click', handler);
-                clearInterval(playAttempt);
-            }, {once: true});
-        });
-    }, 500);
+    audio.play().catch(function() {
+        document.addEventListener('click', function handler() {
+            audio.play().catch(function(){});
+        }, {once: true});
+    });
 
     // Auto close setelah 5 detik
     setTimeout(function() { flasherClose('{$msgId}'); }, 5000);
