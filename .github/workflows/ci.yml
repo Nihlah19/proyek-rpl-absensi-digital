@@ -1,0 +1,30 @@
+name: CI / Automated Testing Pipeline
+
+on:
+  push:
+    branches: [ "main", "revisi_fitur_absensi_pkl" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    name: Run Unit Tests & PHP Syntax Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup PHP Environment
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, pdo, pdo_mysql, curl, gd
+
+    - name: PHP Syntax Check (Linting)
+      run: |
+        find web/app -name "*.php" -exec php -l {} \;
+
+    - name: Execute Automated Unit Tests
+      run: |
+        php tests/run_tests.php
