@@ -53,18 +53,24 @@ class App {
         $reqUri = $_SERVER['REQUEST_URI'] ?? '/';
         $path = parse_url($reqUri, PHP_URL_PATH) ?? '/';
 
-        // Buang prefix subdirektori jika aplikasi berjalan di folder (misal /AbsensiRFID/web/public atau /web/public)
+        // Buang prefix subdirektori jika aplikasi berjalan di folder (misal /AbsensiRFID/web/public, /AbsensiRFID, atau /web/public)
         $scriptName = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
         $scriptDir  = dirname($scriptName);
-        if ($scriptDir !== '/' && $scriptDir !== '.' && !empty($scriptDir)) {
-            if (str_starts_with($path, $scriptDir)) {
-                $path = substr($path, strlen($scriptDir));
+        
+        $dir = $scriptDir;
+        while ($dir !== '/' && $dir !== '.' && $dir !== '\\' && !empty($dir)) {
+            if (str_starts_with($path, $dir)) {
+                $path = substr($path, strlen($dir));
+                break;
             }
+            $parent = str_replace('\\', '/', dirname($dir));
+            if ($parent === $dir) break;
+            $dir = $parent;
         }
 
         // Buang awalan index.php jika ada di URL
         $path = preg_replace('#^/index\.php#', '', $path);
-        $path = preg_replace('#^/(web/public|api)#', '', $path);
+        $path = preg_replace('#^/(web/public|web|public|api)#', '', $path);
         $path = trim($path, '/');
         if (!empty($path)) {
             $path = filter_var($path, FILTER_SANITIZE_URL);
