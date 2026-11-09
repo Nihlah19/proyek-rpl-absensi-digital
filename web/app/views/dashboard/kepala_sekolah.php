@@ -21,7 +21,7 @@
             </p>
         </div>
         <div class="flex items-center gap-2 flex-wrap self-start sm:self-center">
-            <a href="<?= BASEURL ?>/rekapabsensi" class="btn-secondary text-xs">
+            <a href="<?= BASEURL ?>/rekapabsensi?tipe=guru" class="btn-secondary text-xs">
                 <i class="fa-solid fa-table-list text-slate-400"></i> Rekap Presensi Guru
             </a>
             <a href="<?= BASEURL ?>/izin/approval" class="btn-primary text-xs">
@@ -336,7 +336,7 @@
                     </h3>
                 </div>
 
-                <a href="<?= BASEURL ?>/rekapabsensi" class="btn-secondary text-xs self-start sm:self-auto">
+                <a href="<?= BASEURL ?>/rekapabsensi?tipe=guru" class="btn-secondary text-xs self-start sm:self-auto">
                     <i class="fa-solid fa-table-list text-slate-400"></i> Rekap Absensi Lengkap <i class="fa-solid fa-arrow-right text-[10px] ml-1 text-slate-400"></i>
                 </a>
             </div>
@@ -703,12 +703,14 @@
             });
         }
 
-        function downloadKepsekGuru() {
-            const dari = document.getElementById('kepsek-dari').value;
-            const sampai = document.getElementById('kepsek-sampai').value;
-            if(!dari || !sampai) { alert('Pilih rentang tanggal.'); return; }
-            if(dari > sampai) { alert('Tanggal mulai harus lebih kecil dari akhir.'); return; }
-            const url = '<?= BASEURL ?>/kepsek/download_guru?dari=' + dari + '&sampai=' + sampai;
+        function downloadKepsekGuru(dari = '', sampai = '') {
+            const dariEl = document.getElementById('kepsek-dari');
+            const sampaiEl = document.getElementById('kepsek-sampai');
+            if (!dari && dariEl) dari = dariEl.value;
+            if (!sampai && sampaiEl) sampai = sampaiEl.value;
+            if (!dari) dari = '<?= date('Y-m-01') ?>';
+            if (!sampai) sampai = '<?= date('Y-m-d') ?>';
+            const url = '<?= BASEURL ?>/kepsek/download_guru?dari=' + encodeURIComponent(dari) + '&sampai=' + encodeURIComponent(sampai);
             window.location.href = url;
         }
     </script>

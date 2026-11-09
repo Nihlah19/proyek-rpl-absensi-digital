@@ -691,5 +691,32 @@ document.querySelectorAll('#sidebarMenu a').forEach(function (link) {
 <?php if (isset($_SESSION['user_id'])): ?>
 <script src="<?= BASEURL; ?>/assets/js/notification.js?v=2.1"></script>
 <?php endif; ?>
+<!-- Offline Status Indicator -->
+<div id="offlineIndicator" class="hidden fixed bottom-4 right-4 z-50 bg-amber-600/95 dark:bg-amber-700/95 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-lg backdrop-blur-xs flex items-center gap-2 border border-amber-400/40 transition-all">
+    <span class="w-2 h-2 rounded-full bg-amber-200 animate-pulse"></span>
+    <span>Mode Offline Aktif &middot; Akses Data Cache</span>
+</div>
+<script>
+(function() {
+    function updateOnlineStatus() {
+        const el = document.getElementById('offlineIndicator');
+        if (!el) return;
+        if (!navigator.onLine) {
+            el.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-200 animate-pulse"></span><span>Mode Offline Aktif &middot; Akses Data Cache</span>';
+            el.className = 'fixed bottom-4 right-4 z-50 bg-amber-600/95 dark:bg-amber-700/95 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-lg backdrop-blur-xs flex items-center gap-2 border border-amber-400/40 transition-all';
+            el.classList.remove('hidden');
+        } else {
+            if (!el.classList.contains('hidden')) {
+                el.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-200"></span><span>Koneksi Kembali Online</span>';
+                el.className = 'fixed bottom-4 right-4 z-50 bg-emerald-600/95 dark:bg-emerald-700/95 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-lg backdrop-blur-xs flex items-center gap-2 border border-emerald-400/40 transition-all';
+                setTimeout(() => el.classList.add('hidden'), 2500);
+            }
+        }
+    }
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    if (!navigator.onLine) updateOnlineStatus();
+})();
+</script>
 </body>
 </html>

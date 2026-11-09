@@ -45,14 +45,19 @@ class DashboardController extends Controller {
 
         // Otomatis sinkronisasi Alfa jika jam kepulangan sekolah hari ini telah usai
         // dan masih ada siswa/guru yang belum tercatat presensi (tidak scan RFID / QR)
-        $absensiModel = $this->model('Absensi');
-        $jadwalSiswa = $absensiModel->getJadwalHariIni();
-        if ($jadwalSiswa && !empty($jadwalSiswa->status_aktif) && !empty($jadwalSiswa->jam_pulang)) {
-            $nowTime = date('H:i:s');
-            if ($nowTime >= $jadwalSiswa->jam_pulang) {
-                $absensiModel->generateAlfaSiswaHariIni($today);
-                $absensiModel->generateAlfaGuruHariIni($today);
+        // Dibatasi 1x per 15 menit per sesi agar loading dashboard cepat dan responsif
+        $lastDashSync = $_SESSION['last_dash_alfa_sync_' . $today] ?? 0;
+        if (time() - $lastDashSync > 900) {
+            $absensiModel = $this->model('Absensi');
+            $jadwalSiswa = $absensiModel->getJadwalHariIni();
+            if ($jadwalSiswa && !empty($jadwalSiswa->status_aktif) && !empty($jadwalSiswa->jam_pulang)) {
+                $nowTime = date('H:i:s');
+                if ($nowTime >= $jadwalSiswa->jam_pulang) {
+                    $absensiModel->generateAlfaSiswaHariIni($today);
+                    $absensiModel->generateAlfaGuruHariIni($today);
+                }
             }
+            $_SESSION['last_dash_alfa_sync_' . $today] = time();
         }
 
         $absensiSiswaHariIni = $this->laporan->getRekapSiswa(['dari' => $today, 'sampai' => $today, 'limit' => 50, 'offset' => 0]);
@@ -294,7 +299,7 @@ class DashboardController extends Controller {
 
     /** Download rekap absensi siswa (CSV) */
     public function download_siswa() {
-        AuthHelper::checkRole(['admin']);
+        AuthHelper::checkRole(['admin', 'kepsek']);
         $dari   = $_GET['dari']   ?? date('Y-m-01');
         $sampai = $_GET['sampai'] ?? date('Y-m-d');
         
@@ -328,7 +333,7 @@ class DashboardController extends Controller {
 
     /** Download rekap absensi guru (CSV) */
     public function download_guru() {
-        AuthHelper::checkRole(['admin']);
+        AuthHelper::checkRole(['admin', 'kepsek']);
         $dari   = $_GET['dari']   ?? date('Y-m-01');
         $sampai = $_GET['sampai'] ?? date('Y-m-d');
         

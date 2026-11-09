@@ -1,4 +1,4 @@
-const CACHE_NAME = 'absensi-smk-v2.0';
+const CACHE_NAME = 'absensi-smk-v2.2';
 const STATIC_ASSETS = [
     './offline.html',
     './manifest.json',
@@ -25,11 +25,17 @@ const STATIC_ASSETS = [
     './assets/vendor/apexcharts/apexcharts.min.js'
 ];
 
-// 1. Install Event: Cache essential assets
+// 1. Install Event: Cache essential assets safely
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(STATIC_ASSETS);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            for (const asset of STATIC_ASSETS) {
+                try {
+                    await cache.add(asset);
+                } catch (err) {
+                    console.warn('[SW] Skip caching:', asset);
+                }
+            }
         }).then(() => self.skipWaiting())
     );
 });

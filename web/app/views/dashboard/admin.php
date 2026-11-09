@@ -67,8 +67,11 @@ if (!empty($data['statsPerKelas'])) {
             <a href="<?= BASEURL; ?>/admin/iot" class="btn-secondary text-xs">
                 <i class="fa-solid fa-microchip text-slate-500"></i> Perangkat IoT
             </a>
-            <a href="<?= BASEURL; ?>/rekapabsensi" class="btn-secondary text-xs">
-                <i class="fa-solid fa-file-excel text-slate-500"></i> Rekap Absensi
+            <a href="<?= BASEURL; ?>/rekapabsensi?tipe=siswa" class="btn-secondary text-xs">
+                <i class="fa-solid fa-graduation-cap text-emerald-600"></i> Rekap Siswa
+            </a>
+            <a href="<?= BASEURL; ?>/rekapabsensi?tipe=guru" class="btn-secondary text-xs">
+                <i class="fa-solid fa-chalkboard-user text-sky-600"></i> Rekap Guru
             </a>
             <button type="button" onclick="location.reload()" class="btn-primary text-xs cursor-pointer">
                 <i class="fa-solid fa-arrows-rotate"></i> Muat Ulang
@@ -136,7 +139,9 @@ if (!empty($data['statsPerKelas'])) {
                 </div>
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                <span class="text-slate-500 dark:text-slate-400">Tingkat Kehadiran</span>
+                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=guru" class="text-slate-500 hover:text-sky-600 dark:text-slate-400 dark:hover:text-sky-300 transition-colors flex items-center gap-1 font-medium">
+                    Rekap Presensi Guru <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                </a>
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-semibold text-xs bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-400 border border-sky-200/50 dark:border-sky-800/40">
                     <i class="fa-solid fa-arrow-trend-up text-[9px]"></i> <?= $pctGuruGiat ?>%
                 </span>
@@ -291,6 +296,114 @@ if (!empty($data['statsPerKelas'])) {
             <div class="relative w-full h-56">
                 <canvas id="chartBarKelas"></canvas>
             </div>
+        </div>
+    </div>
+
+    <!-- ── DAFTAR PRESENSI GURU HARI INI (ADMIN VIEW & REKAP QUICK ACCESS) ── -->
+    <div class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+        <div class="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-sm border border-sky-200/50 dark:border-sky-800/40">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Presensi Dewan Guru Hari Ini</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Monitoring kehadiran real-time pendidik &amp; tenaga kependidikan</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <a href="<?= BASEURL; ?>/dashboard/download_guru" class="btn-secondary text-xs">
+                    <i class="fa-solid fa-file-csv text-emerald-600"></i> Unduh CSV Hari Ini
+                </a>
+                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=guru" class="btn-primary text-xs">
+                    <i class="fa-solid fa-table-list"></i> Buka Rekap Guru Lengkap <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Filter & Pencarian Cepat Guru -->
+        <div class="px-4 py-3 bg-slate-50/70 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="w-full sm:w-56">
+                <select id="selectAdminGuruStatus" onchange="filterAdminGuruDash()"
+                        class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500">
+                    <option value="">-- Semua Status Guru --</option>
+                    <option value="hadir">Hadir Tepat</option>
+                    <option value="terlambat">Terlambat</option>
+                    <option value="izin">Izin</option>
+                    <option value="sakit">Sakit</option>
+                    <option value="alfa">Alfa</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-72 relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                <input type="text" id="inputAdminGuruSearch" onkeyup="filterAdminGuruDash()"
+                       placeholder="Cari nama guru atau NIP..."
+                       class="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500">
+            </div>
+        </div>
+
+        <!-- Tabel Presensi Guru Hari Ini -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                        <th class="py-3 px-4 w-12 text-center">No</th>
+                        <th class="py-3 px-4">Nama Guru &amp; NIP</th>
+                        <th class="py-3 px-4 text-center">Jam Datang</th>
+                        <th class="py-3 px-4 text-center">Jam Pulang</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4">Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
+                    <?php if (!empty($data['absensiGuruHariIni'])): ?>
+                        <?php $noG = 1; foreach ($data['absensiGuruHariIni'] as $g): ?>
+                            <tr class="row-admin-guru-dash hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors"
+                                data-status="<?= strtolower($g->status ?? '') ?>"
+                                data-nama="<?= strtolower(htmlspecialchars($g->name ?? '')) ?>"
+                                data-nip="<?= strtolower(htmlspecialchars($g->nip ?? '')) ?>">
+                                <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px]"><?= $noG++ ?></td>
+                                <td class="py-3 px-4">
+                                    <span class="font-semibold text-slate-900 dark:text-white block"><?= htmlspecialchars($g->name ?? '-') ?></span>
+                                    <span class="text-[11px] text-slate-400 font-mono">NIP: <?= htmlspecialchars($g->nip ?? '-') ?></span>
+                                </td>
+                                <td class="py-3 px-4 text-center font-mono text-xs">
+                                    <?= !empty($g->jam_datang) ? substr($g->jam_datang, 0, 5) : '<span class="text-slate-400">-</span>' ?>
+                                </td>
+                                <td class="py-3 px-4 text-center font-mono text-xs">
+                                    <?= !empty($g->jam_pulang) ? substr($g->jam_pulang, 0, 5) : '<span class="text-slate-400">-</span>' ?>
+                                </td>
+                                <td class="py-3 px-4 text-center">
+                                    <?php
+                                    $st = strtolower($g->status ?? '');
+                                    $badgeCls = match($st) {
+                                        'hadir'     => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
+                                        'terlambat' => 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+                                        'izin'      => 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+                                        'sakit'     => 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+                                        'alfa'      => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
+                                        default     => 'bg-slate-50 text-slate-600 border-slate-200'
+                                    };
+                                    ?>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border <?= $badgeCls ?>">
+                                        <?= ucfirst($st ?: 'Alfa') ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-slate-500 text-xs">
+                                    <?= htmlspecialchars($g->keterangan ?? '-') ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                                <i class="fa-solid fa-inbox text-2xl mb-2 block opacity-40"></i>
+                                Belum ada riwayat presensi guru untuk hari ini.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -676,6 +789,19 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = '<?= BASEURL; ?>/admin/iot';
     }
 });
+function filterAdminGuruDash() {
+    const status = (document.getElementById('selectAdminGuruStatus')?.value || '').toLowerCase();
+    const q = (document.getElementById('inputAdminGuruSearch')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.row-admin-guru-dash');
+    rows.forEach(r => {
+        const rowStatus = r.getAttribute('data-status') || '';
+        const rowNama = r.getAttribute('data-nama') || '';
+        const rowNip = r.getAttribute('data-nip') || '';
+        const matchStatus = !status || rowStatus === status;
+        const matchQ = !q || rowNama.includes(q) || rowNip.includes(q);
+        r.style.display = (matchStatus && matchQ) ? '' : 'none';
+    });
+}
 </script>
 
 <?php $this->view('templates/footer'); ?>
