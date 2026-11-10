@@ -17,6 +17,7 @@ class Database {
         $option = [
             PDO::ATTR_PERSISTENT => !$isVercel, // Non-persistent pada serverless Vercel
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_TIMEOUT => 5, // Timeout 5 detik agar aman dari 504 Timeout Vercel
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'"
         ];
 

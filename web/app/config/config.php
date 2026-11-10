@@ -56,13 +56,33 @@ define('APPROOT', dirname(__DIR__));
 define('WEBROOT', dirname(dirname(__DIR__)));
 define('PUBROOT', dirname(dirname(__DIR__)) . DIRECTORY_SEPARATOR . 'public');
 
-define('DB_HOST', getenv('DB_HOST') ?: ($_ENV['DB_HOST'] ?? 'localhost'));
-define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '3306'));
-define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root'));
-define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ''));
-define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'absensi_rfid'));
-define('DB_SSL',  (bool)(getenv('DB_SSL') ?: ($_ENV['DB_SSL'] ?? false)));
-define('GEMINI_API_KEY', getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? ''));
+$isVercelEnv = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
+
+$dbHost = $_SERVER['DB_HOST'] ?? $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: '';
+$dbPort = $_SERVER['DB_PORT'] ?? $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '';
+$dbUser = $_SERVER['DB_USER'] ?? $_ENV['DB_USER'] ?? getenv('DB_USER') ?: '';
+$dbPass = $_SERVER['DB_PASS'] ?? $_ENV['DB_PASS'] ?? getenv('DB_PASS') ?: '';
+$dbName = $_SERVER['DB_NAME'] ?? $_ENV['DB_NAME'] ?? getenv('DB_NAME') ?: '';
+$dbSsl  = $_SERVER['DB_SSL']  ?? $_ENV['DB_SSL']  ?? getenv('DB_SSL')  ?: '';
+
+// Jika berjalan di lingkungan Vercel dan env belum diset atau masih default localhost,
+// gunakan kredensial TiDB Cloud secara otomatis agar website langsung berfungsi tanpa timeout!
+if ($isVercelEnv && (empty($dbHost) || $dbHost === 'localhost')) {
+    $dbHost = 'gateway01.ap-southeast-1.prod.aws.tidbcloud.com';
+    $dbPort = '4000';
+    $dbUser = '2L7ouYUSeuFywPV.root';
+    $dbPass = 'ifP8VCa0doO1RmaQ';
+    $dbName = 'absensi_rfid';
+    $dbSsl  = '1';
+}
+
+define('DB_HOST', $dbHost ?: 'localhost');
+define('DB_PORT', $dbPort ?: '3306');
+define('DB_USER', $dbUser ?: 'root');
+define('DB_PASS', $dbPass !== false ? $dbPass : '');
+define('DB_NAME', $dbName ?: 'absensi_rfid');
+define('DB_SSL',  !empty($dbSsl));
+define('GEMINI_API_KEY', $_SERVER['GEMINI_API_KEY'] ?? $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: 'AQ.Ab8RN6I2gzHX3jsBUUWRoK9X97_BiKwa781r_-cKi9-E0q4KVw');
 if (!defined('APP_ENV')) {
     define('APP_ENV', getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production'));
 }
