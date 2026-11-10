@@ -17,20 +17,19 @@
     <link rel="icon" type="image/png" sizes="192x192" href="<?= BASEURL; ?>/assets/img/icon-192.png?v=3">
     <link rel="shortcut icon" href="<?= BASEURL; ?>/assets/img/logo.png?v=3" type="image/png">
     
-    <!-- Typography: Inter (Wise style standard) -->
+    <!-- Typography: Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <!-- Preload Critical Icon WebFont -->
-    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-
-    <!-- Local Vendor Libraries (Compiled CSS first, JS deferred) -->
+    <!-- CSS & Styling: CDN + Local Hybrid (Anti-Berantakan di Cloud & Offline) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
     <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
 
-    <!-- Wise Design Tokens -->
+    <!-- Wise Design Tokens Configuration -->
     <script>
         tailwind.config = {
             theme: {
@@ -48,7 +47,7 @@
                         paper: '#ffffff',      // Page canvas & cards
                     },
                     fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        sans: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
                     },
                     borderRadius: {
                         pill: '9999px',
@@ -60,43 +59,64 @@
         }
     </script>
     
+    <!-- Robust Standalone CSS Fallback (Jaminan Tampilan Rapi 100%) -->
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
+            margin: 0;
+            padding: 0;
             font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             background-color: #f7f9f6;
-            background: radial-gradient(circle at 50% 15%, rgba(159, 232, 112, 0.14) 0%, rgba(247, 249, 246, 0.95) 55%, #f7f9f6 100%);
+            background: radial-gradient(circle at 50% 15%, rgba(159, 232, 112, 0.16) 0%, rgba(247, 249, 246, 0.96) 55%, #f7f9f6 100%);
             color: #454745;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
         }
 
         .wise-headline {
-            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
             font-weight: 900;
             letter-spacing: -0.035em;
-            line-height: 0.95;
+            line-height: 1.1;
             color: #0e0f0c;
         }
 
-        /* ── SMOOTH ENTRANCE ANIMATION ── */
-        @keyframes loginCardEntrance {
-            0% {
-                opacity: 0;
-                transform: translateY(24px) scale(0.97);
-                filter: blur(4px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-                filter: blur(0);
+        /* ── CARD UTAMA LOGIN ── */
+        .login-card-box {
+            background-color: #ffffff !important;
+            border-radius: 24px !important;
+            box-shadow: 0 16px 36px -8px rgba(22, 51, 0, 0.08), 0 4px 16px -2px rgba(0, 0, 0, 0.04) !important;
+            border: 1px solid rgba(134, 134, 133, 0.25) !important;
+            width: 100%;
+            max-width: 420px;
+            padding: 2.25rem 2.25rem;
+            position: relative;
+            z-index: 10;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 480px) {
+            .login-card-box {
+                padding: 1.75rem 1.5rem;
             }
         }
-        .login-card-anim {
-            animation: loginCardEntrance 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: opacity, transform;
-        }
+
+        /* ── WARNA & UTILITAS STANDALONE ── */
+        .bg-paper { background-color: #ffffff !important; }
+        .text-obsidian { color: #0e0f0c !important; }
+        .text-slate { color: #6a6c6a !important; }
+        .text-pebble { color: #868685 !important; }
+        .text-forest { color: #163300 !important; }
+        .bg-forest { background-color: #163300 !important; }
+        .text-lime { color: #9fe870 !important; }
+        .bg-lime { background-color: #9fe870 !important; }
+        .border-fog { border-color: #e8ebe6 !important; }
 
         /* ── LOGO HOVER LIFT ── */
         .logo-smooth {
@@ -114,8 +134,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            background-color: #9fe870;
-            color: #163300;
+            background-color: #9fe870 !important;
+            color: #163300 !important;
             font-size: 14px;
             font-weight: 700;
             border: none;
@@ -126,7 +146,7 @@
             position: relative;
         }
         .btn-pill-lime:hover {
-            background-color: #8ee05c;
+            background-color: #8ee05c !important;
             transform: translateY(-2px);
             box-shadow: 0 10px 24px -4px rgba(159, 232, 112, 0.5);
         }
@@ -138,10 +158,6 @@
         }
         .btn-pill-lime:hover i {
             transform: translateX(4px);
-        }
-
-        .wise-card-shadow {
-            box-shadow: 0 16px 36px -8px rgba(22, 51, 0, 0.08), 0 4px 16px -2px rgba(0, 0, 0, 0.04);
         }
 
         /* ── INPUT FOCUS AURA ── */
@@ -163,7 +179,22 @@
             box-shadow: 0 0 0 4px rgba(159, 232, 112, 0.35);
         }
 
-        /* Respect Reduced Motion */
+        /* ── SMOOTH ENTRANCE ANIMATION ── */
+        @keyframes loginCardEntrance {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .login-card-anim {
+            animation: loginCardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, transform;
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .login-card-anim { animation: none !important; }
             .logo-smooth:hover, .btn-pill-lime:hover { transform: none !important; }
@@ -173,13 +204,18 @@
 <body class="min-h-screen flex flex-col items-center justify-center p-4 relative font-sans antialiased selection:bg-lime selection:text-forest">
 
     <!-- Login Card Container -->
-    <div class="bg-paper rounded-[24px] wise-card-shadow w-full max-w-[420px] p-8 sm:p-10 relative border border-pebble/30 z-10 space-y-6 login-card-anim">
+    <div class="login-card-box login-card-anim space-y-6">
         
         <!-- Header -->
         <div class="text-center space-y-2">
-            <!-- Direct Logo without green box -->
             <a href="<?= BASEURL; ?>" class="inline-block hover:opacity-95 transition-opacity">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="64" height="64" class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" fetchpriority="high">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" 
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=SMK+NU&background=163300&color=9fe870&size=128&bold=true';"
+                     alt="Logo SMK NU Wargabinangun" 
+                     width="64" 
+                     height="64" 
+                     class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" 
+                     fetchpriority="high">
             </a>
 
             <h1 class="wise-headline text-2xl sm:text-[28px] uppercase">
@@ -201,7 +237,7 @@
                     <input type="text"
                            id="username"
                            name="username"
-                           placeholder="Masukkan username Anda"
+                           placeholder="Masukkan username atau NIS"
                            autocomplete="username"
                            required
                            autofocus
