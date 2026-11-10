@@ -61,6 +61,7 @@ define('DB_PORT', getenv('DB_PORT') ?: ($_ENV['DB_PORT'] ?? '3306'));
 define('DB_USER', getenv('DB_USER') ?: ($_ENV['DB_USER'] ?? 'root'));
 define('DB_PASS', getenv('DB_PASS') !== false ? getenv('DB_PASS') : ($_ENV['DB_PASS'] ?? ''));
 define('DB_NAME', getenv('DB_NAME') ?: ($_ENV['DB_NAME'] ?? 'absensi_rfid'));
+define('DB_SSL',  (bool)(getenv('DB_SSL') ?: ($_ENV['DB_SSL'] ?? false)));
 define('GEMINI_API_KEY', getenv('GEMINI_API_KEY') ?: ($_ENV['GEMINI_API_KEY'] ?? ''));
 if (!defined('APP_ENV')) {
     define('APP_ENV', getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production'));

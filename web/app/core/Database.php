@@ -20,6 +20,12 @@ class Database {
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'"
         ];
 
+        // Dukungan koneksi SSL untuk TiDB Cloud / Managed Cloud MySQL
+        if (strpos($this->host, 'tidbcloud.com') !== false || (defined('DB_SSL') && DB_SSL)) {
+            $option[PDO::MYSQL_ATTR_SSL_CA] = true;
+            $option[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+        }
+
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $option);
             $this->dbh->exec("SET time_zone = '+07:00'");
