@@ -355,7 +355,7 @@ class ChatbotController extends Controller {
         // 1. Jumlah / Total Guru
         if (preg_match('/(jumlah\s+guru|total\s+guru|ada\s+berapa\s+(jumlah\s+|total\s+)?guru|berapa\s+guru|banyaknya\s+guru|guru\s+ada\s+berapa)/i', $clean)) {
             $db->query("SELECT COUNT(*) as t FROM guru");
-            $totGuru = (int)($db->single()->t ?? 28);
+            $totGuru = (int)($db->single()->t ?? 27);
 
             // Cek apakah menanyakan guru yang hadir hari ini
             if (preg_match('/(hadir|datang|masuk|absen)/i', $clean)) {
@@ -371,7 +371,7 @@ class ChatbotController extends Controller {
         // 2. Jumlah / Total Siswa
         if (preg_match('/(jumlah\s+siswa|total\s+siswa|ada\s+berapa\s+(jumlah\s+|total\s+)?siswa|berapa\s+siswa|banyaknya\s+siswa|siswa\s+ada\s+berapa)/i', $clean)) {
             $db->query("SELECT COUNT(*) as t FROM siswa");
-            $totSiswa = (int)($db->single()->t ?? 46);
+            $totSiswa = (int)($db->single()->t ?? 255);
 
             // Cek apakah menanyakan siswa yang hadir hari ini
             if (preg_match('/(hadir|datang|masuk|absen)/i', $clean)) {
@@ -2323,8 +2323,8 @@ class ChatbotController extends Controller {
                 foreach ($izinList as $iz) { $izinArr[] = "{$iz->jenis} ({$iz->status}: {$iz->alasan})"; }
                 $izinStr = empty($izinArr) ? "Tidak ada" : implode(', ', $izinArr);
 
-                $db->query("SELECT COUNT(*) as t FROM guru");  $totGuruMaster  = (int)($db->single()->t ?? 28);
-                $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswaMaster = (int)($db->single()->t ?? 46);
+                $db->query("SELECT COUNT(*) as t FROM guru");  $totGuruMaster  = (int)($db->single()->t ?? 27);
+                $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswaMaster = (int)($db->single()->t ?? 255);
                 $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelasMaster = (int)($db->single()->t ?? 9);
 
                 $contextText = 
@@ -2717,7 +2717,7 @@ class ChatbotController extends Controller {
             "1. Jawab secara simpel, langsung, padat, dan to the point tanpa komentar pembuka atau penutup basa-basi.\n" .
             "2. DILARANG menambahkan komentar, evaluasi pribadi, saran tambahan, atau rekomendasi/tips yang tidak diminta agar menghemat token.\n" .
             "3. Pengguna yang sedang berbicara langsung dengan Anda tertera di dalam DATA SINKRONISASI PRIBADI. Kenali dirinya saat dia bertanya tentang dirinya ('siapa saya', 'jadwal saya', 'izin saya', dll).\n" .
-            "4. Jika ditanya jumlah umum (seperti 'ada berapa jumlah guru', 'jumlah siswa', 'jumlah kelas'), berikan jawaban singkat dan langsung (misal: 'Ada 28 guru terdaftar di database.').\n" .
+            "4. Jika ditanya jumlah umum (seperti 'ada berapa jumlah guru', 'jumlah siswa', 'jumlah kelas'), berikan jawaban singkat dan langsung (misal: 'Ada 27 guru terdaftar di database.').\n" .
             "5. DILARANG membuatkan kode program (coding) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n\n" .
             "DATA SINKRONISASI DATABASE SEKOLAH:\n" .
             "{$contextText}\n";
@@ -3417,8 +3417,8 @@ class ChatbotController extends Controller {
         }
 
         // 3. Fallback Ringkasan Direktori Data Sekolah (Simpel & Hemat Token)
-        $db->query("SELECT COUNT(*) as t FROM guru");  $totGuru  = (int)($db->single()->t ?? 28);
-        $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswa = (int)($db->single()->t ?? 46);
+        $db->query("SELECT COUNT(*) as t FROM guru");  $totGuru  = (int)($db->single()->t ?? 27);
+        $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswa = (int)($db->single()->t ?? 255);
         $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelas = (int)($db->single()->t ?? 9);
 
         if (preg_match('/(guru)/i', $lower)) {

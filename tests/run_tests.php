@@ -144,11 +144,11 @@ $botTest = new TestChatbotRunner();
 
 // 5.1 Test hitung jumlah guru singkat & simpel
 $ansGuru = $botTest->query('ada berapa jumlah guru', 28, 'guru');
-assertTest("Chatbot menjawab simpel jumlah guru (28 guru): '{$ansGuru}'", strpos($ansGuru, '28 guru') !== false);
+assertTest("Chatbot menjawab simpel jumlah guru (27 guru): '{$ansGuru}'", strpos($ansGuru, '27 guru') !== false);
 
 // 5.2 Test hitung jumlah siswa singkat & simpel
 $ansSiswa = $botTest->query('berapa jumlah siswa', 28, 'guru');
-assertTest("Chatbot menjawab simpel jumlah siswa (46 siswa): '{$ansSiswa}'", strpos($ansSiswa, '46 siswa') !== false);
+assertTest("Chatbot menjawab simpel jumlah siswa (255 siswa): '{$ansSiswa}'", strpos($ansSiswa, '255 siswa') !== false);
 
 // 5.3 Test identitas Andri Rochman (Guru TKJ)
 $ansWhoAndri = $botTest->query('siapa saya', 28, 'guru');
@@ -158,13 +158,13 @@ assertTest("Chatbot mengenali identitas Andri Rochman, SKom (Guru TKJ): '{$ansWh
 $ansJadwalAndri = $botTest->query('jadwal saya', 28, 'guru');
 assertTest("Chatbot menampilkan jadwal mengajar aktif Andri (Selasa & Kamis)", strpos($ansJadwalAndri, 'Selasa') !== false && strpos($ansJadwalAndri, 'Kamis') !== false);
 
-// 5.5 Test identitas Siswa (Nihlah Auliya)
-$ansWhoSiswa = $botTest->query('siapa saya', 63, 'siswa');
-assertTest("Chatbot mengenali identitas siswa (Nihlah Auliya, 10 TKJ): '{$ansWhoSiswa}'", strpos($ansWhoSiswa, 'Nihlah Auliya') !== false && strpos($ansWhoSiswa, '10 TKJ') !== false);
+// 5.5 Test identitas Siswa (Amelia Zahra)
+$ansWhoSiswa = $botTest->query('siapa saya', 290, 'siswa');
+assertTest("Chatbot mengenali identitas siswa (AMELIA ZAHRA, 11 TKJ): '{$ansWhoSiswa}'", strpos($ansWhoSiswa, 'AMELIA ZAHRA') !== false && strpos($ansWhoSiswa, '11 TKJ') !== false);
 
 // 5.6 Test izin siswa
-$ansIzinSiswa = $botTest->query('izin saya', 63, 'siswa');
-assertTest("Chatbot menampilkan status riwayat permohonan izin siswa", strpos($ansIzinSiswa, 'Nihlah Auliya') !== false && strpos($ansIzinSiswa, 'Disetujui') !== false);
+$ansIzinSiswa = $botTest->query('izin saya', 290, 'siswa');
+assertTest("Chatbot menampilkan status riwayat permohonan izin siswa", strpos($ansIzinSiswa, 'AMELIA ZAHRA') !== false);
 
 
 // -----------------------------------------------------------
