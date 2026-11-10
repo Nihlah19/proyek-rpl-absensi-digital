@@ -1,21 +1,19 @@
 <?php
-/**
- * Test Suite Mandiri - Proyek Akhir Rekayasa Perangkat Lunak
- * Sistem Presensi Terpadu IoT RFID & Modul Khusus PKL Berbasis AI
- * SMK NU Wargabinangun Cirebon
- */
+// ===========================================================
+// AUTOMATED TEST RUNNER - Absensi RFID & PKL Module
+// ===========================================================
 
 echo "======================================================\n";
 echo "  SUITE PENGUJIAN OTOMATIS (AUTOMATED UNIT TESTS)     \n";
 echo "  Sistem Absensi RFID & Presensi Mandiri PKL          \n";
 echo "======================================================\n\n";
 
-$totalTests = 0;
 $passedTests = 0;
 $failedTests = 0;
+$totalTests  = 0;
 
 function assertTest($description, $condition) {
-    global $totalTests, $passedTests, $failedTests;
+    global $passedTests, $failedTests, $totalTests;
     $totalTests++;
     if ($condition) {
         $passedTests++;
@@ -27,56 +25,60 @@ function assertTest($description, $condition) {
 }
 
 // -----------------------------------------------------------
-// TEST SUITE 1: Formula Haversine & Validasi Geofencing PKL
+// TEST SUITE 1: Formula Geofencing Haversine (PKL)
 // -----------------------------------------------------------
 echo "--- 1. Testing Modul Geofencing & Jarak Haversine PKL ---\n";
 
-function haversineDistance($lat1, $lng1, $lat2, $lng2) {
-    $earthRadius = 6371000; // meter
-    $dLat = deg2rad((float)$lat2 - (float)$lat1);
-    $dLng = deg2rad((float)$lng2 - (float)$lng1);
+function calculateDistance($lat1, $lon1, $lat2, $lon2) {
+    $earthRadius = 6371000; // Radius bumi dalam meter
+    $dLat = deg2rad($lat2 - $lat1);
+    $dLon = deg2rad($lon2 - $lon1);
+
     $a = sin($dLat / 2) * sin($dLat / 2) +
-         cos(deg2rad((float)$lat1)) * cos(deg2rad((float)$lat2)) *
-         sin($dLng / 2) * sin($dLng / 2);
+         cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
+         sin($dLon / 2) * sin($dLon / 2);
     $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
-    return round($earthRadius * $c, 1);
+
+    return $earthRadius * $c;
 }
 
-// Titik A: Gerbang SMK NU Wargabinangun (-6.6872, 108.4121)
-// Titik B: Posisi siswa sama persis
-$d0 = haversineDistance(-6.6872, 108.4121, -6.6872, 108.4121);
-assertTest("Jarak titik identik adalah 0 meter", $d0 === 0.0);
+// 1.1 Koordinat Identik (Jarak harus 0 meter)
+$distIdentical = calculateDistance(-6.668725, 108.384210, -6.668725, 108.384210);
+assertTest("Jarak titik identik adalah 0 meter", round($distIdentical, 1) === 0.0);
 
-// Titik C: Posisi siswa berjarak ~35 meter (dalam radius toleransi 50m)
-$d35 = haversineDistance(-6.68720, 108.41210, -6.68745, 108.41225);
-assertTest("Validasi presensi DITERIMA jika jarak ($d35 m) <= radius 50m", $d35 <= 50.0);
+// 1.2 Siswa dalam radius (< 50 meter)
+$distInside = calculateDistance(-6.668725, 108.384210, -6.668480, 108.384050); // ~32 meter
+assertTest("Validasi presensi DITERIMA jika jarak (" . round($distInside, 1) . " m) <= radius 50m", $distInside <= 50.0);
 
-// Titik D: Posisi siswa di luar jangkauan radius (>50m, misal 250m)
-$d250 = haversineDistance(-6.68720, 108.41210, -6.68900, 108.41350);
-assertTest("Validasi presensi DITOLAK jika jarak ($d250 m) > radius 50m", $d250 > 50.0);
+// 1.3 Siswa di luar radius (> 50 meter)
+$distOutside = calculateDistance(-6.668725, 108.384210, -6.671000, 108.384210); // ~252 meter
+assertTest("Validasi presensi DITOLAK jika jarak (" . round($distOutside, 1) . " m) > radius 50m", $distOutside > 50.0);
 
 
 // -----------------------------------------------------------
-// TEST SUITE 2: Validasi Hari Kerja Dinamis PKL (Wali Kelas)
+// TEST SUITE 2: Jadwal & Hari Kerja Dinamis PKL
 // -----------------------------------------------------------
 echo "\n--- 2. Testing Pengaturan Hari Kerja Dinamis PKL ---\n";
 
-function isHariKerjaAktif($hariIni, $daftarHariKerja) {
-    // Array hari kerja yang dicentang wali kelas, misal: ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']
-    return in_array($hariIni, $daftarHariKerja, true);
+function isHariKerja($hari, $tipeHariKerja = '5_hari') {
+    $hari = strtolower($hari);
+    if ($hari === 'minggu') return false;
+    if ($tipeHariKerja === '5_hari') {
+        return in_array($hari, ['senin', 'selasa', 'rabu', 'kamis', 'jumat']);
+    } elseif ($tipeHariKerja === '6_hari') {
+        return in_array($hari, ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu']);
+    }
+    return false;
 }
 
-$hariKerja5Hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-assertTest("Hari Senin terdaftar aktif untuk instansi 5 hari kerja", isHariKerjaAktif('Senin', $hariKerja5Hari) === true);
-assertTest("Hari Sabtu berstatus LIBUR untuk instansi 5 hari kerja (Bebas Alfa)", isHariKerjaAktif('Sabtu', $hariKerja5Hari) === false);
-assertTest("Hari Minggu berstatus LIBUR otomatis", isHariKerjaAktif('Minggu', $hariKerja5Hari) === false);
-
-$hariKerja6Hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-assertTest("Hari Sabtu terdaftar aktif untuk bengkel DUDI 6 hari kerja", isHariKerjaAktif('Sabtu', $hariKerja6Hari) === true);
+assertTest("Hari Senin terdaftar aktif untuk instansi 5 hari kerja", isHariKerja('Senin', '5_hari') === true);
+assertTest("Hari Sabtu berstatus LIBUR untuk instansi 5 hari kerja (Bebas Alfa)", isHariKerja('Sabtu', '5_hari') === false);
+assertTest("Hari Minggu berstatus LIBUR otomatis", isHariKerja('Minggu', '6_hari') === false);
+assertTest("Hari Sabtu terdaftar aktif untuk bengkel DUDI 6 hari kerja", isHariKerja('Sabtu', '6_hari') === true);
 
 
 // -----------------------------------------------------------
-// TEST SUITE 3: Keamanan AI Chatbot (Anti Prompt Injection & Manipulation)
+// TEST SUITE 3: Chatbot AI Sanitasi & Anti-Manipulasi RBAC
 // -----------------------------------------------------------
 echo "\n--- 3. Testing Filter Keamanan & Boundary Asisten AI ---\n";
 
@@ -115,6 +117,54 @@ function hitungTingkatKehadiran($hadir, $terlambat, $pkl, $total) {
 assertTest("Tingkat kehadiran 0 dari 27 guru menghasilkan 0.0%", hitungTingkatKehadiran(0, 0, 0, 27) === 0.0);
 assertTest("Tingkat kehadiran 27 dari 27 guru menghasilkan 100.0%", hitungTingkatKehadiran(25, 2, 0, 27) === 100.0);
 assertTest("Tingkat kehadiran 30 dari 36 siswa (termasuk PKL) terhitung akurat (83.3%)", hitungTingkatKehadiran(20, 5, 5, 36) === 83.3);
+
+
+// -----------------------------------------------------------
+// TEST SUITE 5: Chatbot AI Respon Simpel & Akses Data Pribadi
+// -----------------------------------------------------------
+echo "\n--- 5. Testing Chatbot AI Respon Simpel & Data Pribadi Pengguna ---\n";
+
+require_once __DIR__ . '/../web/app/config/config.php';
+require_once __DIR__ . '/../web/app/core/Controller.php';
+require_once __DIR__ . '/../web/app/core/Database.php';
+require_once __DIR__ . '/../web/app/core/Model.php';
+require_once __DIR__ . '/../web/app/models/AppSetting.php';
+require_once __DIR__ . '/../web/app/controllers/ChatbotController.php';
+
+class TestChatbotRunner extends ChatbotController {
+    public function query($message, $userId, $userRole) {
+        $reflection = new ReflectionClass('ChatbotController');
+        $method = $reflection->getMethod('handleLocalDatabaseQuery');
+        $method->setAccessible(true);
+        return $method->invoke($this, $message, $userId, $userRole);
+    }
+}
+
+$botTest = new TestChatbotRunner();
+
+// 5.1 Test hitung jumlah guru singkat & simpel
+$ansGuru = $botTest->query('ada berapa jumlah guru', 28, 'guru');
+assertTest("Chatbot menjawab simpel jumlah guru (28 guru): '{$ansGuru}'", strpos($ansGuru, '28 guru') !== false);
+
+// 5.2 Test hitung jumlah siswa singkat & simpel
+$ansSiswa = $botTest->query('berapa jumlah siswa', 28, 'guru');
+assertTest("Chatbot menjawab simpel jumlah siswa (46 siswa): '{$ansSiswa}'", strpos($ansSiswa, '46 siswa') !== false);
+
+// 5.3 Test identitas Andri Rochman (Guru TKJ)
+$ansWhoAndri = $botTest->query('siapa saya', 28, 'guru');
+assertTest("Chatbot mengenali identitas Andri Rochman, SKom (Guru TKJ): '{$ansWhoAndri}'", strpos($ansWhoAndri, 'Andri Rochman') !== false && strpos($ansWhoAndri, 'TKJ') !== false);
+
+// 5.4 Test jadwal mengajar Andri
+$ansJadwalAndri = $botTest->query('jadwal saya', 28, 'guru');
+assertTest("Chatbot menampilkan jadwal mengajar aktif Andri (Selasa & Kamis)", strpos($ansJadwalAndri, 'Selasa') !== false && strpos($ansJadwalAndri, 'Kamis') !== false);
+
+// 5.5 Test identitas Siswa (Nihlah Auliya)
+$ansWhoSiswa = $botTest->query('siapa saya', 63, 'siswa');
+assertTest("Chatbot mengenali identitas siswa (Nihlah Auliya, 10 TKJ): '{$ansWhoSiswa}'", strpos($ansWhoSiswa, 'Nihlah Auliya') !== false && strpos($ansWhoSiswa, '10 TKJ') !== false);
+
+// 5.6 Test izin siswa
+$ansIzinSiswa = $botTest->query('izin saya', 63, 'siswa');
+assertTest("Chatbot menampilkan status riwayat permohonan izin siswa", strpos($ansIzinSiswa, 'Nihlah Auliya') !== false && strpos($ansIzinSiswa, 'Disetujui') !== false);
 
 
 // -----------------------------------------------------------

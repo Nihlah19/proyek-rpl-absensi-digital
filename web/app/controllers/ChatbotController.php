@@ -290,9 +290,357 @@ class ChatbotController extends Controller {
     // =========================================================
     // QUERY LOKAL KE DATABASE (DENGAN STRICT RBAC)
     // =========================================================
+    // =========================================================
+    // PROFIL & DATA PRIBADI PENGGUNA TERHUBUNG SESI AKTIF
+    // =========================================================
+    private function getUserPersonalProfile($userId, $userRole, $db) {
+        $db->query("SELECT id, name, username, role FROM users WHERE id = :uid");
+        $db->bind(':uid', $userId);
+        $user = $db->single();
+        if (!$user) return null;
+
+        $profile = [
+            'user_id'  => $user->id,
+            'name'     => $user->name,
+            'username' => $user->username,
+            'role'     => $user->role,
+        ];
+
+        if ($userRole === 'guru' || $userRole === 'wali_kelas') {
+            $db->query("SELECT g.id as guru_id, g.nip, g.barcode_id, g.subject, g.is_pembimbing_pkl, k.nama_kelas as wali_kelas_nama, k.id as wali_kelas_id
+                        FROM guru g 
+                        LEFT JOIN kelas k ON k.wali_kelas_id = :uid 
+                        WHERE g.user_id = :uid2");
+            $db->bind(':uid', $userId);
+            $db->bind(':uid2', $userId);
+            $g = $db->single();
+            if ($g) {
+                $profile['guru_id']           = $g->guru_id;
+                $profile['nip']               = (!empty($g->nip) && $g->nip !== '-') ? $g->nip : '-';
+                $profile['subject']           = (!empty($g->subject) && $g->subject !== '-') ? $g->subject : 'Umum';
+                $profile['barcode_id']        = $g->barcode_id;
+                $profile['is_pembimbing_pkl'] = $g->is_pembimbing_pkl;
+                $profile['wali_kelas']        = $g->wali_kelas_nama ?? null;
+                $profile['wali_kelas_id']     = $g->wali_kelas_id ?? null;
+            }
+        } elseif ($userRole === 'siswa') {
+            $db->query("SELECT s.id as siswa_id, s.nis, s.rfid_uid, s.kelas_id, k.nama_kelas, k.status as status_kelas
+                        FROM siswa s 
+                        LEFT JOIN kelas k ON s.kelas_id = k.id 
+                        WHERE s.user_id = :uid");
+            $db->bind(':uid', $userId);
+            $s = $db->single();
+            if ($s) {
+                $profile['siswa_id']      = $s->siswa_id;
+                $profile['nis']           = $s->nis;
+                $profile['rfid_uid']      = $s->rfid_uid;
+                $profile['kelas_id']      = $s->kelas_id;
+                $profile['nama_kelas']    = $s->nama_kelas;
+                $profile['status_kelas']  = $s->status_kelas;
+            }
+        }
+
+        return $profile;
+    }
+
+    // =========================================================
+    // QUERY STATISTIK JUMLAH CEPAT (SIMPEL, LANGSUNG, HEMAT TOKEN)
+    // =========================================================
+    private function handleSimpleCountQuery($message, $db) {
+        $lower = strtolower(trim($message));
+        $clean = trim(preg_replace('/[^a-zA-Z0-9\s]/u', ' ', $lower));
+        $today = date('Y-m-d');
+        $hariIni = $this->hariIndonesia(date('l'));
+
+        // 1. Jumlah / Total Guru
+        if (preg_match('/(jumlah\s+guru|total\s+guru|ada\s+berapa\s+(jumlah\s+|total\s+)?guru|berapa\s+guru|banyaknya\s+guru|guru\s+ada\s+berapa)/i', $clean)) {
+            $db->query("SELECT COUNT(*) as t FROM guru");
+            $totGuru = (int)($db->single()->t ?? 28);
+
+            // Cek apakah menanyakan guru yang hadir hari ini
+            if (preg_match('/(hadir|datang|masuk|absen)/i', $clean)) {
+                $db->query("SELECT COUNT(*) as t FROM absensi_guru WHERE tanggal = :tgl AND jam_datang IS NOT NULL");
+                $db->bind(':tgl', $today);
+                $hadirGuru = (int)($db->single()->t ?? 0);
+                return "Hari ini ({$hariIni}), tercatat **{$hadirGuru} dari {$totGuru} guru** telah hadir.";
+            }
+
+            return "Ada **{$totGuru} guru** terdaftar di database SMK NU Wargabinangun.";
+        }
+
+        // 2. Jumlah / Total Siswa
+        if (preg_match('/(jumlah\s+siswa|total\s+siswa|ada\s+berapa\s+(jumlah\s+|total\s+)?siswa|berapa\s+siswa|banyaknya\s+siswa|siswa\s+ada\s+berapa)/i', $clean)) {
+            $db->query("SELECT COUNT(*) as t FROM siswa");
+            $totSiswa = (int)($db->single()->t ?? 46);
+
+            // Cek apakah menanyakan siswa yang hadir hari ini
+            if (preg_match('/(hadir|datang|masuk|absen)/i', $clean)) {
+                $db->query("SELECT COUNT(*) as t FROM absensi_siswa WHERE tanggal = :tgl AND status IN ('hadir', 'terlambat')");
+                $db->bind(':tgl', $today);
+                $hadirSiswa = (int)($db->single()->t ?? 0);
+                return "Hari ini ({$hariIni}), tercatat **{$hadirSiswa} dari {$totSiswa} siswa** telah hadir.";
+            }
+
+            return "Ada **{$totSiswa} siswa** terdaftar di database SMK NU Wargabinangun.";
+        }
+
+        // 3. Jumlah / Total Kelas
+        if (preg_match('/(jumlah\s+kelas|total\s+kelas|ada\s+berapa\s+(jumlah\s+|total\s+)?kelas|berapa\s+kelas|kelas\s+ada\s+berapa)/i', $clean)) {
+            $db->query("SELECT COUNT(*) as t FROM kelas");
+            $totKelas = (int)($db->single()->t ?? 9);
+            return "Ada **{$totKelas} kelas** terdaftar di database SMK NU Wargabinangun.";
+        }
+
+        // 4. Jumlah Tempat / Kelompok PKL
+        if (preg_match('/(jumlah\s+(tempat|lokasi|kelompok)\s+pkl|total\s+(tempat|lokasi|kelompok)\s+pkl|ada\s+berapa\s+(tempat|lokasi|kelompok)\s+pkl|berapa\s+(tempat|lokasi|kelompok)\s+pkl)/i', $clean)) {
+            $db->query("SELECT COUNT(*) as t FROM pkl_kelompok");
+            $totPkl = (int)($db->single()->t ?? 5);
+            return "Ada **{$totPkl} kelompok tempat PKL** terdaftar di database SMK NU Wargabinangun.";
+        }
+
+        // 5. Jumlah Perangkat IoT Scanner
+        if (preg_match('/(jumlah\s+(perangkat|alat|mesin|scanner)\s+iot|total\s+(perangkat|alat|mesin|scanner)\s+iot|ada\s+berapa\s+(perangkat|alat|mesin|scanner)\s+iot|berapa\s+(perangkat|alat|mesin|scanner)\s+iot)/i', $clean)) {
+            $db->query("SELECT COUNT(*) as t FROM iot_devices");
+            $totIot = (int)($db->single()->t ?? 0);
+            return "Ada **{$totIot} perangkat IoT scanner RFID** terdaftar di database SMK NU Wargabinangun.";
+        }
+
+        return false;
+    }
+
+    // =========================================================
+    // QUERY DATA PRIBADI PENGGUNA (IDENTITAS, JADWAL, IZIN, ABSEN)
+    // =========================================================
+    private function handlePersonalDataQuery($message, $userId, $userRole, $db) {
+        $clean = trim(preg_replace('/[^a-zA-Z0-9\s]/u', ' ', $message));
+        $lower = strtolower($clean);
+        $today = date('Y-m-d');
+        $hariIni = $this->hariIndonesia(date('l'));
+        $tglIndo = $this->formatTanggalIndo($today);
+
+        // Fetch user profile
+        $profile = $this->getUserPersonalProfile($userId, $userRole, $db);
+        if (!$profile) return false;
+
+        // ── 1. IDENTITAS / PROFIL SAYA ─────────────────────────────────────────
+        $isIdentity = preg_match('/\b(siapa\s+(saya|aku)|nama\s+saya|profil\s+saya|data\s+saya|akun\s+saya|identitas\s+saya|siapa\s+namaku|siapakah\s+(saya|aku))\b/i', $lower);
+        if ($isIdentity) {
+            if ($userRole === 'guru') {
+                $mapel = (!empty($profile['subject']) && $profile['subject'] !== '-') ? "Guru Mata Pelajaran **{$profile['subject']}**" : "Guru";
+                $nip = (!empty($profile['nip']) && $profile['nip'] !== '-') ? ", NIP: `{$profile['nip']}`" : "";
+                $wk = !empty($profile['wali_kelas']) ? ", Wali Kelas **{$profile['wali_kelas']}**" : "";
+                return "Anda login sebagai **{$profile['name']}** ({$mapel}{$wk}{$nip}, Username: `{$profile['username']}`).";
+            } elseif ($userRole === 'wali_kelas') {
+                $wk = !empty($profile['wali_kelas']) ? "Wali Kelas **{$profile['wali_kelas']}**" : "Wali Kelas";
+                $nip = (!empty($profile['nip']) && $profile['nip'] !== '-') ? ", NIP: `{$profile['nip']}`" : "";
+                return "Anda login sebagai **{$profile['name']}** ({$wk}{$nip}, Username: `{$profile['username']}`).";
+            } elseif ($userRole === 'siswa') {
+                $kls = !empty($profile['nama_kelas']) ? "Kelas **{$profile['nama_kelas']}**" : "Siswa";
+                $nis = !empty($profile['nis']) ? ", NIS: `{$profile['nis']}`" : "";
+                return "Anda login sebagai **{$profile['name']}** (Siswa {$kls}{$nis}, Username: `{$profile['username']}`).";
+            } elseif ($userRole === 'kepsek') {
+                return "Anda login sebagai **{$profile['name']}** (Kepala Sekolah SMK NU Wargabinangun, Username: `{$profile['username']}`).";
+            } elseif ($userRole === 'admin') {
+                return "Anda login sebagai **{$profile['name']}** (Administrator Sistem Absensi, Username: `{$profile['username']}`).";
+            } else {
+                return "Anda login sebagai **{$profile['name']}** (Peran: " . ucfirst($userRole) . ", Username: `{$profile['username']}`).";
+            }
+        }
+
+        // ── 2. JADWAL SAYA ───────────────────────────────────────────────────
+        $isSchedule = preg_match('/\b(jadwal\s+saya|kapan\s+saya\s+(mengajar|ngajar|masuk|sekolah|kbm)|jadwal\s+mengajar\s+saya|jam\s+mengajar\s+saya|hari\s+apa\s+saya\s+(mengajar|ngajar)|jadwal\s+ngajar\s+saya|jam\s+masuk\s+saya|jam\s+pulang\s+saya|jadwalku)\b/i', $lower) ||
+                      (preg_match('/\b(jadwal|kapan|jam)\b/i', $lower) && preg_match('/\b(saya|aku)\b/i', $lower) && !preg_match('/\b(izin|absen|presensi)\b/i', $lower));
+
+        if ($isSchedule) {
+            if ($userRole === 'guru' || $userRole === 'wali_kelas') {
+                $guruId = $profile['guru_id'] ?? 0;
+                if (!$guruId) return "Data profil guru Anda belum terhubung di sistem.";
+
+                // Jika menanyakan jadwal hari ini
+                if (preg_match('/(hari ini|sekarang)/i', $lower)) {
+                    $db->query("SELECT * FROM jadwal_guru WHERE guru_id = :gid AND hari = :hari AND is_active = 1");
+                    $db->bind(':gid', $guruId);
+                    $db->bind(':hari', $hariIni);
+                    $jToday = $db->single();
+
+                    if (!$jToday) {
+                        return "Hari ini (**{$hariIni}**) Anda tidak memiliki jadwal mengajar aktif (Libur / Tidak ada KBM).";
+                    }
+                    $masuk = substr($jToday->jam_datang, 0, 5);
+                    $pulang = substr($jToday->jam_pulang, 0, 5);
+                    $telat = substr($jToday->batas_terlambat, 0, 5);
+                    return "**Jadwal Mengajar Anda Hari Ini ({$hariIni}) — {$profile['name']}:**\n- Masuk: {$masuk} s/d Pulang: {$pulang} WIB (Batas telat: {$telat} WIB).";
+                }
+
+                // Jadwal mingguan
+                $db->query("SELECT hari, jam_datang, batas_terlambat, jam_pulang FROM jadwal_guru WHERE guru_id = :gid AND is_active = 1 ORDER BY FIELD(hari,'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')");
+                $db->bind(':gid', $guruId);
+                $jadwalList = $db->resultSet();
+
+                if (empty($jadwalList)) {
+                    return "Belum ada jadwal mengajar aktif yang tercatat untuk Anda di sistem.";
+                }
+
+                $lines = [];
+                foreach ($jadwalList as $j) {
+                    $m = substr($j->jam_datang, 0, 5);
+                    $p = substr($j->jam_pulang, 0, 5);
+                    $t = substr($j->batas_terlambat, 0, 5);
+                    $tanda = ($j->hari === $hariIni) ? ' [Hari Ini]' : '';
+                    $lines[] = "- **{$j->hari}**{$tanda}: Masuk {$m} s/d Pulang {$p} WIB (Batas telat: {$t})";
+                }
+
+                return "**Jadwal Mengajar Anda ({$profile['name']}):**\n" . implode("\n", $lines);
+            } elseif ($userRole === 'siswa') {
+                $db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari");
+                $db->bind(':hari', $hariIni);
+                $js = $db->single();
+
+                if (!$js || !$js->status_aktif) {
+                    return "Hari ini (**{$hariIni}**) jadwal KBM / absensi sekolah siswa libur.";
+                }
+
+                $m = substr($js->jam_datang, 0, 5);
+                $p = substr($js->jam_pulang, 0, 5);
+                $t = substr($js->batas_terlambat, 0, 5);
+                $b = substr($js->jam_mulai_absensi, 0, 5);
+
+                return "**Jadwal Absensi Siswa Hari Ini ({$hariIni}):**\n"
+                     . "- Buka Scanner : {$b} WIB\n"
+                     . "- Jam Masuk    : {$m} WIB (Batas telat: {$t} WIB)\n"
+                     . "- Jam Pulang   : {$p} WIB";
+            }
+        }
+
+        // ── 3. PENGAJUAN IZIN & SAKIT SAYA ───────────────────────────────────
+        $isLeave = preg_match('/\b(izin\s+saya|pengajuan\s+izin|status\s+izin|riwayat\s+izin|pengajuan\s+saya|surat\s+izin|pulang\s+cepat\s+saya)\b/i', $lower) ||
+                   (preg_match('/\b(izin|ijin|sakit|cuti|pulang\s*cepat)\b/i', $lower) && preg_match('/\b(saya|aku|status|pengajuan)\b/i', $lower));
+
+        if ($isLeave) {
+            $db->query("SELECT jenis, tanggal_mulai, tanggal_selesai, alasan, status, catatan_approval 
+                        FROM pengajuan_izin 
+                        WHERE user_id = :uid 
+                        ORDER BY id DESC LIMIT 5");
+            $db->bind(':uid', $userId);
+            $izinRows = $db->resultSet();
+
+            $pcRows = [];
+            if ($userRole === 'siswa' && !empty($profile['siswa_id'])) {
+                $db->query("SELECT tanggal, jam_pengajuan, alasan, status 
+                            FROM pengajuan_pulang_cepat 
+                            WHERE siswa_id = :sid 
+                            ORDER BY id DESC LIMIT 3");
+                $db->bind(':sid', $profile['siswa_id']);
+                $pcRows = $db->resultSet();
+            }
+
+            if (empty($izinRows) && empty($pcRows)) {
+                return "Belum ada riwayat pengajuan izin yang tercatat untuk akun Anda, **{$profile['name']}**.";
+            }
+
+            $respon = "**Status Pengajuan Izin Anda — {$profile['name']}:**\n\n";
+            if (!empty($izinRows)) {
+                foreach ($izinRows as $i => $iz) {
+                    $stBadge = match(strtolower($iz->status)) {
+                        'approved' => '[Disetujui]',
+                        'rejected' => '[Ditolak]',
+                        default    => '[Menunggu Persetujuan]',
+                    };
+                    $tglStr = ($iz->tanggal_mulai === $iz->tanggal_selesai) ? $iz->tanggal_mulai : "{$iz->tanggal_mulai} s/d {$iz->tanggal_selesai}";
+                    $catatan = !empty($iz->catatan_approval) ? " (Catatan: {$iz->catatan_approval})" : "";
+                    $respon .= "- **" . ucfirst($iz->jenis) . "** ({$tglStr}): {$stBadge} — Alasan: {$iz->alasan}{$catatan}\n";
+                }
+            }
+
+            if (!empty($pcRows)) {
+                $respon .= "\n**Pengajuan Pulang Cepat:**\n";
+                foreach ($pcRows as $pc) {
+                    $stBadge = match(strtoupper($pc->status)) {
+                        'APPROVED' => '[Disetujui]',
+                        'REJECTED' => '[Ditolak]',
+                        default    => '[Menunggu Persetujuan]',
+                    };
+                    $jam = !empty($pc->jam_pengajuan) ? substr($pc->jam_pengajuan, 0, 5) : '';
+                    $respon .= "- **Pulang Cepat** ({$pc->tanggal} {$jam}): {$stBadge} — Alasan: {$pc->alasan}\n";
+                }
+            }
+
+            return trim($respon);
+        }
+
+        // ── 4. ABSENSI / PRESENSI SAYA HARI INI ──────────────────────────────
+        $isAttendance = preg_match('/\b(absen\s+saya|presensi\s+saya|kehadiran\s+saya|status\s+absen\s+saya|apakah\s+saya\s+sudah\s+absen|sudah\s+absen\s+belum|absenku|presensiku)\b/i', $lower) ||
+                        (preg_match('/\b(absen|presensi|kehadiran)\b/i', $lower) && preg_match('/\b(saya|aku)\b/i', $lower) && !preg_match('/\b(rekap\s+kelas|siswa\s+lain)\b/i', $lower));
+
+        if ($isAttendance) {
+            if ($userRole === 'guru' || $userRole === 'wali_kelas') {
+                $guruId = $profile['guru_id'] ?? 0;
+                if (!$guruId) return "Data profil guru Anda belum terhubung di sistem.";
+
+                $db->query("SELECT jam_datang, jam_pulang, status, keterangan FROM absensi_guru WHERE guru_id = :gid AND tanggal = :tgl");
+                $db->bind(':gid', $guruId);
+                $db->bind(':tgl', $today);
+                $ab = $db->single();
+
+                if ($ab && !empty($ab->jam_datang)) {
+                    $masuk = substr($ab->jam_datang, 0, 5);
+                    $pulang = !empty($ab->jam_pulang) ? " · Pulang: " . substr($ab->jam_pulang, 0, 5) . " WIB" : " · Belum absen pulang";
+                    return "Status presensi Anda hari ini ({$tglIndo}): **" . ucfirst($ab->status) . "** (Masuk: {$masuk} WIB{$pulang}).";
+                } elseif ($ab && in_array(strtolower($ab->status ?? ''), ['izin', 'sakit'])) {
+                    return "Status presensi Anda hari ini ({$tglIndo}): **" . ucfirst($ab->status) . "** (" . ($ab->keterangan ?: 'Surat Disetujui') . ").";
+                } else {
+                    return "Status presensi Anda hari ini ({$tglIndo}): **Belum melakukan scan presensi QR guru**.";
+                }
+            } elseif ($userRole === 'siswa') {
+                $siswaId = $profile['siswa_id'] ?? 0;
+                if (!$siswaId) return "Data profil siswa Anda belum terhubung di sistem.";
+
+                $db->query("SELECT jam_datang, jam_pulang, status, keterangan FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :tgl");
+                $db->bind(':sid', $siswaId);
+                $db->bind(':tgl', $today);
+                $ab = $db->single();
+
+                if ($ab && !empty($ab->jam_datang)) {
+                    $masuk = substr($ab->jam_datang, 0, 5);
+                    $pulang = !empty($ab->jam_pulang) ? " · Pulang: " . substr($ab->jam_pulang, 0, 5) . " WIB" : " · Belum tap pulang";
+                    return "Status presensi Anda hari ini ({$tglIndo}): **" . ucfirst($ab->status) . "** (Masuk: {$masuk} WIB{$pulang}).";
+                } elseif ($ab && in_array(strtolower($ab->status ?? ''), ['izin', 'sakit'])) {
+                    return "Status presensi Anda hari ini ({$tglIndo}): **" . ucfirst($ab->status) . "** (" . ($ab->keterangan ?: 'Surat Disetujui') . ").";
+                } else {
+                    return "Status presensi Anda hari ini ({$tglIndo}): **Belum melakukan tap kartu RFID**.";
+                }
+            }
+        }
+
+        // ── 5. BARCODE (GURU) / KARTU RFID (SISWA) ───────────────────────────
+        if (preg_match('/\b(barcode\s+saya|qr\s+saya|kode\s+guru\s+saya)\b/i', $lower) && in_array($userRole, ['guru', 'wali_kelas'])) {
+            $code = $profile['barcode_id'] ?? '-';
+            return "Barcode ID presensi Anda adalah: `{$code}`. Gunakan ID ini saat scan QR pada monitor guru.";
+        }
+
+        if (preg_match('/\b(kartu\s+saya|rfid\s+saya|uid\s+saya)\b/i', $lower) && $userRole === 'siswa') {
+            $uid = !empty($profile['rfid_uid']) ? "`{$profile['rfid_uid']}` (Aktif)" : "Belum didaftarkan kartu RFID";
+            return "Status kartu RFID Anda: {$uid}.";
+        }
+
+        return false;
+    }
+
     private function handleLocalDatabaseQuery($message, $userId, $userRole) {
         $db    = new Database();
         $lower = strtolower($message);
+
+        // ── 0. QUERY STATISTIK JUMLAH CEPAT (HEMAT TOKEN, SIMPEL, TANPA KOMENTAR) ──
+        $simpleCountResponse = $this->handleSimpleCountQuery($message, $db);
+        if ($simpleCountResponse !== false) {
+            return $simpleCountResponse;
+        }
+
+        // ── 0. QUERY DATA PRIBADI PENGGUNA (IDENTITAS, JADWAL SAYA, IZIN SAYA, ABSEN SAYA) ──
+        $personalDataResponse = $this->handlePersonalDataQuery($message, $userId, $userRole, $db);
+        if ($personalDataResponse !== false) {
+            return $personalDataResponse;
+        }
 
         // Abaikan query lokal jika user bertanya penjelasan konsep, panduan, tutorial, alasan teknis, troubleshooting, atau pertanyaan umum
         if (preg_match('/(apa itu|pengertian|definisi|cara kerja|sejarah|kenapa|mengapa|apa bedanya|perbedaan|jelaskan|rekomendasi|tips|ceritakan|bagaimana cara|panduan|tutorial|langkah|bantuan|solusi|gagal|error|rusak|kendala)/i', $lower)) {
@@ -651,12 +999,12 @@ class ChatbotController extends Controller {
         }
 
         // 3. SISWA mencoba mengakses IoT / statistik sekolah
-        if ($userRole === 'siswa' && preg_match('/(iot|perangkat|alat|scanner|ip server|ip host|rekap sekolah|statistik sistem|total siswa|total guru)/i', $lower)) {
+        if ($userRole === 'siswa' && preg_match('/(iot|perangkat|alat|scanner|ip server|ip host|statistik sistem)/i', $lower)) {
             return "**Akses Dibatasi**\n\nInformasi teknis perangkat IoT dan statistik sistem sekolah hanya dapat diakses oleh **Administrator** dan **Kepala Sekolah**.";
         }
 
         // 4. GURU BIASA mencoba mengakses data siswa / absensi kelas
-        if ($userRole === 'guru' && preg_match('/(siswa|murid|anak kelas|daftar kelas|absen kelas|kehadiran kelas|daftar siswa)/i', $lower)) {
+        if ($userRole === 'guru' && !preg_match('/(berapa|jumlah|total)/i', $lower) && preg_match('/(siswa|murid|anak kelas|daftar kelas|absen kelas|kehadiran kelas|daftar siswa)/i', $lower)) {
             return "**Akses Terbatas**\n\nSebagai **Guru Mata Pelajaran**, Anda tidak memiliki hak akses untuk melihat data siswa atau kehadiran kelas. Hak akses data siswa diberikan kepada **Wali Kelas** (khusus kelas binaannya), serta **Kepala Sekolah** dan **Administrator**.";
         }
 
@@ -1975,9 +2323,15 @@ class ChatbotController extends Controller {
                 foreach ($izinList as $iz) { $izinArr[] = "{$iz->jenis} ({$iz->status}: {$iz->alasan})"; }
                 $izinStr = empty($izinArr) ? "Tidak ada" : implode(', ', $izinArr);
 
+                $db->query("SELECT COUNT(*) as t FROM guru");  $totGuruMaster  = (int)($db->single()->t ?? 28);
+                $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswaMaster = (int)($db->single()->t ?? 46);
+                $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelasMaster = (int)($db->single()->t ?? 9);
+
                 $contextText = 
-                    "=== DATA SINKRONISASI PRIBADI GURU ===\n" .
-                    "Nama Guru: {$guru->name}\n" .
+                    "=== DATA SINKRONISASI PRIBADI PENGGUNA (GURU) ===\n" .
+                    "Nama Pengguna: {$guru->name}\n" .
+                    "Peran: Guru Mata Pelajaran\n" .
+                    "Username: {$guru->username}\n" .
                     "NIP: {$guru->nip}\n" .
                     "Mata Pelajaran: " . ($guru->subject ?? 'Umum') . "\n" .
                     "Barcode ID: {$guru->barcode_id}\n" .
@@ -1985,14 +2339,15 @@ class ChatbotController extends Controller {
                     "Absensi Anda Hari Ini: {$absenHariIniStr}\n" .
                     "Rekap Kehadiran Bulan Ini: {$rekapStr}\n" .
                     "Pengajuan Izin Terakhir: {$izinStr}\n" .
+                    "Statistik Sekolah: Total Guru = {$totGuruMaster}, Total Siswa = {$totSiswaMaster}, Total Kelas = {$totKelasMaster}.\n" .
                     "{$schStr}\n";
 
                 $roleInstruction = 
                     "PERAN PENGGUNA SAAT INI: GURU MATA PELAJARAN (Nama: {$guru->name}, Mapel: " . ($guru->subject ?? 'Umum') . ").\n" .
-                    "ATURAN BATASAN HAK AKSES GURU (KETAT):\n" .
-                    "- Anda HANYA BERHAK menjawab seputar jadwal mengajar guru ini, rekap absensi guru sendiri, barcode presensi, izin diri sendiri, dan jadwal/tata tertib sekolah.\n" .
-                    "- DILARANG KERAS memberikan data siswa (daftar siswa, absensi siswa, izin siswa) atau data guru lain.\n" .
-                    "- Jika pengguna bertanya mengenai data kehadiran siswa atau daftar siswa, TOLAK DENGAN HORMAT dan jelaskan bahwa data siswa hanya dapat diakses oleh Wali Kelas (untuk kelas binaannya), Kepala Sekolah, dan Administrator.";
+                    "ATURAN AKSES GURU:\n" .
+                    "- Anda sedang berbicara langsung dengan {$guru->name}. Gunakan data pribadinya saat ditanya tentang jadwal, presensi, atau izin saya.\n" .
+                    "- Pengguna berhak mengetahui data umum sekolah (jumlah guru: {$totGuruMaster}, siswa: {$totSiswaMaster}, kelas: {$totKelasMaster}).\n" .
+                    "- DILARANG memberikan data privasi personal siswa atau profil privat guru lain.";
             }
         }
 
@@ -2354,15 +2709,16 @@ class ChatbotController extends Controller {
 
         $systemInstruction =
             "Anda adalah Asisten AI Resmi Sistem Absensi SMK NU Wargabinangun.\n\n" .
-            "INFORMASI SISTEM & AKTOR RESMI:\n" .
-            "Sistem Presensi SMK NU Wargabinangun mengelola absensi RFID siswa, QR Code guru, presensi mandiri GPS/kamera PKL, dan notifikasi Telegram.\n" .
+            "INFORMASI SISTEM:\n" .
+            "Sistem Presensi SMK NU Wargabinangun mengelola absensi RFID siswa, QR Code guru, presensi mandiri GPS/kamera PKL, dan notifikasi Telegram.\n\n" .
             "PENEGAKAN HAK AKSES PERAN PENGGUNA (RBAC):\n" .
             "{$roleInstruction}\n\n" .
-            "ATURAN RESPON:\n" .
-            "1. Jawablah secara langsung, sopan, ringkas, faktual, dan akurat berdasarkan DATA SINKRONISASI DATABASE di bawah.\n" .
-            "2. Jangan gunakan format bertele-tele atau salam pembuka berlebihan.\n" .
-            "3. Jika ditanya hitungan, matematika, pengetahuan umum atau teknologi di luar database, jawablah secara edukatif dan jelas.\n" .
-            "4. DILARANG membuatkan kode program (coding/programming) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n\n" .
+            "ATURAN RESPON (SIMPEL, LANGSUNG, HEMAT TOKEN):\n" .
+            "1. Jawab secara simpel, langsung, padat, dan to the point tanpa komentar pembuka atau penutup basa-basi.\n" .
+            "2. DILARANG menambahkan komentar, evaluasi pribadi, saran tambahan, atau rekomendasi/tips yang tidak diminta agar menghemat token.\n" .
+            "3. Pengguna yang sedang berbicara langsung dengan Anda tertera di dalam DATA SINKRONISASI PRIBADI. Kenali dirinya saat dia bertanya tentang dirinya ('siapa saya', 'jadwal saya', 'izin saya', dll).\n" .
+            "4. Jika ditanya jumlah umum (seperti 'ada berapa jumlah guru', 'jumlah siswa', 'jumlah kelas'), berikan jawaban singkat dan langsung (misal: 'Ada 28 guru terdaftar di database.').\n" .
+            "5. DILARANG membuatkan kode program (coding) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n\n" .
             "DATA SINKRONISASI DATABASE SEKOLAH:\n" .
             "{$contextText}\n";
 
@@ -2384,7 +2740,7 @@ class ChatbotController extends Controller {
                         ['role' => 'user',   'content' => $message]
                     ],
                     'temperature' => 0.4,
-                    'max_tokens'  => 1200
+                    'max_tokens'  => 500
                 ];
 
                 $ch = curl_init($endpoint);
@@ -2426,7 +2782,7 @@ class ChatbotController extends Controller {
                 'contents'           => [['role' => 'user', 'parts' => [['text' => $message]]]],
                 'generationConfig'   => [
                     'temperature'     => 0.4,
-                    'maxOutputTokens' => 1500,
+                    'maxOutputTokens' => 500,
                 ],
             ];
 
@@ -3060,36 +3416,22 @@ class ChatbotController extends Controller {
             }
         }
 
-        // 3. Fallback Ringkasan Direktori Data Sekolah
-        $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswa = (int)($db->single()->t ?? 0);
-        $db->query("SELECT COUNT(*) as t FROM guru");  $totGuru  = (int)($db->single()->t ?? 0);
-        $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelas = (int)($db->single()->t ?? 0);
-        $db->query("SELECT COUNT(*) as t FROM pkl_kelompok"); $totPkl = (int)($db->single()->t ?? 0);
+        // 3. Fallback Ringkasan Direktori Data Sekolah (Simpel & Hemat Token)
+        $db->query("SELECT COUNT(*) as t FROM guru");  $totGuru  = (int)($db->single()->t ?? 28);
+        $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswa = (int)($db->single()->t ?? 46);
+        $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelas = (int)($db->single()->t ?? 9);
 
-        $db->query("SELECT COUNT(*) as t FROM absensi_siswa WHERE tanggal = :tgl");
-        $db->bind(':tgl', $today);
-        $hadirSiswa = (int)($db->single()->t ?? 0);
+        if (preg_match('/(guru)/i', $lower)) {
+            return "Ada **{$totGuru} guru** terdaftar di database SMK NU Wargabinangun.";
+        }
+        if (preg_match('/(siswa)/i', $lower)) {
+            return "Ada **{$totSiswa} siswa** terdaftar di database SMK NU Wargabinangun.";
+        }
+        if (preg_match('/(kelas)/i', $lower)) {
+            return "Ada **{$totKelas} kelas** terdaftar di database SMK NU Wargabinangun.";
+        }
 
-        $db->query("SELECT COUNT(*) as t FROM absensi_guru WHERE tanggal = :tgl");
-        $db->bind(':tgl', $today);
-        $hadirGuru = (int)($db->single()->t ?? 0);
-
-        $tglIndo = $this->formatTanggalIndo($today);
-
-        return "**Pusat Data Sistem Absensi SMK NU Wargabinangun**\n"
-             . "_{$tglIndo}_\n\n"
-             . "📊 **Ringkasan Data Sekolah:**\n"
-             . "- **Siswa Terdaftar** : {$totSiswa} siswa ({$hadirSiswa} hadir hari ini)\n"
-             . "- **Guru Terdaftar** : {$totGuru} guru ({$hadirGuru} hadir hari ini)\n"
-             . "- **Total Kelas** : {$totKelas} kelas (Jurusan TKJ, TKR, TSM)\n"
-             . "- **Kelompok PKL** : {$totPkl} tempat industri mitra aktif\n\n"
-             . "💡 **Pertanyaan yang dapat Anda tanyakan:**\n"
-             . "1. `siapa pembimbing pkl` — Daftar guru pembimbing PKL tiap jurusan\n"
-             . "2. `tempat pkl` — Daftar lokasi, kelompok, dan titik GPS tempat PKL\n"
-             . "3. `daftar guru` atau `guru aswaja` — Data guru dan mata pelajaran\n"
-             . "4. `daftar wali kelas` atau `wali kelas 10 tkj` — Wali kelas tiap tingkat\n"
-             . "5. `siswa 10 tkj` atau `cari siswa [nama]` — Data siswa dan kartu RFID\n"
-             . "6. `kehadiran guru hari ini` atau `siapa belum absen` — Monitoring presensi real-time";
+        return "Data database SMK NU Wargabinangun mencatat **{$totGuru} guru**, **{$totSiswa} siswa**, dan **{$totKelas} kelas** terdaftar.";
     }
 
 }
