@@ -17,9 +17,9 @@ $statusMap = [
 $role           = $data['role'] ?? '';
 $tipe           = $data['tipe'] ?? 'siswa';
 $viewMode       = $data['viewMode'] ?? 'ringkasan';
-$kategori       = $data['kategori'] ?? 'biasa';
-$isKelasPkl     = $data['isKelasPkl'] ?? false;
-$activeKelasObj = $data['activeKelasObj'] ?? null;
+$kategori       = ($tipe === 'guru') ? 'biasa' : ($data['kategori'] ?? 'biasa');
+$isKelasPkl     = ($tipe === 'guru') ? false : ($data['isKelasPkl'] ?? false);
+$activeKelasObj = ($tipe === 'guru') ? null : ($data['activeKelasObj'] ?? null);
 $filters        = $data['filters'] ?? [];
 $stats          = $data['stats'] ?? [];
 $akumulasiMap   = $data['akumulasiMap'] ?? [];
@@ -391,7 +391,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
     <!-- ── 7. TABEL DATA REKAPITULASI (CLEAN & ACCESSIBLE TABLE) ── -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
         <div class="overflow-x-auto">
-            <?php if ($viewMode === 'ringkasan' && $kategori === 'pkl'): ?>
+            <?php if ($tipe === 'siswa' && $viewMode === 'ringkasan' && $kategori === 'pkl'): ?>
             <!-- ──────── TABLE A: REKAP RINGKASAN SISWA PKL ──────── -->
             <table class="w-full min-w-[760px] text-xs text-left text-slate-700">
                 <thead class="text-[11px] font-semibold text-slate-600 uppercase bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 tracking-wider text-slate-600 dark:text-slate-300">
@@ -584,7 +584,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 </tbody>
             </table>
 
-            <?php elseif ($kategori === 'pkl'): ?>
+            <?php elseif ($tipe === 'siswa' && $kategori === 'pkl'): ?>
             <!-- ──────── TABLE C: LOG TRANSAKSI HARIAN SISWA PKL ──────── -->
             <table class="w-full min-w-[760px] text-xs text-left text-slate-700">
                 <thead class="text-[11px] font-semibold text-slate-600 uppercase bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 tracking-wider text-slate-600 dark:text-slate-300">

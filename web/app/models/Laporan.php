@@ -82,7 +82,7 @@ class Laporan {
             FROM absensi_guru ag
             JOIN guru g ON g.id = ag.guru_id
             JOIN users u ON u.id = g.user_id
-            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas')
+            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')
             ORDER BY ag.tanggal DESC, u.name ASC
         ";
 
@@ -108,7 +108,7 @@ class Laporan {
             FROM absensi_guru ag
             JOIN guru g ON g.id = ag.guru_id
             JOIN users u ON u.id = g.user_id
-            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas')
+            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')
         ");
         foreach ($binds as $key => $val) {
             $this->db->bind($key, $val);
@@ -144,7 +144,7 @@ class Laporan {
             FROM absensi_guru ag
             JOIN guru g ON g.id = ag.guru_id
             JOIN users u ON u.id = g.user_id
-            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas')
+            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')
         ");
         foreach ($binds as $key => $val) {
             $this->db->bind($key, $val);
@@ -326,7 +326,7 @@ class Laporan {
             FROM absensi_guru ag
             JOIN guru g ON g.id = ag.guru_id
             JOIN users u ON u.id = g.user_id
-            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas')
+            WHERE $where AND u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')
             ORDER BY ag.tanggal DESC, u.name ASC
         ");
         foreach ($binds as $key => $val) {
@@ -540,7 +540,7 @@ class Laporan {
         $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
         $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
         
-        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas')";
+        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')";
         $binds = [':dari' => $dari, ':sampai' => $sampai];
 
         if (!empty($filters['search'])) {
@@ -581,7 +581,7 @@ class Laporan {
     }
 
     public function countAkumulasiGuru($filters = []) {
-        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas')";
+        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')";
         $binds = [];
         if (!empty($filters['search'])) {
             $where .= " AND (u.name LIKE :search OR g.nip LIKE :search)";
@@ -605,7 +605,7 @@ class Laporan {
         $dari   = !empty($dari) ? $dari : date('Y-m-01');
         $sampai = !empty($sampai) ? $sampai : date('Y-m-d');
         
-        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas')";
+        $where = "u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek')";
         $binds = [':dari' => $dari, ':sampai' => $sampai];
 
         if (!empty($extraFilters['search'])) {

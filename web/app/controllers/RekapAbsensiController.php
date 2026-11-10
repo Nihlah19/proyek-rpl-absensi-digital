@@ -67,7 +67,12 @@ class RekapAbsensiController extends Controller {
         $akumulasiMap = [];
 
         $waliKelasInfo = null;
+        $isKelasPkl = false;
+        $activeKelasObj = null;
+
         if ($tipe === 'guru') {
+            $kategori = 'biasa'; // Guru tidak memiliki kategori PKL
+            $filters['kelas_id'] = ''; // Guru tidak terikat filter kelas siswa
             $stats = $this->laporanModel->getStatsRekapGuru($filters);
 
             if ($viewMode === 'ringkasan') {
@@ -178,10 +183,14 @@ class RekapAbsensiController extends Controller {
             $tipe = 'siswa';
         }
 
+        if ($tipe === 'guru') {
+            $kategori = 'biasa';
+        }
+
         $extraFilters = [];
         if (!empty($_GET['status']))   $extraFilters['status']   = $_GET['status'];
         if (!empty($_GET['search']))   $extraFilters['search']   = trim($_GET['search']);
-        if (!empty($_GET['kelas_id'])) $extraFilters['kelas_id'] = (int)$_GET['kelas_id'];
+        if ($tipe !== 'guru' && !empty($_GET['kelas_id'])) $extraFilters['kelas_id'] = (int)$_GET['kelas_id'];
 
         // Sinkronisasi data Alfa & Izin untuk periode yang diekspor
         // Siswa tanpa tap RFID dan guru tanpa scan QR otomatis tercatat Alfa jika tidak ada izin/sakit

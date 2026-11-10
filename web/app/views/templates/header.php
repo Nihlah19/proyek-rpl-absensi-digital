@@ -706,10 +706,10 @@
                         <!-- Info Nama & Role di Desktop -->
                         <div class="hidden sm:block min-w-0 pr-0.5">
                             <p class="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate max-w-[130px] leading-tight group-hover:text-emerald-700 dark:group-hover:text-emerald-400">
-                                <?= htmlspecialchars(SessionHelper::get('name')) ?>
+                                <?= htmlspecialchars(SessionHelper::get('name') ?? '') ?>
                             </p>
                             <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium uppercase tracking-wider leading-tight">
-                                <?= ucfirst(SessionHelper::get('role')) ?>
+                                <?= ucfirst(SessionHelper::get('role') ?? '') ?>
                             </p>
                         </div>
 
@@ -729,13 +729,13 @@
                             </div>
                             <div class="min-w-0 flex-1">
                                 <p class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                                    <?= htmlspecialchars(SessionHelper::get('name')) ?>
+                                    <?= htmlspecialchars(SessionHelper::get('name') ?? '') ?>
                                 </p>
                                 <div class="mt-0.5 flex items-center gap-1.5 flex-wrap">
                                     <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 uppercase">
-                                        <?= htmlspecialchars(SessionHelper::get('role')) ?>
+                                        <?= htmlspecialchars(SessionHelper::get('role') ?? '') ?>
                                     </span>
-                                    <span class="text-[10px] text-slate-400 font-mono truncate">@<?= htmlspecialchars(SessionHelper::get('username')) ?></span>
+                                    <span class="text-[10px] text-slate-400 font-mono truncate">@<?= htmlspecialchars(SessionHelper::get('username') ?? '') ?></span>
                                 </div>
                             </div>
                         </div>
@@ -801,7 +801,7 @@
 <div id="headerQrModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/70  hidden flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-sm p-6 text-center animate-fade-in">
         <h3 class="text-base font-bold text-slate-900 dark:text-white font-headline">QR Code Presensi Guru</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4"><?= htmlspecialchars(SessionHelper::get('name')) ?></p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4"><?= htmlspecialchars(SessionHelper::get('name') ?? '') ?></p>
         <div id="headerQrCodeContainer" class="p-4 bg-white rounded-xl inline-block shadow-xs border border-slate-200 mx-auto"></div>
         <p class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300 mt-3"><?= htmlspecialchars($headerBarcodeId) ?></p>
         <div class="flex gap-2 mt-5">
