@@ -2,10 +2,18 @@
 // Entrypoint Serverless Function Vercel untuk Absensi Siswa & PKL
 // SMK NU Wargabinangun
 
+// 1. Bersihkan parameter url jika berisi index.php
+if (isset($_GET['url'])) {
+    $cleanUrl = trim($_GET['url'], '/');
+    if ($cleanUrl === '' || $cleanUrl === 'index.php' || $cleanUrl === 'api/index.php') {
+        unset($_GET['url']);
+    }
+}
+
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $parsedPath = parse_url($requestUri, PHP_URL_PATH) ?? '/';
 
-// 1. Tangani direct call ke endpoint API jika dipanggil
+// 2. Tangani direct call ke endpoint API jika dipanggil
 if (strpos($parsedPath, '/web/public/api/') === 0 || (strpos($parsedPath, '/api/') === 0 && $parsedPath !== '/api/index.php')) {
     $script = preg_replace('#^/(web/public/api|api)/#', '', $parsedPath);
     $apiFile = __DIR__ . '/../web/public/api/' . $script;
@@ -15,7 +23,7 @@ if (strpos($parsedPath, '/web/public/api/') === 0 || (strpos($parsedPath, '/api/
     }
 }
 
-// 2. Tangani file statis (assets, uploads, favicon, manifest, sw.js) jika diteruskan Vercel ke runtime
+// 3. Tangani file statis (assets, uploads, favicon, manifest, sw.js) jika diteruskan Vercel ke runtime
 $urlParam = $_GET['url'] ?? '';
 $candidate = $urlParam ?: ltrim($parsedPath, '/');
 $candidate = preg_replace('#^web/public/#', '', $candidate);
@@ -50,11 +58,11 @@ if (preg_match('#^(assets/|uploads/|favicon\.ico|manifest\.json|sw\.js|offline\.
     }
 }
 
-// 3. Set working directory ke web/public
+// 4. Set working directory ke web/public
 chdir(__DIR__ . '/../web/public');
 
-// 4. Muat inisialisasi aplikasi MVC
+// 5. Muat inisialisasi aplikasi MVC
 require_once __DIR__ . '/../web/app/init.php';
 
-// 5. Jalankan controller & method MVC
+// 6. Jalankan controller & method MVC (Output HTML langsung ke browser, no download)
 $app = new App();
