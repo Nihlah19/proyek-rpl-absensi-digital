@@ -27,10 +27,15 @@ class Database {
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'"
         ];
 
-        // Dukungan koneksi SSL untuk TiDB Cloud / Managed Cloud MySQL
+        // Dukungan koneksi SSL untuk TiDB Cloud / Managed Cloud MySQL (PHP 8.0 - 8.5+ compatible)
         if (strpos($this->host, 'tidbcloud.com') !== false || (defined('DB_SSL') && DB_SSL)) {
-            $option[PDO::MYSQL_ATTR_SSL_CA] = true;
-            $option[PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            if (defined('Pdo\Mysql::ATTR_SSL_CA')) {
+                $option[\Pdo\Mysql::ATTR_SSL_CA] = true;
+                $option[\Pdo\Mysql::ATTR_SSL_VERIFY_SERVER_CERT] = false;
+            } else {
+                $option[1009] = true; // PDO::MYSQL_ATTR_SSL_CA (PHP < 8.5)
+                $option[1014] = false; // PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT (PHP < 8.5)
+            }
         }
 
         try {

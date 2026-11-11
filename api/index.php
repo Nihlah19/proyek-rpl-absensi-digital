@@ -1,6 +1,10 @@
 <?php
 // Entrypoint Serverless Function Vercel untuk Absensi Siswa & PKL
 // SMK NU Wargabinangun
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
+@ini_set('display_errors', '0');
+@ini_set('display_startup_errors', '0');
+@ini_set('log_errors', '1');
 
 // 1. Bersihkan parameter url jika berisi index.php
 if (isset($_GET['url'])) {

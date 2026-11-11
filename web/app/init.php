@@ -1,4 +1,10 @@
 <?php
+// Sembunyikan deprecation & notices dari browser agar tidak merusak session header HTTP
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED & ~E_NOTICE);
+@ini_set('display_errors', '0');
+@ini_set('display_startup_errors', '0');
+@ini_set('log_errors', '1');
+
 // Aktifkan kompresi output GZIP otomatis (Mengurangi payload transfer 75-85% dan mempercepat TTFB/LCP)
 if (!headers_sent() && extension_loaded('zlib')) {
     if (!ini_get('zlib.output_compression')) {
@@ -10,16 +16,27 @@ if (!headers_sent() && extension_loaded('zlib')) {
 // Konfigurasi cookie sesi sebelum session_start()
 // agar kompatibel dengan ngrok (HTTPS), Vercel, maupun localhost (HTTP).
 if (!session_id()) {
+    $isVercel = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
+    if ($isVercel) {
+        $sessDir = sys_get_temp_dir() . '/sessions';
+        if (!is_dir($sessDir)) {
+            @mkdir($sessDir, 0777, true);
+        }
+        if (is_dir($sessDir) && is_writable($sessDir)) {
+            @session_save_path($sessDir);
+        }
+    }
+
     $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
                || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
 
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => 86400 * 7,    // 7 hari agar sesi tetap bertahan
         'path'     => '/',
         'domain'   => '',           // Kosong = gunakan domain host aktif secara otomatis
         'secure'   => $isHttps,     // Wajib true saat HTTPS
         'httponly' => true,
-        'samesite' => $isHttps ? 'None' : 'Lax',
+        'samesite' => 'Lax',
     ]);
     session_start();
 }
