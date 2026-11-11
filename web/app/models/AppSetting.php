@@ -125,12 +125,12 @@ class AppSetting extends Model {
             return 'groq';
         } elseif (strpos($key, 'xai-') === 0) {
             return 'grok';
-        } elseif (strpos($key, 'AIza') === 0) {
+        } elseif (strpos($key, 'AIza') === 0 || strpos($key, 'AQ.') === 0) {
             return 'gemini';
         } elseif (strpos($key, 'sk-') === 0) {
             return 'groq';
         }
-        return 'groq'; // Default modern inference engine
+        return 'gemini'; // Default jika key tidak dikenali atau menggunakan format baru Google API Studio
     }
 
     /**
@@ -147,11 +147,15 @@ class AppSetting extends Model {
         $defaultModel = match($provider) {
             'groq'   => 'llama-3.3-70b-versatile',
             'grok'   => 'grok-2-latest',
-            'gemini' => 'gemini-2.5-flash',
-            default  => 'llama-3.3-70b-versatile'
+            'gemini' => 'gemini-3.5-flash',
+            default  => 'gemini-3.5-flash'
         };
 
         $activeModel = self::get('ai_model') ?: self::get('gemini_model', $defaultModel);
+        // Normalisasi model Gemini lama/usang ke model aktif tercepat
+        if ($provider === 'gemini' && in_array($activeModel, ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro'])) {
+            $activeModel = 'gemini-3.5-flash';
+        }
 
         $maskedKey = '';
         if (!empty($activeKey)) {
@@ -352,7 +356,7 @@ class AppSetting extends Model {
                 $mid = str_replace('models/', '', $m['name'] ?? '');
                 $methods = $m['supportedGenerationMethods'] ?? [];
                 if (!in_array('generateContent', $methods)) continue;
-                $isRec = in_array($mid, ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']);
+                $isRec = in_array($mid, ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest']);
                 $models[] = [
                     'id'             => $mid,
                     'name'           => $m['displayName'] ?? $mid,
@@ -387,9 +391,9 @@ class AppSetting extends Model {
             ];
         } elseif ($provider === 'gemini') {
             return [
-                ['id' => 'gemini-2.5-flash', 'name' => 'Gemini 2.5 Flash', 'provider' => 'gemini', 'badge' => 'Rekomendasi Utama', 'is_recommended' => true],
-                ['id' => 'gemini-2.0-flash', 'name' => 'Gemini 2.0 Flash', 'provider' => 'gemini', 'badge' => 'Cepat', 'is_recommended' => true],
-                ['id' => 'gemini-1.5-flash', 'name' => 'Gemini 1.5 Flash', 'provider' => 'gemini', 'badge' => 'Stabil', 'is_recommended' => false]
+                ['id' => 'gemini-3.5-flash', 'name' => 'Gemini 3.5 Flash', 'provider' => 'gemini', 'badge' => 'Rekomendasi Utama (Tercepat)', 'is_recommended' => true],
+                ['id' => 'gemini-3.8-flash', 'name' => 'Gemini 3.8 Flash', 'provider' => 'gemini', 'badge' => 'Cerdas & Stabil', 'is_recommended' => false],
+                ['id' => 'gemini-3.5-flash-lite', 'name' => 'Gemini 3.5 Flash Lite', 'provider' => 'gemini', 'badge' => 'Ultra Ringan', 'is_recommended' => false]
             ];
         }
 

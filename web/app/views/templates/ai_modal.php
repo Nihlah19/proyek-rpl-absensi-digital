@@ -31,26 +31,37 @@ $savedProvider = $currentAiConfig['provider'] ?? 'groq';
                     Provider AI <span class="text-rose-500">*</span>
                 </label>
                 <select id="ai_provider_select" onchange="onProviderChanged()" class="vh-input w-full text-xs font-semibold">
-                    <option value="groq" <?= ($savedProvider === 'groq') ? 'selected' : '' ?>>Groq Cloud (Llama 3.3, Llama 3.1) — Cepat &amp; Efisien (Rekomendasi)</option>
+                    <option value="gemini" <?= ($savedProvider === 'gemini') ? 'selected' : '' ?>>Google Gemini (Gemini 3.5 Flash, 3.8 Flash) — Cepat &amp; Cerdas</option>
+                    <option value="groq" <?= ($savedProvider === 'groq') ? 'selected' : '' ?>>Groq Cloud (Llama 3.3, Llama 3.1) — Cepat &amp; Efisien</option>
                     <option value="grok" <?= ($savedProvider === 'grok') ? 'selected' : '' ?>>xAI Grok (Grok 2, Grok Beta)</option>
-                    <option value="gemini" <?= ($savedProvider === 'gemini') ? 'selected' : '' ?>>Google Gemini (Gemini 2.5 Flash, 2.0 Flash)</option>
                     <option value="auto">Deteksi Otomatis dari Awalan API Key</option>
                 </select>
             </div>
 
-            <!-- Input API Key -->
+            <!-- Input API Key (Menggunakan text dengan CSS masking agar tidak pernah memicu popup password manager browser) -->
             <div>
                 <div class="flex items-center justify-between mb-1.5">
                     <label for="ai_input_api_key" class="block text-xs font-bold text-slate-700 dark:text-slate-300">
                         API Key <span class="text-rose-500">*</span>
                     </label>
                     <span id="keyFormatHint" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-mono font-medium">
-                        <?= ($savedProvider === 'groq') ? 'Key: gsk_...' : (($savedProvider === 'grok') ? 'Key: xai-...' : 'Key: AIzaSy...') ?>
+                        <?= ($savedProvider === 'groq') ? 'Key: gsk_...' : (($savedProvider === 'grok') ? 'Key: xai-...' : 'Key: AQ... / AIza...') ?>
                     </span>
                 </div>
                 <div class="relative">
-                    <input type="password" id="ai_input_api_key" placeholder="Masukkan API Key (misal: gsk_... atau xai-...)"
+                    <input type="text" id="ai_input_api_key" name="ai_credential_token"
+                           placeholder="Masukkan API Key (misal: AQ... atau AIza... atau gsk_...)"
                            value="<?= htmlspecialchars($savedApiKey) ?>"
+                           autocomplete="off"
+                           autocorrect="off"
+                           autocapitalize="off"
+                           spellcheck="false"
+                           data-lpignore="true"
+                           data-1p-ignore="true"
+                           data-bwignore="true"
+                           data-form-type="other"
+                           data-masked="true"
+                           style="-webkit-text-security: disc; -moz-text-security: disc;"
                            oninput="onApiKeyInput(this.value)"
                            class="vh-input w-full pr-10 text-xs font-mono">
                     <button type="button" onclick="toggleApiKeyVisibility()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-xs p-1" title="Lihat / Sembunyikan Key">
@@ -141,11 +152,16 @@ function toggleApiKeyVisibility() {
     const inp = document.getElementById('ai_input_api_key');
     const ico = document.getElementById('eyeIconApiKey');
     if (!inp || !ico) return;
-    if (inp.type === 'password') {
-        inp.type = 'text';
+    const isMasked = (inp.getAttribute('data-masked') === 'true' || inp.style.webkitTextSecurity !== 'none');
+    if (isMasked) {
+        inp.style.webkitTextSecurity = 'none';
+        inp.style.mozTextSecurity = 'none';
+        inp.setAttribute('data-masked', 'false');
         ico.className = 'fa-solid fa-eye-slash';
     } else {
-        inp.type = 'password';
+        inp.style.webkitTextSecurity = 'disc';
+        inp.style.mozTextSecurity = 'disc';
+        inp.setAttribute('data-masked', 'true');
         ico.className = 'fa-solid fa-eye';
     }
 }
@@ -158,7 +174,7 @@ function onProviderChanged() {
     } else if (prov === 'grok') {
         hint.textContent = 'Key: xai-...';
     } else if (prov === 'gemini') {
-        hint.textContent = 'Key: AIzaSy...';
+        hint.textContent = 'Key: AQ... / AIza...';
     } else {
         hint.textContent = 'Otomatis';
     }
@@ -171,7 +187,7 @@ function onApiKeyInput(val) {
         select.value = 'groq';
     } else if (val.startsWith('xai-')) {
         select.value = 'grok';
-    } else if (val.startsWith('AIza')) {
+    } else if (val.startsWith('AIza') || val.startsWith('AQ.')) {
         select.value = 'gemini';
     }
     onProviderChanged();

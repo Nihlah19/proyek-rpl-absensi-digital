@@ -2175,6 +2175,16 @@ class ChatbotController extends Controller {
         $hariIni  = $this->hariIndonesia(date('l'));
         $besok    = $this->hariIndonesia(date('l', strtotime('+1 day')));
 
+        // Cek cache sesi agar query database tidak diulang tiap pertanyaan berturut-turut (TTL: 60 detik)
+        $targetDate = $this->parseDateFromMessage($message);
+        $isSpecificDate = ($targetDate && $targetDate !== $today);
+        $cacheKey = "cb_ctx_{$userId}_{$role}";
+        $cacheTimeKey = "cb_ctx_t_{$userId}_{$role}";
+
+        if (!$isSpecificDate && isset($_SESSION[$cacheKey]) && isset($_SESSION[$cacheTimeKey]) && (time() - $_SESSION[$cacheTimeKey] < 60)) {
+            return $_SESSION[$cacheKey];
+        }
+
         // Jadwal siswa hari ini dari tabel jadwal_siswa
         $db->query("SELECT jam_mulai_absensi, jam_datang, batas_terlambat, jam_pulang, status_aktif FROM jadwal_siswa WHERE hari = :h");
         $db->bind(':h', $hariIni);
@@ -2472,10 +2482,12 @@ class ChatbotController extends Controller {
         elseif ($role === 'admin' || $role === 'kepsek') {
             $actorTitle = ($role === 'admin') ? 'ADMINISTRATOR' : 'KEPALA SEKOLAH';
 
-            // Master totals
-            $db->query("SELECT COUNT(*) as total FROM siswa"); $totSiswa = $db->single()->total ?? 0;
-            $db->query("SELECT COUNT(*) as total FROM guru");  $totGuru  = $db->single()->total ?? 0;
-            $db->query("SELECT COUNT(*) as total FROM kelas"); $totKelas = $db->single()->total ?? 0;
+            // Master totals (1 query agregat cepat)
+            $db->query("SELECT (SELECT COUNT(*) FROM siswa) as tot_siswa, (SELECT COUNT(*) FROM guru) as tot_guru, (SELECT COUNT(*) FROM kelas) as tot_kelas");
+            $mTotals = $db->single();
+            $totSiswa = (int)($mTotals->tot_siswa ?? 0);
+            $totGuru  = (int)($mTotals->tot_guru ?? 0);
+            $totKelas = (int)($mTotals->tot_kelas ?? 0);
 
             // Kelas & Wali Kelas
             $db->query("SELECT k.nama_kelas, u.name as wali_nama FROM kelas k LEFT JOIN users u ON u.id = k.wali_kelas_id ORDER BY k.nama_kelas ASC");
@@ -2669,10 +2681,17 @@ class ChatbotController extends Controller {
                 "- Jawablah setiap pertanyaan pengguna secara lengkap, terstruktur, faktual, dan akurat berdasarkan data sinkronisasi di atas.";
         }
 
-        return [
+        $result = [
             'context_text'     => $contextText,
             'role_instruction' => $roleInstruction,
         ];
+
+        if (!$isSpecificDate) {
+            $_SESSION[$cacheKey] = $result;
+            $_SESSION[$cacheTimeKey] = time();
+        }
+
+        return $result;
     }
 
     // =========================================================
@@ -2689,7 +2708,10 @@ class ChatbotController extends Controller {
         $aiConf   = class_exists('AppSetting') ? AppSetting::getAiConfig() : ['api_key' => '', 'model' => 'llama-3.3-70b-versatile', 'provider' => 'groq'];
         $apiKey   = !empty($aiConf['api_key']) ? $aiConf['api_key'] : (defined('GEMINI_API_KEY') ? GEMINI_API_KEY : '');
         $provider = !empty($aiConf['provider']) ? $aiConf['provider'] : 'groq';
-        $model    = !empty($aiConf['model']) ? $aiConf['model'] : ($provider === 'gemini' ? 'gemini-2.5-flash' : 'llama-3.3-70b-versatile');
+        $model    = !empty($aiConf['model']) ? $aiConf['model'] : ($provider === 'gemini' ? 'gemini-3.5-flash' : 'llama-3.3-70b-versatile');
+        if ($provider === 'gemini' && in_array($model, ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro'])) {
+            $model = 'gemini-3.5-flash';
+        }
 
         // Fallback jika API Key belum diisi
         if (empty($apiKey)) {
@@ -2752,8 +2774,11 @@ class ChatbotController extends Controller {
                         'Content-Type: application/json'
                     ],
                     CURLOPT_POSTFIELDS     => json_encode($payload),
-                    CURLOPT_TIMEOUT        => 20,
-                    CURLOPT_CONNECTTIMEOUT => 6,
+                    CURLOPT_TIMEOUT        => 8,
+                    CURLOPT_CONNECTTIMEOUT => 3,
+                    CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
+                    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_TCP_NODELAY    => 1,
                     CURLOPT_SSL_VERIFYPEER => false,
                 ]);
 
@@ -2776,17 +2801,22 @@ class ChatbotController extends Controller {
 
         // ── B. PROVIDER: GOOGLE GEMINI ──
         if ($provider === 'gemini' || empty($provider)) {
-            $candidateModels = array_values(array_unique([$model, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash-latest']));
+            $candidateModels = array_values(array_unique([$model, 'gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest']));
             $payload = [
                 'system_instruction' => ['parts' => [['text' => $systemInstruction]]],
                 'contents'           => [['role' => 'user', 'parts' => [['text' => $message]]]],
                 'generationConfig'   => [
-                    'temperature'     => 0.4,
-                    'maxOutputTokens' => 500,
+                    'temperature'     => 0.2,
+                    'maxOutputTokens' => 350,
                 ],
             ];
 
             foreach ($candidateModels as $cModel) {
+                // Lewati model usang yang diketahui sudah 404
+                if (in_array($cModel, ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-pro'])) {
+                    continue;
+                }
+
                 $url = "https://generativelanguage.googleapis.com/v1beta/models/{$cModel}:generateContent?key={$apiKey}";
                 $ch  = curl_init($url);
                 curl_setopt_array($ch, [
@@ -2794,8 +2824,11 @@ class ChatbotController extends Controller {
                     CURLOPT_POST           => true,
                     CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
                     CURLOPT_POSTFIELDS     => json_encode($payload),
-                    CURLOPT_TIMEOUT        => 20,
-                    CURLOPT_CONNECTTIMEOUT => 6,
+                    CURLOPT_TIMEOUT        => 7,
+                    CURLOPT_CONNECTTIMEOUT => 3,
+                    CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4,
+                    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                    CURLOPT_TCP_NODELAY    => 1,
                     CURLOPT_SSL_VERIFYPEER => false,
                 ]);
 

@@ -150,7 +150,7 @@
             <?php endforeach; ?>
         </div>
 
-        <form id="cb-page-form" onsubmit="event.preventDefault(); cbPageSend();" class="relative flex items-center gap-2">
+        <form id="cb-page-form" autocomplete="off" onsubmit="event.preventDefault(); cbPageSend();" class="relative flex items-center gap-2">
             <div class="flex-1 relative">
                 <input
                     type="text"
