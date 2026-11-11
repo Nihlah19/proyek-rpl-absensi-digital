@@ -17,47 +17,12 @@
     <link rel="icon" type="image/png" sizes="192x192" href="<?= BASEURL; ?>/assets/img/icon-192.png?v=3">
     <link rel="shortcut icon" href="<?= BASEURL; ?>/assets/img/logo.png?v=3" type="image/png">
     
-    <!-- Typography: Fast First Paint -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-
-    <!-- Precompiled Fast CSS First (Instant Render) -->
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
-    
-    <!-- Non-Blocking Deferred Tailwind JIT for Extended Theme Tokens -->
-    <script defer src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Wise Design Tokens Configuration -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        forest: '#163300',     // Dominant brand dark
-                        lime: '#9fe870',       // Electric lime voltage (CTA)
-                        spruce: '#054d28',     // Secondary dark green
-                        linen: '#e2f6d5',      // Pale green wash
-                        charcoal: '#454745',   // Body text, dense UI
-                        obsidian: '#0e0f0c',   // Display headlines
-                        pebble: '#868685',     // Muted text, borders
-                        slate: '#6a6c6a',      // Supporting text
-                        fog: '#e8ebe6',        // Soft backgrounds
-                        paper: '#ffffff',      // Page canvas & cards
-                    },
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                    },
-                    borderRadius: {
-                        pill: '9999px',
-                        card: '10px',
-                        largeCard: '24px',
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Preload & Offline-Ready Local CSS/Fonts (Zero External Render-Blocking CDNs) -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0" as="style">
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/pjs-4.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
     
     <!-- Robust Standalone CSS Fallback (Jaminan Tampilan Rapi 100%) -->
     <style>
@@ -179,20 +144,20 @@
             box-shadow: 0 0 0 4px rgba(159, 232, 112, 0.35);
         }
 
-        /* ── SMOOTH ENTRANCE ANIMATION ── */
+        /* ── SMOOTH ENTRANCE ANIMATION (Immediate First Paint) ── */
         @keyframes loginCardEntrance {
             0% {
-                opacity: 0;
-                transform: translateY(20px) scale(0.98);
+                opacity: 1;
+                transform: translateY(8px);
             }
             100% {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: translateY(0);
             }
         }
         .login-card-anim {
-            animation: loginCardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            will-change: opacity, transform;
+            animation: loginCardEntrance 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: transform;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -209,13 +174,17 @@
         <!-- Header -->
         <div class="text-center space-y-2">
             <a href="<?= BASEURL; ?>" class="inline-block hover:opacity-95 transition-opacity">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" 
-                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=SMK+NU&background=163300&color=9fe870&size=128&bold=true';"
-                     alt="Logo SMK NU Wargabinangun" 
-                     width="64" 
-                     height="64" 
-                     class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" 
-                     fetchpriority="high">
+                <picture>
+                    <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
+                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" 
+                         onerror="this.onerror=null; this.src='<?= BASEURL; ?>/assets/img/icon-192.png';"
+                         alt="Logo SMK NU Wargabinangun" 
+                         width="64" 
+                         height="64" 
+                         class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" 
+                         fetchpriority="high"
+                         decoding="async">
+                </picture>
             </a>
 
             <h1 class="wise-headline text-2xl sm:text-[28px] uppercase">

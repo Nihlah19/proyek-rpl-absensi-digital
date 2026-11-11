@@ -33,17 +33,13 @@
     <link rel="icon" type="image/png" sizes="192x192" href="<?= BASEURL; ?>/assets/img/icon-192.png?v=3">
     <link rel="shortcut icon" href="<?= BASEURL; ?>/assets/img/logo.png?v=3" type="image/png">
     
-    <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono (Professional Balanced Dashboard Typography) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Offline-Ready Precompiled Tailwind CSS + Local Fonts & Icons (Zero External CDNs) -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0" as="style">
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/pjs-4.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
     
-    <!-- Precompiled Fast CSS First (Render-Blocking Zero Delay) -->
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
-    
-    <!-- Non-Blocking Deferred Tailwind Script for Runtime Helpers -->
-    <script defer src="https://cdn.tailwindcss.com"></script>
     <!-- Conditional Module Loading (Only load heavy JS on pages that actually use them to boost performance) -->
     <?php
     $curUrl = $_GET['url'] ?? '';
@@ -59,67 +55,7 @@
     <?php endif; ?>
     <?php if ($isQr || !empty($data['load_qrcode'])): ?>
     <script defer src="<?= BASEURL; ?>/assets/vendor/qrcodejs/qrcode.min.js"></script>
-    <?php endif; ?>    
-
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        forest: {
-                            DEFAULT: '#163300',
-                            900: '#0e2400',
-                            800: '#163300',
-                            700: '#1e4402',
-                            600: '#285804',
-                            500: '#3c7a0d',
-                        },
-                        lime: {
-                            DEFAULT: '#9fe870',
-                            400: '#b4f088',
-                            500: '#9fe870',
-                            600: '#86d853',
-                        },
-                        brand: {
-                            50: '#f0f8ec',
-                            100: '#ddf1d5',
-                            200: '#bfe5b0',
-                            300: '#9cd385',
-                            400: '#75be5c',
-                            500: '#52a637',
-                            600: '#3e8428',
-                            700: '#316721',
-                            800: '#163300',
-                            900: '#0e2400',
-                        },
-                        primary: '#163300',
-                        'primary-dark': '#0e2400',
-                        success: '#10b981',
-                        warning: '#f59e0b',
-                        danger: '#ef4444',
-                        info: '#0ea5e9'
-                    },
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'Inter', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
-                        headline: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-                        body: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
-                        mono: ['"JetBrains Mono"', 'monospace']
-                    },
-                    borderRadius: {
-                        xs: '4px',
-                        sm: '6px',
-                        DEFAULT: '10px',
-                        md: '12px',
-                        lg: '14px',
-                        xl: '16px',
-                        '2xl': '20px',
-                        full: '9999px'
-                    }
-                }
-            }
-        }
-    </script>
+    <?php endif; ?>
 
     <style>
         /* ========== Clean & Calm Design System Tokens ========== */
@@ -602,7 +538,10 @@
                 <i id="sidebarToggleIcon" class="fa-solid fa-bars text-base"></i>
             </button>
             <a href="<?= BASEURL; ?>/dashboard" class="flex items-center gap-3 group transition-all">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="36" height="36" class="h-9 w-9 object-contain shrink-0" fetchpriority="high">
+                <picture class="shrink-0">
+                    <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
+                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="36" height="36" class="h-9 w-9 object-contain shrink-0" fetchpriority="high" decoding="async">
+                </picture>
                 <div class="hidden sm:block">
                     <h2 class="text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-headline">SMK NU WARGABINANGUN</h2>
                     <p class="text-[10.5px] text-[#2e6d22] dark:text-[#9fe870] font-semibold tracking-wider uppercase leading-tight flex items-center gap-1.5">

@@ -169,7 +169,7 @@
                                 <div class="flex items-center gap-2">
                                     <i class="fa-solid fa-arrow-left text-xs opacity-80"></i>
                                     <div class="w-8 h-8 rounded-full bg-emerald-100 border border-white/40 overflow-hidden flex items-center justify-center text-emerald-800 font-bold text-xs shrink-0">
-                                        <img src="<?= BASEURL ?>/assets/img/logo.png?v=3" alt="Logo" class="w-6 h-6 object-contain" onerror="this.src='https://ui-avatars.com/api/?name=SMK+NU&background=0F7A4A&color=fff'">
+                                        <img src="<?= BASEURL ?>/assets/img/logo.png?v=3" alt="Logo" class="w-6 h-6 object-contain" onerror="this.onerror=null; this.src='<?= BASEURL ?>/assets/img/icon-192.png'">
                                     </div>
                                     <div class="leading-tight min-w-0">
                                         <h4 class="text-xs font-bold truncate max-w-[140px]">SMK NU Wargabinangun</h4>

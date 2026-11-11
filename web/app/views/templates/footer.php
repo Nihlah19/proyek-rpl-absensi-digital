@@ -680,16 +680,16 @@ document.querySelectorAll('#sidebarMenu a').forEach(function (link) {
 });
 </script>
 
-<script src="<?= BASEURL; ?>/assets/js/script.js"></script>
+<script defer src="<?= BASEURL; ?>/assets/js/script.js"></script>
 
 
 <!-- PWA Service Worker & Install Flow -->
 <script>
     const BASE_URL = '<?= BASEURL; ?>';
 </script>
-<script src="<?= BASEURL; ?>/assets/js/pwa.js?v=2.1"></script>
+<script defer src="<?= BASEURL; ?>/assets/js/pwa.js?v=3.0"></script>
 <?php if (isset($_SESSION['user_id'])): ?>
-<script src="<?= BASEURL; ?>/assets/js/notification.js?v=2.1"></script>
+<script defer src="<?= BASEURL; ?>/assets/js/notification.js?v=2.1"></script>
 <?php endif; ?>
 <!-- Offline Status Indicator -->
 <div id="offlineIndicator" class="hidden fixed bottom-4 right-4 z-50 bg-amber-600/95 dark:bg-amber-700/95 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-lg backdrop-blur-xs flex items-center gap-2 border border-amber-400/40 transition-all">

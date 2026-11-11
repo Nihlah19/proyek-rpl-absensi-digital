@@ -65,12 +65,12 @@ class Database {
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Vercel Deployment — Konfigurasi Database Diperlukan</title>
-            <script src="https://cdn.tailwindcss.com"></script>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+            <link rel="stylesheet" href="/assets/css/tailwind.css?v=3.0">
+            <link rel="stylesheet" href="/assets/vendor/fontawesome/css/all.min.css?v=6.5">
+            <link rel="stylesheet" href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
             <style>
-                body { font-family: 'Inter', sans-serif; }
-                code, pre { font-family: 'JetBrains Mono', monospace; }
+                body { font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+                code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
             </style>
         </head>
         <body class="bg-[#f7f9f5] text-[#1c1c1c] min-h-screen flex items-center justify-center p-4">

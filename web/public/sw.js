@@ -1,28 +1,24 @@
-const CACHE_NAME = 'absensi-smk-v2.2';
+const CACHE_NAME = 'absensi-smk-v3.0';
 const STATIC_ASSETS = [
+    './',
     './offline.html',
     './manifest.json',
-    './assets/img/logo.png',
-    './assets/img/logo.webp',
-    './assets/img/icon-192.png',
-    './assets/img/icon-512.png',
-    './assets/img/apple-touch-icon.png',
     './assets/css/tailwind.css',
+    './assets/css/style.css',
+    './assets/img/logo.webp',
+    './assets/img/logo.png',
+    './assets/img/icon-192.png',
+    './assets/img/apple-touch-icon.png',
     './assets/js/pwa.js',
     './assets/js/notification.js',
     './assets/js/script.js',
-    './assets/vendor/tailwindcss/tailwind.min.js',
     './assets/vendor/fontawesome/css/all.min.css',
     './assets/vendor/fontawesome/webfonts/fa-solid-900.woff2',
     './assets/vendor/fontawesome/webfonts/fa-regular-400.woff2',
     './assets/vendor/fontawesome/webfonts/fa-brands-400.woff2',
     './assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css',
-    './assets/vendor/fonts/plus-jakarta-sans/pjs-1.woff2',
-    './assets/vendor/fonts/plus-jakarta-sans/pjs-2.woff2',
     './assets/vendor/fonts/plus-jakarta-sans/pjs-3.woff2',
-    './assets/vendor/fonts/plus-jakarta-sans/pjs-4.woff2',
-    './assets/vendor/chartjs/chart.min.js',
-    './assets/vendor/apexcharts/apexcharts.min.js'
+    './assets/vendor/fonts/plus-jakarta-sans/pjs-4.woff2'
 ];
 
 // 1. Install Event: Cache essential assets safely
@@ -86,8 +82,8 @@ self.addEventListener('fetch', (event) => {
                     return networkResponse;
                 })
                 .catch(async () => {
-                    // Offline fallback: try cache, or fallback to offline.html
-                    const cachedResponse = await caches.match(request);
+                    // Offline fallback: try exact/search-ignored cache, or fallback to offline.html
+                    const cachedResponse = await caches.match(request) || await caches.match(request, { ignoreSearch: true });
                     if (cachedResponse) {
                         return cachedResponse;
                     }
@@ -103,25 +99,39 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Strategy B: Static assets (images, css, js, icons, fonts)
-    if (
+    // Strategy B: Static assets (images, css, js, icons, fonts) - Instant Cache-First + Background Revalidate
+    const isStaticAsset =
         request.destination === 'image' ||
         request.destination === 'style' ||
         request.destination === 'script' ||
-        request.destination === 'font'
-    ) {
-        event.respondWith(
-            caches.match(request).then((cachedResponse) => {
-                const fetchPromise = fetch(request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
-                        const responseClone = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-                    }
-                    return networkResponse;
-                }).catch(() => {/* ignore network errors for background update */});
+        request.destination === 'font' ||
+        url.pathname.includes('/assets/') ||
+        /\.(css|js|woff2?|ttf|webp|png|jpe?g|svg|ico)$/i.test(url.pathname);
 
-                // Return cached version immediately if available, otherwise wait for network
-                return cachedResponse || fetchPromise;
+    if (isStaticAsset) {
+        event.respondWith(
+            caches.match(request).then((exactMatch) => {
+                if (exactMatch) {
+                    fetch(request).then((networkResponse) => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            const responseClone = networkResponse.clone();
+                            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+                        }
+                    }).catch(() => {});
+                    return exactMatch;
+                }
+
+                return caches.match(request, { ignoreSearch: true }).then((searchIgnoredMatch) => {
+                    const fetchPromise = fetch(request).then((networkResponse) => {
+                        if (networkResponse && networkResponse.status === 200) {
+                            const responseClone = networkResponse.clone();
+                            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+                        }
+                        return networkResponse;
+                    }).catch(() => searchIgnoredMatch);
+
+                    return searchIgnoredMatch || fetchPromise;
+                });
             })
         );
         return;

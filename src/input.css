@@ -6,15 +6,14 @@
    CUSTOM STYLES - Tailwind Extension
    ============================================ */
 
-/* Smooth scroll & Parent-Friendly Base Styles */
-html {
-    scroll-behavior: smooth;
-    font-size: 17px; /* Diperbesar agar semua tulisan & tombol otomatis sedikit lebih besar (ramah lansia/orang tua) */
-}
+@layer base {
+    html {
+        scroll-behavior: smooth;
+    }
 
-/* Memastikan warna dasar teks lebih gelap/kontras agar tidak sakit mata */
-body {
-    @apply text-slate-800 bg-slate-50;
+    body {
+        @apply text-slate-800 bg-slate-50;
+    }
 }
 
 /* Memperkuat contrast warna abu-abu (muted) */

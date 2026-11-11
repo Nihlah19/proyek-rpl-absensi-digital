@@ -6,11 +6,9 @@
     <meta name="base-url" content="<?= BASEURL; ?>">
     <title><?= $data['judul'] ?? '404 - Halaman Tidak Ditemukan' ?> · SMK NU Wargabinangun</title>
     <link rel="icon" type="image/png" href="<?= BASEURL; ?>/assets/img/logo.png?v=3">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
 </head>
 <body class="bg-[#f8faf7] text-[#0e0f0c] min-h-screen flex flex-col font-['Plus_Jakarta_Sans',sans-serif] antialiased">
     <!-- Header Minimalis -->

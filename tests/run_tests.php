@@ -296,6 +296,56 @@ try {
 }
 
 // -----------------------------------------------------------
+// TEST SUITE 7: Performa, Offline Tailwind CSS & Konten Landing
+// -----------------------------------------------------------
+echo "\n--- 7. Testing Performa Aset Offline Tailwind & Landing Page ---\n";
+
+$cssPath = __DIR__ . '/../web/public/assets/css/tailwind.css';
+$cssContent = @file_get_contents($cssPath) ?: '';
+assertTest("Bundel Tailwind CSS terkompilasi & minified tersedia secara lokal", strlen($cssContent) > 20000 && strlen($cssContent) < 150000 && strpos($cssContent, '.bg-forest{') !== false && strpos($cssContent, '.bg-lime{') !== false);
+assertTest("Tailwind CSS mencakup dark mode & utilitas custom (shadow-2xs, backdrop-blur-xs, slate)", strpos($cssContent, 'dark\\:') !== false && strpos($cssContent, '.shadow-2xs{') !== false && strpos($cssContent, '.backdrop-blur-xs{') !== false && strpos($cssContent, '.text-slate{') !== false);
+
+$swContent = @file_get_contents(__DIR__ . '/../web/public/sw.js') ?: '';
+assertTest("Service Worker (sw.js) pre-cache Tailwind CSS, FontAwesome & font lokal tanpa JIT JS berat", strpos($swContent, './assets/css/tailwind.css') !== false && strpos($swContent, './assets/vendor/fontawesome/css/all.min.css') !== false && strpos($swContent, 'tailwind.min.js') === false && strpos($swContent, 'ignoreSearch: true') !== false);
+
+$viewsToCheck = [
+    __DIR__ . '/../web/app/views/home/landing.php',
+    __DIR__ . '/../web/app/views/auth/login.php',
+    __DIR__ . '/../web/app/views/templates/header.php',
+    __DIR__ . '/../web/app/views/riwayat/index.php',
+    __DIR__ . '/../web/app/views/riwayat/guru.php',
+    __DIR__ . '/../web/app/views/errors/404_public.php',
+];
+$allOfflineReady = true;
+foreach ($viewsToCheck as $viewFile) {
+    $html = @file_get_contents($viewFile) ?: '';
+    if (preg_match('/cdn\.tailwindcss\.com|tailwind\.min\.js|fonts\.googleapis\.com|cdnjs\.cloudflare\.com/i', $html)) {
+        $allOfflineReady = false;
+        break;
+    }
+    if (strpos($html, '/assets/css/tailwind.css') === false) {
+        $allOfflineReady = false;
+        break;
+    }
+}
+assertTest("Seluruh halaman utama bebas CDN render-blocking & bebas JIT JS runtime", $allOfflineReady);
+
+$landingHtml = @file_get_contents(__DIR__ . '/../web/app/views/home/landing.php') ?: '';
+assertTest("Landing page menampilkan nama siswa 'NIhlah Auliya' (tanpa Ahmad Fauzi)", strpos($landingHtml, 'NIhlah Auliya') !== false && stripos($landingHtml, 'Ahmad Fauzi') === false);
+
+$vercelCfg = json_decode(@file_get_contents(__DIR__ . '/../vercel.json') ?: '', true);
+$hasAssetsCache = false;
+if (is_array($vercelCfg) && !empty($vercelCfg['routes'])) {
+    foreach ($vercelCfg['routes'] as $route) {
+        if (($route['src'] ?? '') === '/assets/(.*)' && !empty($route['headers']['Cache-Control'])) {
+            $hasAssetsCache = true;
+        }
+    }
+}
+assertTest("Konfigurasi vercel.json valid dengan header Cache-Control immutable untuk aset statis", is_array($vercelCfg) && $hasAssetsCache);
+
+
+// -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN
 // -----------------------------------------------------------
 echo "\n======================================================\n";

@@ -18,48 +18,15 @@
     <link rel="icon" type="image/png" sizes="192x192" href="<?= BASEURL; ?>/assets/img/icon-192.png?v=3">
     <link rel="shortcut icon" href="<?= BASEURL; ?>/assets/img/logo.png?v=3" type="image/png">
 
-    <!-- Typography: Inter (Wise style standard) & JetBrains Mono for Hardware UI -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
+    <!-- Typography & Offline-Ready Local Assets (Zero Render-Blocking External CDNs) -->
+    <link rel="preload" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0" as="style">
+    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/pjs-4.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
 
-    <!-- Local Vendor Libraries -->
-    <script src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
-
-    <!-- Wise Design Tokens via Tailwind CSS -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        forest: '#163300',     // Dominant brand dark
-                        lime: '#9fe870',       // Electric lime voltage (CTA & active states)
-                        spruce: '#054d28',     // Secondary dark green
-                        linen: '#e2f6d5',      // Pale green wash / badges
-                        charcoal: '#454745',   // Body text, dense UI
-                        obsidian: '#0e0f0c',   // Display headlines, high contrast
-                        pebble: '#868685',     // Muted secondary text, borders
-                        slate: '#6a6c6a',      // Supporting body text
-                        fog: '#e8ebe6',        // Card surfaces & soft dividers
-                        paper: '#ffffff',      // Page canvas & white cards
-                    },
-                    fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    },
-                    borderRadius: {
-                        pill: '9999px',
-                        card: '10px',
-                        largeCard: '28px',
-                    }
-                }
-            }
-        };
-    </script>
+    <!-- Compiled Offline Tailwind CSS + Local WebFonts & Icons -->
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css?v=3.0">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
+    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
 
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -91,7 +58,7 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             background-color: #ffffff;
@@ -103,9 +70,14 @@
             scroll-margin-top: 5rem;
         }
 
+        #fitur, #alur-kerja, #akses-peran, footer {
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 650px;
+        }
+
         /* Wise Sans Signature Shout: Ultra-heavy blocky display type */
         .wise-headline {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             font-weight: 900;
             letter-spacing: -0.035em;
             line-height: 0.92;
@@ -113,7 +85,7 @@
         }
 
         .wise-headline-dark {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             font-weight: 900;
             letter-spacing: -0.035em;
             line-height: 0.92;
@@ -244,13 +216,13 @@
             animation: simSwap 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Hero Entrance */
+        /* Hero Entrance (Zero LCP opacity block) */
         @keyframes heroFadeIn {
-            0% { opacity: 0; transform: translateY(20px); }
+            0% { opacity: 1; transform: translateY(8px); }
             100% { opacity: 1; transform: translateY(0); }
         }
         .hero-entrance {
-            animation: heroFadeIn 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: heroFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         /* Metric block hover */
@@ -286,7 +258,10 @@
         
         <!-- Brand / Identity -->
         <a href="<?= BASEURL; ?>" class="flex items-center gap-3 group">
-            <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" fetchpriority="high">
+            <picture class="shrink-0">
+                <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" fetchpriority="high" decoding="async">
+            </picture>
             <span class="block text-sm font-extrabold tracking-tight text-obsidian uppercase font-sans leading-none">SMK NU WARGABINANGUN</span>
         </a>
 
@@ -421,7 +396,7 @@
                         <!-- Student Tap Result -->
                         <div class="pt-2 border-t border-fog flex items-center justify-between">
                             <div>
-                                <h4 class="text-sm font-bold text-obsidian">Ahmad Fauzi</h4>
+                                <h4 class="text-sm font-bold text-obsidian">NIhlah Auliya</h4>
                                 <p class="text-xs text-slate">NIS: 202410012 &bull; Kelas: 11 TKJ</p>
                             </div>
                             <div class="text-right">
@@ -692,7 +667,7 @@
                         <i class="fa-brands fa-whatsapp text-sm"></i> Contoh Pesan Orang Tua:
                     </div>
                     <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed">
-                        "Yth. Bpk/Ibu Wali Murid, ananda <strong>Ahmad Fauzi (11 TKJ)</strong> telah hadir di SMK NU Wargabinangun pada pukul <strong>06:48 WIB</strong>. Terima kasih."
+                        "Yth. Bpk/Ibu Wali Murid, ananda <strong>NIhlah Auliya (11 TKJ)</strong> telah hadir di SMK NU Wargabinangun pada pukul <strong>06:48 WIB</strong>. Terima kasih."
                     </div>
                 </div>
 
@@ -701,7 +676,7 @@
                         <i class="fa-regular fa-clipboard text-sm"></i> Contoh Laporan Kelas:
                     </div>
                     <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed">
-                        "[REKAP KELAS 11 TKJ] Siswa Ahmad Fauzi terverifikasi hadir di sekolah. Total siswa hadir: 31 Siswa, Izin/Sakit: 1 Siswa."
+                        "[REKAP KELAS 11 TKJ] Siswa NIhlah Auliya terverifikasi hadir di sekolah. Total siswa hadir: 31 Siswa, Izin/Sakit: 1 Siswa."
                     </div>
                 </div>
             </div>
@@ -792,7 +767,10 @@
         
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-fog">
             <div class="flex items-center gap-3">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" loading="lazy" decoding="async">
+                <picture>
+                    <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
+                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" loading="lazy" decoding="async">
+                </picture>
                 <div>
                     <h4 class="text-sm font-extrabold text-obsidian uppercase leading-none font-sans">SMK NU WARGABINANGUN</h4>
                     <p class="text-xs text-slate mt-1">Jl. Lapangan Bola Wargabinangun, Cirebon, Jawa Barat</p>
@@ -936,7 +914,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <script>
     const BASE_URL = '<?= BASEURL; ?>';
 </script>
-<script src="<?= BASEURL; ?>/assets/js/pwa.js"></script>
+<script defer src="<?= BASEURL; ?>/assets/js/pwa.js?v=3.0"></script>
 
 </body>
 </html>
