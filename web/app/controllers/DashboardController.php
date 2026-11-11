@@ -150,6 +150,10 @@ class DashboardController extends Controller {
         $this->view('templates/footer');
     }
 
+    public function kepsek() {
+        $this->kepala_sekolah();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // KEPALA SEKOLAH
     // ─────────────────────────────────────────────────────────────────────────
@@ -185,6 +189,10 @@ class DashboardController extends Controller {
         $this->view('templates/header', $data);
         $this->view('dashboard/kepala_sekolah', $data);
         $this->view('templates/footer');
+    }
+
+    public function walikelas() {
+        $this->wali_kelas();
     }
 
     // ─────────────────────────────────────────────────────────────────────────

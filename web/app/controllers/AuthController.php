@@ -44,15 +44,20 @@ class AuthController extends Controller {
                 SessionHelper::set('role', $user->role);
                 SessionHelper::set('avatar', $user->avatar ?? null);
                 
+                $classCode = null;
                 if ($user->role === 'wali_kelas' || $user->role === 'walikelas') {
                     $db = new Database();
                     $db->query("SELECT class_code FROM kelas WHERE wali_kelas_id = :user_id");
                     $db->bind(':user_id', $user->id);
                     $kelas = $db->single();
                     if ($kelas) {
+                        $classCode = $kelas->class_code;
                         SessionHelper::set('class_code', $kelas->class_code);
                     }
                 }
+
+                // Terbitkan auth cookie persisten untuk Vercel Serverless
+                SessionHelper::issueAuthCookie($user->id, $user->username, $user->role, $user->name, $classCode, $user->avatar ?? null);
 
                 $this->redirectBasedOnRole($user->role);
             } else {

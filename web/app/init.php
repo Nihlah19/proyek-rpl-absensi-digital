@@ -62,6 +62,9 @@ require_once __DIR__ . '/helpers/ValidationHelper.php';
 require_once __DIR__ . '/helpers/Flasher.php';
 require_once __DIR__ . '/helpers/BadgeHelper.php';
 
+// Otomatis sinkronisasi sesi dari signed auth cookie (mempertahankan login di seluruh serverless lambda Vercel)
+SessionHelper::syncSessionFromCookie();
+
 // Default Error Handler
 set_exception_handler(function ($e) {
     // Selalu tulis ke file log kustom

@@ -15,8 +15,23 @@ class App {
                 $this->controller = $controllerName;
                 unset($url[0]);
             } else {
-                $this->controller = 'ErrorController';
-                $this->method = 'notFound';
+                // Fallback pencarian case-insensitive & tanpa tanda minus/garis bawah untuk Linux/Vercel
+                $found = false;
+                $targetClean = strtolower(str_replace(['-', '_'], '', $url[0])) . 'controller.php';
+                $files = scandir(__DIR__ . '/../controllers/');
+                foreach ($files as $f) {
+                    if ($f === '.' || $f === '..') continue;
+                    if (strtolower(str_replace(['-', '_'], '', $f)) === $targetClean) {
+                        $this->controller = pathinfo($f, PATHINFO_FILENAME);
+                        unset($url[0]);
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    $this->controller = 'ErrorController';
+                    $this->method = 'notFound';
+                }
             }
         }
 
@@ -29,6 +44,17 @@ class App {
             if (method_exists($this->controller, $methodName)) {
                 $this->method = $methodName;
                 unset($url[1]);
+            } else {
+                // Fallback pencarian method case-insensitive
+                $cleanTarget = strtolower(str_replace(['-', '_'], '', $url[1]));
+                $methods = get_class_methods($this->controller) ?: [];
+                foreach ($methods as $m) {
+                    if (strtolower(str_replace(['-', '_'], '', $m)) === $cleanTarget) {
+                        $this->method = $m;
+                        unset($url[1]);
+                        break;
+                    }
+                }
             }
         }
 

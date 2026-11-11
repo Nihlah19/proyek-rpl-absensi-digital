@@ -19,10 +19,13 @@ class WaController extends Controller {
         $this->ensureTables();
     }
 
+    private static $tablesEnsured = false;
+
     /**
      * Memastikan 10 slot wa_config dan kolom pendukung terstruktur dengan benar
      */
     private function ensureTables(): void {
+        if (self::$tablesEnsured) return;
         try {
             // Pastikan kolom delay_seconds dan priority ada
             $this->db->query("SHOW COLUMNS FROM wa_config LIKE 'delay_seconds'");
@@ -82,6 +85,7 @@ class WaController extends Controller {
                     $this->db->execute();
                 }
             }
+            self::$tablesEnsured = true;
         } catch (Exception $e) {
             error_log('[WaController::ensureTables] ' . $e->getMessage());
         }

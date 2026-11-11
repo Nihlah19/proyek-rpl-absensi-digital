@@ -889,7 +889,7 @@ function downloadHeaderQr() {
                         $isJadwalGroupActive = ($isJadwalSiswa || $isJadwalGuru);
 
                         // Presensi & Rekap Checkers
-                        $isRekapActive = (strpos($reqUri, '/rekapabsensi') !== false);
+                        $isRekapActive = (strpos($reqUri, '/rekap') !== false);
                         $isApprovalActive = (strpos($reqUri, '/izin/approval') !== false || strpos($reqUri, '/izin/detail') !== false);
                         $isScannerActive = (strpos($reqUri, '/guru/scanner') !== false);
                         $isPklKelompokActive = (strpos($reqUri, '/pkl/kelompok') !== false);
@@ -1003,14 +1003,14 @@ function downloadHeaderQr() {
                         </button>
                         <ul id="submenu-presensi" class="ml-5 pl-3 py-1 space-y-0.5 border-l border-slate-200 dark:border-slate-800 <?= $isPresensiAdminActive ? '' : 'hidden' ?>">
                             <li>
-                                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=siswa"
+                                <a href="<?= BASEURL; ?>/rekap-absensi?tipe=siswa"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? 'siswa') === 'siswa')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-graduation-cap text-xs w-4 text-center shrink-0 text-emerald-600"></i>
                                     <span class="truncate">Rekap Presensi Siswa</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=guru"
+                                <a href="<?= BASEURL; ?>/rekap-absensi?tipe=guru"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? '') === 'guru')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-chalkboard-user text-xs w-4 text-center shrink-0 text-sky-600"></i>
                                     <span class="truncate">Rekap Presensi Guru</span>
@@ -1172,14 +1172,14 @@ function downloadHeaderQr() {
                         </button>
                         <ul id="submenu-kepsek-presensi" class="ml-5 pl-3 py-1 space-y-0.5 border-l border-slate-200 dark:border-slate-800 <?= $isPresensiKepsekActive ? '' : 'hidden' ?>">
                             <li>
-                                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=guru"
+                                <a href="<?= BASEURL; ?>/rekap-absensi?tipe=guru"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? 'guru') === 'guru')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-chalkboard-user text-xs w-4 text-center shrink-0 text-sky-600"></i>
                                     <span class="truncate">Rekap Presensi Guru</span>
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= BASEURL; ?>/rekapabsensi?tipe=siswa"
+                                <a href="<?= BASEURL; ?>/rekap-absensi?tipe=siswa"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? '') === 'siswa')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-graduation-cap text-xs w-4 text-center shrink-0 text-emerald-600"></i>
                                     <span class="truncate">Monitoring Siswa</span>
@@ -1216,7 +1216,7 @@ function downloadHeaderQr() {
                                 </a>
                             </li>
                             <li>
-                                <a href="<?= BASEURL; ?>/rekapabsensi"
+                                <a href="<?= BASEURL; ?>/rekap-absensi"
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= $isRekapActive ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-file-lines text-xs w-4 text-center shrink-0 <?= $isRekapActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500' ?>"></i>
                                     <span class="truncate">Rekap Absensi Kelas</span>

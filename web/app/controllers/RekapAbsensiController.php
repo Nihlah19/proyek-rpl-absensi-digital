@@ -38,16 +38,19 @@ class RekapAbsensiController extends Controller {
         ];
 
         // Sinkronisasi data Alfa & Izin untuk periode yang dipilih
-        // Dibatasi 1x per 10 menit per rentang tanggal agar TTFB instan dan beban server ringan
-        $syncKey = 'last_sync_alfa_' . md5(($filters['dari'] ?? '') . '_' . ($filters['sampai'] ?? ''));
-        $lastSync = $_SESSION[$syncKey] ?? 0;
-        if (time() - $lastSync > 600) {
-            $absensiModel = $this->model('Absensi');
-            $syncSampai = min($filters['sampai'], date('Y-m-d'));
-            if ($filters['dari'] <= $syncSampai) {
-                $absensiModel->syncAlfaDanIzinRange($filters['dari'], $syncSampai);
+        // Di lingkungan Vercel serverless, jangan memblokir rendering halaman secara sinkron
+        $isVercelEnv = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
+        if (!$isVercelEnv) {
+            $syncKey = 'last_sync_alfa_' . md5(($filters['dari'] ?? '') . '_' . ($filters['sampai'] ?? ''));
+            $lastSync = $_SESSION[$syncKey] ?? 0;
+            if (time() - $lastSync > 600) {
+                $absensiModel = $this->model('Absensi');
+                $syncSampai = min($filters['sampai'], date('Y-m-d'));
+                if ($filters['dari'] <= $syncSampai) {
+                    $absensiModel->syncAlfaDanIzinRange($filters['dari'], $syncSampai);
+                }
+                $_SESSION[$syncKey] = time();
             }
-            $_SESSION[$syncKey] = time();
         }
 
         // Ambil daftar seluruh kelas untuk filter dropdown admin
