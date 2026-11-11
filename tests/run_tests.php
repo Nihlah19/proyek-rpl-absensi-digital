@@ -168,6 +168,134 @@ assertTest("Chatbot menampilkan status riwayat permohonan izin siswa", strpos($a
 
 
 // -----------------------------------------------------------
+// TEST SUITE 6: Aturan Auto-Alfa Reguler & Guru + Fleksibilitas PKL
+// -----------------------------------------------------------
+echo "\n--- 6. Testing Auto-Alfa Reguler/Guru & Pengecualian/Fleksibilitas PKL ---\n";
+
+require_once __DIR__ . '/../web/app/models/Absensi.php';
+require_once __DIR__ . '/../web/app/models/Pkl.php';
+require_once __DIR__ . '/../web/app/models/Laporan.php';
+
+$dbTest = new Database();
+$absensiTest = new Absensi();
+$pklTest = new Pkl();
+$laporanTest = new Laporan();
+
+$testDate = '2024-01-08'; // Senin (hari kerja aktif historis terisolasi)
+$insertedIzinIds = [];
+
+try {
+    // Pastikan bersih sebelum mulai
+    $dbTest->query("DELETE FROM absensi_siswa WHERE tanggal = :t");
+    $dbTest->bind(':t', $testDate);
+    $dbTest->execute();
+    $dbTest->query("DELETE FROM absensi_guru WHERE tanggal = :t");
+    $dbTest->bind(':t', $testDate);
+    $dbTest->execute();
+
+    // Hitung baseline siswa reguler & PKL dari database
+    $dbTest->query("SELECT COUNT(*) AS cnt FROM siswa s JOIN kelas k ON k.id = s.kelas_id LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id WHERE (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl') AND pks.id IS NULL");
+    $expectedReguler = (int)$dbTest->single()->cnt;
+
+    $dbTest->query("SELECT COUNT(DISTINCT g.id) AS cnt FROM jadwal_guru jg JOIN guru g ON g.id = jg.guru_id WHERE LOWER(jg.hari) = 'senin' AND jg.is_active = 1");
+    $expectedGuruSenin = (int)$dbTest->single()->cnt;
+
+    // 6.1 Auto-Alfa Siswa Reguler (PKL harus bebas / 0 alfa)
+    $absensiTest->generateAlfaSiswaHariIni($testDate, false);
+    $dbTest->query("SELECT COUNT(*) AS cnt FROM absensi_siswa a JOIN siswa s ON s.id = a.siswa_id JOIN kelas k ON k.id = s.kelas_id WHERE a.tanggal = :t AND a.status = 'alfa' AND k.status != 'pkl'");
+    $dbTest->bind(':t', $testDate);
+    $actualRegulerAlfa = (int)$dbTest->single()->cnt;
+
+    $dbTest->query("SELECT COUNT(*) AS cnt FROM absensi_siswa a JOIN siswa s ON s.id = a.siswa_id JOIN kelas k ON k.id = s.kelas_id WHERE a.tanggal = :t AND a.status = 'alfa' AND k.status = 'pkl'");
+    $dbTest->bind(':t', $testDate);
+    $actualPklAlfa = (int)$dbTest->single()->cnt;
+
+    assertTest("Auto-alfa menandai seluruh siswa reguler yang tidak scan/izin ($actualRegulerAlfa/$expectedReguler)", $expectedReguler > 0 && $actualRegulerAlfa === $expectedReguler);
+    assertTest("Siswa PKL bebas dari aturan auto-alfa sekolah ($actualPklAlfa baris alfa)", $actualPklAlfa === 0);
+
+    // 6.2 Auto-Alfa Guru sesuai jadwal aktif Senin
+    $absensiTest->generateAlfaGuruHariIni($testDate, false);
+    $dbTest->query("SELECT COUNT(*) AS cnt FROM absensi_guru WHERE tanggal = :t AND status = 'alfa'");
+    $dbTest->bind(':t', $testDate);
+    $actualGuruAlfa = (int)$dbTest->single()->cnt;
+    assertTest("Auto-alfa menandai guru terjadwal aktif yang belum scan QR/izin ($actualGuruAlfa/$expectedGuruSenin)", $expectedGuruSenin > 0 && $actualGuruAlfa === $expectedGuruSenin);
+
+    // 6.3 Approved Izin/Sakit menimpa placeholder alfa pada siswa & guru
+    $dbTest->query("SELECT s.id AS siswa_id, s.user_id FROM siswa s JOIN kelas k ON k.id = s.kelas_id WHERE k.status != 'pkl' LIMIT 1");
+    $sampleSiswa = $dbTest->single();
+    $dbTest->query("SELECT g.id AS guru_id, g.user_id FROM jadwal_guru jg JOIN guru g ON g.id = jg.guru_id WHERE LOWER(jg.hari) = 'senin' AND jg.is_active = 1 LIMIT 1");
+    $sampleGuru = $dbTest->single();
+
+    if ($sampleSiswa && $sampleGuru) {
+        $dbTest->query("INSERT INTO pengajuan_izin (user_id, tanggal_mulai, tanggal_selesai, jenis, alasan, status) VALUES (:uid, :t, :t, 'sakit', 'Unit Test Sakit', 'approved')");
+        $dbTest->bind(':uid', (int)$sampleSiswa->user_id);
+        $dbTest->bind(':t', $testDate);
+        $dbTest->execute();
+        $insertedIzinIds[] = (int)$dbTest->lastInsertId();
+
+        $dbTest->query("INSERT INTO pengajuan_izin (user_id, tanggal_mulai, tanggal_selesai, jenis, alasan, status) VALUES (:uid, :t, :t, 'izin', 'Unit Test Izin Guru', 'approved')");
+        $dbTest->bind(':uid', (int)$sampleGuru->user_id);
+        $dbTest->bind(':t', $testDate);
+        $dbTest->execute();
+        $insertedIzinIds[] = (int)$dbTest->lastInsertId();
+
+        $absensiTest->syncAlfaDanIzinRange($testDate, $testDate, false, true, true, 5);
+
+        $dbTest->query("SELECT status FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :t");
+        $dbTest->bind(':sid', (int)$sampleSiswa->siswa_id);
+        $dbTest->bind(':t', $testDate);
+        $syncedSiswa = $dbTest->single();
+
+        $dbTest->query("SELECT status FROM absensi_guru WHERE guru_id = :gid AND tanggal = :t");
+        $dbTest->bind(':gid', (int)$sampleGuru->guru_id);
+        $dbTest->bind(':t', $testDate);
+        $syncedGuru = $dbTest->single();
+
+        assertTest("Izin sakit approved otomatis menggantikan placeholder alfa siswa menjadi 'sakit'", $syncedSiswa && $syncedSiswa->status === 'sakit');
+        assertTest("Izin dinas approved otomatis menggantikan placeholder alfa guru menjadi 'izin'", $syncedGuru && $syncedGuru->status === 'izin');
+    } else {
+        assertTest("Sample siswa & guru tersedia untuk uji sinkronisasi izin", false);
+    }
+
+    // 6.4 Input Fleksibel PKL (Libur Industri & Shift Bebas + Rekap PKL)
+    $dbTest->query("SELECT s.id FROM siswa s JOIN kelas k ON k.id = s.kelas_id WHERE k.status = 'pkl' LIMIT 1");
+    $samplePkl = $dbTest->single();
+    if ($samplePkl) {
+        $pklSiswaId = (int)$samplePkl->id;
+        $okLibur = $pklTest->savePresensiManualPkl($pklSiswaId, $testDate, 'libur_industri', null, null, 'Jadwal libur rolling industri');
+        $dbTest->query("SELECT status, keterangan FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :t");
+        $dbTest->bind(':sid', $pklSiswaId);
+        $dbTest->bind(':t', $testDate);
+        $rowLibur = $dbTest->single();
+        assertTest("Penyesuaian fleksibel PKL 'libur_industri' tersimpan sebagai izin bernarasi", $okLibur && $rowLibur && $rowLibur->status === 'izin' && strpos($rowLibur->keterangan ?? '', 'Libur Industri') !== false);
+
+        $okShift = $pklTest->savePresensiManualPkl($pklSiswaId, $testDate, 'pkl', '09:30:00', '17:00:00', 'Shift siang bengkel');
+        $dbTest->query("SELECT COUNT(*) AS cnt, MAX(status) AS status, MAX(jam_datang) AS jam_datang, MAX(jam_pulang) AS jam_pulang FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :t");
+        $dbTest->bind(':sid', $pklSiswaId);
+        $dbTest->bind(':t', $testDate);
+        $rowShift = $dbTest->single();
+        assertTest("Update shift PKL fleksibel menimpa baris sama tanpa duplikat (09:30-17:00)", $okShift && $rowShift && (int)$rowShift->cnt === 1 && $rowShift->status === 'pkl' && $rowShift->jam_datang === '09:30:00');
+
+        $rekapCount = $laporanTest->countRekapPkl(['dari' => $testDate, 'sampai' => $testDate]);
+        assertTest("Data PKL fleksibel terbaca di Laporan Rekap PKL (count={$rekapCount})", $rekapCount >= 1);
+    } else {
+        assertTest("Sample siswa PKL tersedia untuk uji fleksibilitas PKL", false);
+    }
+} finally {
+    if (!empty($insertedIzinIds)) {
+        $idsSql = implode(',', array_map('intval', $insertedIzinIds));
+        $dbTest->query("DELETE FROM pengajuan_izin WHERE id IN ($idsSql)");
+        $dbTest->execute();
+    }
+    $dbTest->query("DELETE FROM absensi_siswa WHERE tanggal = :t");
+    $dbTest->bind(':t', $testDate);
+    $dbTest->execute();
+    $dbTest->query("DELETE FROM absensi_guru WHERE tanggal = :t");
+    $dbTest->bind(':t', $testDate);
+    $dbTest->execute();
+}
+
+// -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN
 // -----------------------------------------------------------
 echo "\n======================================================\n";

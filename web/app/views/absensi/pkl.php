@@ -136,6 +136,15 @@ $namaTempat     = $lokasiPkl ? htmlspecialchars($lokasiPkl->nama_tempat ?? '') :
                             </div>
                         </div>
 
+                        <!-- Catatan Kondisi Industri (Opsional / Tugas Lapangan) -->
+                        <div>
+                            <label for="pklKeterangan" class="block text-[11px] font-medium text-slate-600 dark:text-slate-300 mb-1">
+                                Catatan Kondisi Industri / Aktivitas (Opsional)
+                            </label>
+                            <textarea id="pklKeterangan" rows="2" placeholder="Contoh: Shift siang, tugas lapangan teknisi luar kantor, atau kondisi khusus instansi mitra..." class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-emerald-500 resize-none"></textarea>
+                            <p class="text-[10px] text-slate-400 mt-1">Jam presensi PKL fleksibel mengikuti industri masing-masing. Wajib diisi min. 5 karakter jika bertugas di luar radius GPS.</p>
+                        </div>
+
                         <!-- Tombol Presensi -->
                         <div>
                             <?php if ($sudahMasuk && $sudahPulang): ?>
@@ -188,8 +197,9 @@ $namaTempat     = $lokasiPkl ? htmlspecialchars($lokasiPkl->nama_tempat ?? '') :
                                     <?php endif; ?>
                                 </div>
                                 <?php if ($sudahMasuk && !empty($absensiHariIni->foto_masuk)): ?>
+                                    <?php $srcMasuk = (strpos($absensiHariIni->foto_masuk, 'data:image/') === 0) ? $absensiHariIni->foto_masuk : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($absensiHariIni->foto_masuk); ?>
                                     <div class="rounded-lg overflow-hidden bg-slate-950 h-32 border border-slate-700/50">
-                                        <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($absensiHariIni->foto_masuk) ?>" alt="Foto Masuk" class="w-full h-full object-cover">
+                                        <img src="<?= $srcMasuk ?>" alt="Foto Masuk" class="w-full h-full object-cover">
                                     </div>
                                 <?php endif; ?>
                                 <div class="text-xs text-slate-600 dark:text-slate-400">
@@ -208,8 +218,9 @@ $namaTempat     = $lokasiPkl ? htmlspecialchars($lokasiPkl->nama_tempat ?? '') :
                                     <?php endif; ?>
                                 </div>
                                 <?php if ($sudahPulang && !empty($absensiHariIni->foto_pulang)): ?>
+                                    <?php $srcPulang = (strpos($absensiHariIni->foto_pulang, 'data:image/') === 0) ? $absensiHariIni->foto_pulang : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($absensiHariIni->foto_pulang); ?>
                                     <div class="rounded-lg overflow-hidden bg-slate-950 h-32 border border-slate-700/50">
-                                        <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($absensiHariIni->foto_pulang) ?>" alt="Foto Pulang" class="w-full h-full object-cover">
+                                        <img src="<?= $srcPulang ?>" alt="Foto Pulang" class="w-full h-full object-cover">
                                     </div>
                                 <?php endif; ?>
                                 <div class="text-xs text-slate-600 dark:text-slate-400">
@@ -451,30 +462,40 @@ function updateDistanceDisplay(dist, errorMsg = null) {
 
 async function takeSnapshotAndSubmit(actionType) {
     if (REGISTERED_LAT === null || REGISTERED_LNG === null) {
-        showModal(false, 'Lokasi PKL Belum Ditentukan', 'Wali Kelas Anda belum menentukan titik lokasi tempat PKL.');
+        showModal(false, 'Lokasi PKL Belum Ditentukan', 'Guru Pembimbing PKL Anda belum menentukan titik lokasi tempat PKL.');
         return;
     }
 
-    if (userLat === null || userLng === null) {
-        showModal(false, 'GPS Belum Terdeteksi', 'Pastikan izin lokasi (GPS) pada perangkat Anda telah diaktifkan, lalu klik Refresh GPS.');
+    const ketEl = document.getElementById('pklKeterangan');
+    const keterangan = ketEl ? ketEl.value.trim() : '';
+
+    if ((userLat === null || userLng === null) && keterangan.length < 5) {
+        showModal(false, 'GPS Belum Terdeteksi', 'Aktifkan GPS perangkat, atau isi Catatan Kondisi Industri minimal 5 karakter jika berada di area kerja tanpa sinyal GPS.');
+        if (ketEl) ketEl.focus();
         return;
     }
 
-    const currentDist = haversineDistance(userLat, userLng, REGISTERED_LAT, REGISTERED_LNG);
-    if (currentDist > MAX_RADIUS) {
-        showModal(false, 'Presensi Ditolak', `Jarak Anda saat ini (${Math.round(currentDist)} meter) melebihi batas radius ${MAX_RADIUS} meter dari tempat PKL. Absensi ditolak.`);
-        return;
+    if (userLat !== null && userLng !== null) {
+        const currentDist = haversineDistance(userLat, userLng, REGISTERED_LAT, REGISTERED_LNG);
+        if (currentDist > MAX_RADIUS && keterangan.length < 5) {
+            showModal(false, 'Di Luar Radius Lokasi', `Jarak Anda (${Math.round(currentDist)}m) melebihi radius ${MAX_RADIUS}m. Jika sedang tugas lapangan / kondisi khusus industri, isi Catatan Kondisi Industri (min. 5 karakter) lalu kirim ulang.`);
+            if (ketEl) ketEl.focus();
+            return;
+        }
     }
 
     const video = document.getElementById('videoFeed');
     const canvas = document.getElementById('photoCanvas');
     if (!video || !canvas) return;
 
-    canvas.width = video.videoWidth || 640;
-    canvas.height = video.videoHeight || 480;
+    const srcW = video.videoWidth || 640;
+    const srcH = video.videoHeight || 480;
+    const scale = srcW > 640 ? (640 / srcW) : 1;
+    canvas.width = Math.round(srcW * scale);
+    canvas.height = Math.round(srcH * scale);
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const photoBase64 = canvas.toDataURL('image/jpeg', 0.85);
+    const photoBase64 = canvas.toDataURL('image/jpeg', 0.72);
 
     const btnSubmit = document.getElementById('btnSubmitPresensi');
     if (btnSubmit) {
@@ -490,7 +511,8 @@ async function takeSnapshotAndSubmit(actionType) {
                 action: actionType,
                 latitude: userLat,
                 longitude: userLng,
-                foto: photoBase64
+                foto: photoBase64,
+                keterangan: keterangan
             })
         });
 

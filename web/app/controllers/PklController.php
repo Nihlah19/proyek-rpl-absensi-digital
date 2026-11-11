@@ -188,6 +188,13 @@ class PklController extends Controller {
         $pembimbing   = trim($_POST['pembimbing_nama'] ?? '');
         $kontak       = trim($_POST['pembimbing_kontak'] ?? '');
         $siswaIds     = isset($_POST['siswa_ids']) && is_array($_POST['siswa_ids']) ? $_POST['siswa_ids'] : [];
+        $allowedDays  = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+        $rawHari      = isset($_POST['hari_kerja']) && is_array($_POST['hari_kerja']) ? $_POST['hari_kerja'] : ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        $hariKerjaArr = array_values(array_intersect($allowedDays, $rawHari));
+        if (empty($hariKerjaArr)) {
+            $hariKerjaArr = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        }
+        $isJamBebas   = isset($_POST['is_jam_bebas']) ? (int)$_POST['is_jam_bebas'] : 1;
 
         // Validasi akses jika bukan admin: pastikan kelas tersebut berada di bawah tanggung jawab guru pembimbing ini
         if ($userRole !== 'admin') {
@@ -243,6 +250,8 @@ class PklController extends Controller {
             'pembimbing_nama'    => $pembimbing,
             'pembimbing_kontak'  => $kontak,
             'pembimbing_guru_id' => $pembimbingGuruId,
+            'hari_kerja'         => json_encode($hariKerjaArr),
+            'is_jam_bebas'       => $isJamBebas,
             'created_by'         => $userId
         ];
 
@@ -443,11 +452,12 @@ class PklController extends Controller {
             $rows = $this->pklModel->getMonitoringPresensi((int)$activeKelas->id, $tanggal);
             $stats['total'] = count($rows);
             foreach ($rows as $r) {
+                $st = strtolower((string)($r->status ?? ''));
                 if (!empty($r->jam_pulang)) {
                     $stats['pulang']++;
-                } elseif (!empty($r->jam_datang)) {
+                } elseif (!empty($r->jam_datang) || $st === 'pkl' || $st === 'hadir') {
                     $stats['masuk']++;
-                } else {
+                } elseif (!in_array($st, ['izin', 'sakit', 'alfa'])) {
                     $stats['belum']++;
                 }
             }
@@ -473,5 +483,69 @@ class PklController extends Controller {
      */
     public function log() {
         $this->monitoring();
+    }
+
+    /**
+     * Input / Penyesuaian Presensi Fleksibel Siswa PKL oleh Guru Pembimbing PKL atau Admin
+     * sesuai kondisi industri masing-masing (masuk/pulang bebas jam, izin, sakit, libur industri, dll).
+     */
+    public function save_presensi_manual() {
+        AuthHelper::check();
+        $userId   = (int)SessionHelper::get('user_id');
+        $userRole = SessionHelper::get('role');
+
+        $isPembimbing = ($userRole === 'admin') || $this->pklModel->isUserPembimbingPkl($userId);
+        if (!$isPembimbing) {
+            Flasher::setFlash('Akses Ditolak', 'Anda tidak memiliki hak akses mengubah presensi PKL.', 'danger');
+            header('Location: ' . BASEURL . '/dashboard');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASEURL . '/pkl/monitoring');
+            exit;
+        }
+
+        $siswaId    = (int)($_POST['siswa_id'] ?? 0);
+        $kelasId    = (int)($_POST['kelas_id'] ?? 0);
+        $tanggal    = !empty($_POST['tanggal']) ? trim($_POST['tanggal']) : date('Y-m-d');
+        $rawStatus  = strtolower(trim($_POST['status'] ?? 'pkl'));
+        $jamDatang  = trim($_POST['jam_datang'] ?? '');
+        $jamPulang  = trim($_POST['jam_pulang'] ?? '');
+        $keterangan = trim($_POST['keterangan'] ?? '');
+
+        if ($userRole !== 'admin') {
+            $allowedKelas = $this->pklModel->getKelasByPembimbingUserId($userId);
+            $allowedIds = array_map(function($k) { return (int)$k->id; }, $allowedKelas);
+            if (!in_array($kelasId, $allowedIds, true)) {
+                Flasher::setFlash('Akses Ditolak', 'Anda tidak berwenang mengelola presensi kelas PKL ini.', 'danger');
+                header('Location: ' . BASEURL . '/pkl/monitoring');
+                exit;
+            }
+        }
+
+        if ($siswaId <= 0) {
+            Flasher::setFlash('Gagal', 'Siswa tidak valid.', 'danger');
+            header('Location: ' . BASEURL . '/pkl/monitoring?kelas_id=' . $kelasId . '&tanggal=' . urlencode($tanggal));
+            exit;
+        }
+
+        $ok = $this->pklModel->savePresensiManualPkl(
+            $siswaId,
+            $tanggal,
+            $rawStatus,
+            $jamDatang,
+            $jamPulang,
+            $keterangan
+        );
+
+        if ($ok) {
+            Flasher::setFlash('Berhasil', 'Data presensi PKL berhasil diperbarui sesuai kondisi industri.', 'success');
+        } else {
+            Flasher::setFlash('Gagal', 'Gagal menyimpan pembaruan presensi PKL.', 'danger');
+        }
+
+        header('Location: ' . BASEURL . '/pkl/monitoring?kelas_id=' . $kelasId . '&tanggal=' . urlencode($tanggal));
+        exit;
     }
 }

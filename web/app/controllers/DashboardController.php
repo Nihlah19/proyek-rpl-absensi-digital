@@ -43,25 +43,8 @@ class DashboardController extends Controller {
 
         $today = date('Y-m-d');
 
-        // Otomatis sinkronisasi Alfa jika jam kepulangan sekolah hari ini telah usai
-        // dan masih ada siswa/guru yang belum tercatat presensi (tidak scan RFID / QR)
-        // Di lingkungan Vercel serverless, hindari blocking execution pada synchronous page request
-        $isVercelEnv = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
-        if (!$isVercelEnv) {
-            $lastDashSync = $_SESSION['last_dash_alfa_sync_' . $today] ?? 0;
-            if (time() - $lastDashSync > 900) {
-                $absensiModel = $this->model('Absensi');
-                $jadwalSiswa = $absensiModel->getJadwalHariIni();
-                if ($jadwalSiswa && !empty($jadwalSiswa->status_aktif) && !empty($jadwalSiswa->jam_pulang)) {
-                    $nowTime = date('H:i:s');
-                    if ($nowTime >= $jadwalSiswa->jam_pulang) {
-                        $absensiModel->generateAlfaSiswaHariIni($today);
-                        $absensiModel->generateAlfaGuruHariIni($today);
-                    }
-                }
-                $_SESSION['last_dash_alfa_sync_' . $today] = time();
-            }
-        }
+        // Sinkronisasi cepat Alfa & Izin (siswa reguler non-PKL + guru berjadwal aktif) agar log kehadiran selalu akurat
+        $this->model('Absensi')->syncAlfaAutoThrottled($today, $today, 60, true, true);
 
         $absensiSiswaHariIni = $this->laporan->getRekapSiswa(['dari' => $today, 'sampai' => $today, 'limit' => 50, 'offset' => 0]);
         $absensiGuruHariIni  = $this->laporan->getRekapGuru(['dari' => $today, 'sampai' => $today, 'limit' => 50, 'offset' => 0]);
@@ -121,6 +104,9 @@ class DashboardController extends Controller {
         $guruData = $db->single();
 
         $statsBulanan   = $guruId ? $this->monitor->getStatsBulananGuru($guruId) : null;
+        if ($guruId) {
+            $this->model('Absensi')->syncAlfaAutoThrottled(date('Y-m-d', strtotime('-7 days')), date('Y-m-d'), 60, false, true);
+        }
         $riwayatGuru    = $guruId ? $this->monitor->getRiwayatGuru($guruId, '', '', '', '', 0, 5) : [];
         $jadwalHariIni  = $guruId ? $this->monitor->getJadwalHariIniGuru($guruId) : null;
 
@@ -170,6 +156,8 @@ class DashboardController extends Controller {
         }
 
         $today = date('Y-m-d');
+        $todayGuru = date('Y-m-d');
+        $this->model('Absensi')->syncAlfaAutoThrottled($todayGuru, $todayGuru, 60, false, true);
         $absensiGuruHariIni = $this->laporan->getRekapGuru([
             'dari'   => $today,
             'sampai' => $today,
@@ -212,6 +200,8 @@ class DashboardController extends Controller {
         $guruData = $db->single();
 
         $today = date('Y-m-d');
+        $todayWali = date('Y-m-d');
+        $this->model('Absensi')->syncAlfaAutoThrottled($todayWali, $todayWali, 60, true, false);
         $absensiSiswaHariIni = $kelasId ? $this->laporan->getRekapSiswa([
             'dari'     => $today,
             'sampai'   => $today,
@@ -282,6 +272,9 @@ class DashboardController extends Controller {
         }
 
         $statsBulanan   = $siswaId ? $this->monitor->getStatsBulananSiswa($siswaId) : null;
+        if ($siswaId) {
+            $this->model('Absensi')->syncAlfaAutoThrottled(date('Y-m-d', strtotime('-7 days')), date('Y-m-d'), 60, true, false);
+        }
         $riwayatSiswa   = $siswaId ? $this->monitor->getRiwayatSiswa($siswaId, '', '', '', '', 0, 5) : [];
         $jadwalHariIni  = $this->monitor->getJadwalHariIniSiswa();
 

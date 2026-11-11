@@ -844,7 +844,7 @@ class Laporan {
         $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
         $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
         
-        $where = "ab.status = 'pkl'";
+        $where = "(ab.status = 'pkl' OR k.status = 'pkl' OR pks.id IS NOT NULL)";
         $binds = [':dari' => $dari, ':sampai' => $sampai];
         $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
 
@@ -890,7 +890,7 @@ class Laporan {
         $dari   = !empty($filters['dari']) ? $filters['dari'] : date('Y-m-01');
         $sampai = !empty($filters['sampai']) ? $filters['sampai'] : date('Y-m-d');
         
-        $where = "ab.status = 'pkl'";
+        $where = "(ab.status = 'pkl' OR k.status = 'pkl' OR pks.id IS NOT NULL)";
         $binds = [':dari' => $dari, ':sampai' => $sampai];
         $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
 
@@ -924,7 +924,7 @@ class Laporan {
         $dari   = !empty($dari) ? $dari : date('Y-m-01');
         $sampai = !empty($sampai) ? $sampai : date('Y-m-d');
         
-        $where = "ab.status = 'pkl'";
+        $where = "(ab.status = 'pkl' OR k.status = 'pkl' OR pks.id IS NOT NULL)";
         $binds = [':dari' => $dari, ':sampai' => $sampai];
         $where .= " AND ab.tanggal >= :dari AND ab.tanggal <= :sampai";
 

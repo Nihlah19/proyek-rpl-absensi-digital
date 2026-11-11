@@ -18,10 +18,14 @@ $isCli = (php_sapi_name() === 'cli' || defined('STDIN'));
 
 if (!$isCli) {
     header('Content-Type: application/json');
-    $secretKey = $_ENV['CRON_KEY'] ?? 'absensi_rfid_cron_secret_2026';
-    $inputKey  = $_GET['key'] ?? '';
+    $secretKey   = $_ENV['CRON_KEY'] ?? getenv('CRON_KEY') ?: 'absensi_rfid_cron_secret_2026';
+    $cronSecret  = $_ENV['CRON_SECRET'] ?? getenv('CRON_SECRET') ?: '';
+    $inputKey    = $_GET['key'] ?? '';
+    $authHeader  = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+    $isVercelCron = (isset($_SERVER['HTTP_USER_AGENT']) && stripos($_SERVER['HTTP_USER_AGENT'], 'vercel-cron') !== false)
+                    || (!empty($cronSecret) && $authHeader === 'Bearer ' . $cronSecret);
 
-    if ($inputKey !== $secretKey) {
+    if ($inputKey !== $secretKey && !$isVercelCron) {
         http_response_code(403);
         echo json_encode(['success' => false, 'message' => 'Unauthorized: Invalid cron key']);
         exit;

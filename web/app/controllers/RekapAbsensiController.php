@@ -43,20 +43,17 @@ class RekapAbsensiController extends Controller {
             'kelas_id' => $_GET['kelas_id'] ?? '',
         ];
 
-        // Sinkronisasi data Alfa & Izin untuk periode yang dipilih
-        // Di lingkungan Vercel serverless, jangan memblokir rendering halaman secara sinkron
-        $isVercelEnv = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
-        if (!$isVercelEnv) {
-            $syncKey = 'last_sync_alfa_' . md5(($filters['dari'] ?? '') . '_' . ($filters['sampai'] ?? ''));
-            $lastSync = $_SESSION[$syncKey] ?? 0;
-            if (time() - $lastSync > 600) {
-                $absensiModel = $this->model('Absensi');
-                $syncSampai = min($filters['sampai'], date('Y-m-d'));
-                if ($filters['dari'] <= $syncSampai) {
-                    $absensiModel->syncAlfaDanIzinRange($filters['dari'], $syncSampai);
-                }
-                $_SESSION[$syncKey] = time();
+        // Sinkronisasi cepat data Alfa & Izin untuk periode yang dipilih (berlaku juga di Vercel tanpa timeout)
+        // Siswa reguler & guru yang belum scan RFID/QR dan tanpa izin disetujui otomatis tercatat Alfa; PKL dibebaskan.
+        $syncKey  = 'last_sync_alfa_' . md5(($filters['dari'] ?? '') . '_' . ($filters['sampai'] ?? '') . '_' . ($kategori ?? 'biasa'));
+        $lastSync = $_SESSION[$syncKey] ?? 0;
+        if (time() - $lastSync > 60) {
+            $absensiModel = $this->model('Absensi');
+            $syncSampai   = min($filters['sampai'], date('Y-m-d'));
+            if ($filters['dari'] <= $syncSampai) {
+                $absensiModel->syncAlfaDanIzinRange($filters['dari'], $syncSampai, true, ($tipe === 'siswa' && $kategori !== 'pkl'), ($tipe === 'guru'));
             }
+            $_SESSION[$syncKey] = time();
         }
 
         // Ambil daftar seluruh kelas untuk filter dropdown admin

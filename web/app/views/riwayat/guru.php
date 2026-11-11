@@ -844,9 +844,13 @@
             
             if (!tbody) return;
 
-            // Total count badge
+            // Total count badge (hitung yang hadir / terlambat / pulang, tidak termasuk alfa)
             if (totalScannedCountEl) {
-                totalScannedCountEl.textContent = `${allScannedData.length} Guru Hadir`;
+                const hadirCount = allScannedData.filter(item => {
+                    const st = (item.status || '').toLowerCase();
+                    return st === 'hadir' || st === 'terlambat' || Boolean(item.jam_pulang);
+                }).length;
+                totalScannedCountEl.textContent = `${hadirCount} Guru Hadir`;
             }
 
             // Filter data by search query
@@ -971,6 +975,10 @@
                     rowHover = 'hover:bg-amber-50/40';
                     avatarBg = 'text-amber-600 bg-amber-50 border-amber-200';
                     statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200/80"><i class="fa-solid fa-notes-medical text-[10px]"></i> Sakit</span>`;
+                } else if (status === 'alfa') {
+                    rowHover = 'hover:bg-rose-50/40';
+                    avatarBg = 'text-rose-600 bg-rose-50 border-rose-200';
+                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200/80"><i class="fa-solid fa-circle-xmark text-[10px]"></i> Alfa</span>`;
                 } else {
                     statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(status ? status.toUpperCase() : '-')}</span>`;
                 }

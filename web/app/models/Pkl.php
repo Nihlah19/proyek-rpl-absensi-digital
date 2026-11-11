@@ -727,15 +727,19 @@ class Pkl extends Model {
             SELECT 
                 s.id as siswa_id,
                 s.nis,
+                s.kelas_id,
                 u.name as nama_siswa,
                 pk.nama_kelompok,
                 pk.nama_tempat,
                 pk.radius_meter,
+                pk.hari_kerja,
+                pk.is_jam_bebas,
                 ug.name as pembimbing_guru_nama,
                 a.id as absensi_id,
                 a.jam_datang,
                 a.jam_pulang,
                 a.status,
+                a.keterangan,
                 a.foto_masuk,
                 a.foto_pulang,
                 a.jarak_meter,
@@ -818,18 +822,105 @@ class Pkl extends Model {
     }
 
     /**
+     * Pastikan kolom foto_masuk & foto_pulang pada absensi_siswa mampu menampung Data URI (serverless fallback).
+     */
+    public function ensureFotoColumnReady() {
+        try {
+            $this->db->query("SELECT setting_value FROM app_settings WHERE setting_key = 'pkl_foto_col_v1' LIMIT 1");
+            $chk = $this->db->single();
+            if ($chk && $chk->setting_value === '1') {
+                return true;
+            }
+            $this->db->query("ALTER TABLE absensi_siswa MODIFY COLUMN foto_masuk MEDIUMTEXT NULL, MODIFY COLUMN foto_pulang MEDIUMTEXT NULL");
+            $this->db->execute();
+            $this->db->query("INSERT INTO app_settings (setting_key, setting_value) VALUES ('pkl_foto_col_v1', '1') ON DUPLICATE KEY UPDATE setting_value = '1'");
+            $this->db->execute();
+            return true;
+        } catch (Throwable $e) {
+            error_log('[Pkl::ensureFotoColumnReady] ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Input atau perbarui presensi PKL secara fleksibel oleh Guru Pembimbing PKL / Admin sesuai kondisi industri.
+     */
+    public function savePresensiManualPkl($siswaId, $tanggal, $status, $jamDatang = null, $jamPulang = null, $keterangan = null) {
+        $siswaId   = (int)$siswaId;
+        $rawStatus = strtolower(trim((string)$status));
+        $ketTrim   = trim((string)$keterangan);
+
+        if ($rawStatus === 'libur_industri') {
+            $status     = 'izin';
+            $ketTrim    = '[Libur Industri] ' . ($ketTrim !== '' ? $ketTrim : 'Hari libur / off shift sesuai jadwal instansi mitra');
+            $jamDatang  = null;
+            $jamPulang  = null;
+        } else {
+            $allowedStatuses = ['pkl', 'hadir', 'izin', 'sakit', 'alfa'];
+            $status = in_array($rawStatus, $allowedStatuses, true)
+                ? ($rawStatus === 'hadir' ? 'pkl' : $rawStatus)
+                : 'pkl';
+        }
+
+        $normTime = function($val) {
+            $v = trim((string)$val);
+            if ($v === '') return null;
+            return strlen($v) === 5 ? $v . ':00' : $v;
+        };
+        $jamDatang  = $normTime($jamDatang);
+        $jamPulang  = $normTime($jamPulang);
+        $keterangan = $ketTrim !== '' ? $ketTrim : 'Input fleksibel Pembimbing PKL';
+
+        $this->db->query("SELECT id FROM absensi_siswa WHERE siswa_id = :sid AND tanggal = :tgl LIMIT 1");
+        $this->db->bind(':sid', $siswaId);
+        $this->db->bind(':tgl', $tanggal);
+        $existing = $this->db->single();
+
+        if ($existing) {
+            $this->db->query("
+                UPDATE absensi_siswa
+                SET status = :status,
+                    jam_datang = :jam_datang,
+                    jam_pulang = :jam_pulang,
+                    keterangan = :keterangan
+                WHERE id = :id
+            ");
+            $this->db->bind(':status', $status);
+            $this->db->bind(':jam_datang', $jamDatang);
+            $this->db->bind(':jam_pulang', $jamPulang);
+            $this->db->bind(':keterangan', $keterangan);
+            $this->db->bind(':id', (int)$existing->id);
+            return $this->db->execute();
+        }
+
+        $this->db->query("
+            INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, jam_pulang, status, keterangan)
+            VALUES (:sid, :tgl, :jam_datang, :jam_pulang, :status, :keterangan)
+        ");
+        $this->db->bind(':sid', $siswaId);
+        $this->db->bind(':tgl', $tanggal);
+        $this->db->bind(':jam_datang', $jamDatang);
+        $this->db->bind(':jam_pulang', $jamPulang);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':keterangan', $keterangan);
+        return $this->db->execute();
+    }
+
+    /**
      * Catat presensi masuk PKL
      */
-    public function catatAbsenMasuk($siswaId, $tanggal, $jam, $foto, $lat, $lng, $jarak) {
+    public function catatAbsenMasuk($siswaId, $tanggal, $jam, $foto, $lat, $lng, $jarak, $keterangan = null) {
+        $ketText = !empty($keterangan) ? $keterangan : 'Presensi Masuk PKL Mandiri';
         $this->db->query("
             INSERT INTO absensi_siswa 
                 (siswa_id, tanggal, jam_datang, status, keterangan, foto_masuk, latitude_masuk, longitude_masuk, jarak_meter)
             VALUES 
-                (:sid, :tgl, :jam, 'pkl', 'Presensi Masuk PKL Mandiri', :foto, :lat, :lng, :jarak)
+                (:sid, :tgl, :jam, 'pkl', :ket, :foto, :lat, :lng, :jarak)
         ");
         $this->db->bind(':sid', $siswaId);
         $this->db->bind(':tgl', $tanggal);
         $this->db->bind(':jam', $jam);
+        $this->db->bind(':ket', $ketText);
         $this->db->bind(':foto', $foto);
         $this->db->bind(':lat', $lat);
         $this->db->bind(':lng', $lng);
@@ -840,7 +931,10 @@ class Pkl extends Model {
     /**
      * Catat presensi pulang PKL
      */
-    public function catatAbsenPulang($absensiId, $jam, $foto, $lat, $lng, $jarak) {
+    public function catatAbsenPulang($absensiId, $jam, $foto, $lat, $lng, $jarak, $keterangan = null) {
+        $ketClause = !empty($keterangan)
+            ? ", keterangan = CASE WHEN keterangan IS NOT NULL AND TRIM(keterangan) != '' THEN CONCAT(keterangan, ' | Pulang: ', :ket) ELSE :ket2 END "
+            : "";
         $this->db->query("
             UPDATE absensi_siswa 
             SET 
@@ -850,6 +944,7 @@ class Pkl extends Model {
                 longitude_pulang = :lng,
                 jarak_meter = :jarak,
                 status = 'pkl'
+                {$ketClause}
             WHERE id = :id
         ");
         $this->db->bind(':jam', $jam);
@@ -857,6 +952,10 @@ class Pkl extends Model {
         $this->db->bind(':lat', $lat);
         $this->db->bind(':lng', $lng);
         $this->db->bind(':jarak', $jarak);
+        if (!empty($keterangan)) {
+            $this->db->bind(':ket', $keterangan);
+            $this->db->bind(':ket2', $keterangan);
+        }
         $this->db->bind(':id', $absensiId);
         return $this->db->execute();
     }

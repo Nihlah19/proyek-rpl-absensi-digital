@@ -233,8 +233,9 @@ if (!$ap) return;
                                 </td>
                                 <td class="px-3 py-2 text-center">
                                     <?php if (!empty($lg->foto_masuk)): ?>
-                                        <a href="<?= BASEURL; ?>/<?= htmlspecialchars($lg->foto_masuk) ?>" target="_blank" class="inline-block" title="Lihat Foto Selfie">
-                                            <img src="<?= BASEURL; ?>/<?= htmlspecialchars($lg->foto_masuk) ?>" alt="Selfie" class="w-7 h-7 rounded-md object-cover border border-slate-200 dark:border-slate-700 shadow-2xs hover:scale-110 transition-transform">
+                                        <?php $srcAdminPkl = (strpos($lg->foto_masuk, 'data:image/') === 0) ? $lg->foto_masuk : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($lg->foto_masuk); ?>
+                                        <a href="<?= $srcAdminPkl ?>" target="_blank" class="inline-block" title="Lihat Foto Selfie">
+                                            <img src="<?= $srcAdminPkl ?>" alt="Selfie" class="w-7 h-7 rounded-md object-cover border border-slate-200 dark:border-slate-700 shadow-2xs hover:scale-110 transition-transform">
                                         </a>
                                     <?php else: ?>
                                         <span class="text-slate-300">-</span>

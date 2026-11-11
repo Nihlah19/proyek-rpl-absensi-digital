@@ -129,17 +129,205 @@ class Absensi extends Model {
      *    masukkan status 'izin' atau 'sakit' sesuai jenis pengajuannya.
      * 4. Jika tidak ada izin disetujui, masukkan status 'alfa' dengan keterangan 'Tidak hadir tanpa keterangan (Otomatis)'.
      */
-    public function generateAlfaSiswaHariIni($tanggal = null) {
+    /**
+     * Tentukan apakah batas waktu auto-alfa untuk tanggal target sudah tercapai.
+     * Hari sebelum hari ini selalu langsung diproses; hari depan tidak diproses.
+     */
+    private function isCutoffPassed($tanggal, $batasTerlambat = null, $jamPulang = null, $respectCutoff = false) {
+        $today = date('Y-m-d');
+        if ($tanggal > $today) return false;
+        if ($tanggal < $today || !$respectCutoff) return true;
+
+        $candidates = [];
+        foreach ([$batasTerlambat, $jamPulang] as $t) {
+            if (!empty($t) && $t !== '00:00:00') {
+                $candidates[] = $t;
+            }
+        }
+        if (empty($candidates)) return true;
+
+        $cutoff = min($candidates);
+        return date('H:i:s') >= $cutoff;
+    }
+
+    /**
+     * Sinkronisasi placeholder alfa -> izin/sakit jika pengajuan izin telah disetujui pada tanggal terkait.
+     */
+    private function syncApprovedIzinOntoAlfa($table, $fkCol, $roleTable, $dari, $sampai = null) {
+        $sampai = $sampai ?: $dari;
+        $this->db->query("
+            UPDATE {$table} a
+            JOIN {$roleTable} r ON r.id = a.{$fkCol}
+            JOIN pengajuan_izin pi ON pi.user_id = r.user_id
+                AND pi.status = 'approved'
+                AND a.tanggal BETWEEN pi.tanggal_mulai AND pi.tanggal_selesai
+            SET a.status = CASE WHEN LOWER(pi.jenis) = 'sakit' THEN 'sakit' ELSE 'izin' END,
+                a.keterangan = CASE
+                    WHEN pi.alasan IS NOT NULL AND TRIM(pi.alasan) != '' THEN CONCAT('Izin disetujui: ', pi.alasan)
+                    ELSE 'Izin disetujui'
+                END
+            WHERE a.tanggal BETWEEN :d1 AND :d2
+              AND a.status = 'alfa'
+              AND a.jam_datang IS NULL
+              AND a.jam_pulang IS NULL
+        ");
+        $this->db->bind(':d1', $dari);
+        $this->db->bind(':d2', $sampai);
+        $this->db->execute();
+    }
+
+    /**
+     * Insert massal absensi izin/sakit/alfa untuk siswa reguler (non-PKL) pada tanggal tertentu.
+     */
+    private function bulkInsertAlfaSiswaDate($tanggal) {
+        $this->syncApprovedIzinOntoAlfa('absensi_siswa', 'siswa_id', 'siswa', $tanggal, $tanggal);
+
+        $this->db->query("
+            INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, jam_pulang, status, keterangan)
+            SELECT
+                s.id,
+                :tgl1,
+                NULL,
+                NULL,
+                CASE
+                    WHEN MAX(LOWER(pi.jenis)) = 'sakit' THEN 'sakit'
+                    WHEN MAX(pi.id) IS NOT NULL THEN 'izin'
+                    ELSE 'alfa'
+                END AS status_auto,
+                CASE
+                    WHEN MAX(pi.id) IS NOT NULL THEN
+                        COALESCE(NULLIF(CONCAT('Izin disetujui: ', COALESCE(MAX(pi.alasan), '')), 'Izin disetujui: '), 'Izin disetujui')
+                    ELSE 'Tidak melakukan presensi (tanpa scan RFID / izin)'
+                END AS ket_auto
+            FROM siswa s
+            JOIN users u ON u.id = s.user_id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id
+            LEFT JOIN absensi_siswa a ON a.siswa_id = s.id AND a.tanggal = :tgl2
+            LEFT JOIN pengajuan_izin pi ON pi.user_id = s.user_id
+                AND pi.status = 'approved'
+                AND :tgl3 BETWEEN pi.tanggal_mulai AND pi.tanggal_selesai
+            WHERE (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+              AND pks.id IS NULL
+              AND a.id IS NULL
+            GROUP BY s.id
+        ");
+        $this->db->bind(':tgl1', $tanggal);
+        $this->db->bind(':tgl2', $tanggal);
+        $this->db->bind(':tgl3', $tanggal);
+        $this->db->execute();
+    }
+
+    /**
+     * Insert massal absensi izin/sakit/alfa untuk guru berjadwal aktif pada tanggal tertentu.
+     */
+    private function bulkInsertAlfaGuruDate($tanggal, $hariIndo, $useFallbackAllGuru = false, $respectCutoff = false) {
+        $this->syncApprovedIzinOntoAlfa('absensi_guru', 'guru_id', 'guru', $tanggal, $tanggal);
+
+        $isToday = ($tanggal === date('Y-m-d'));
+        $nowTime = date('H:i:s');
+
+        if ($useFallbackAllGuru) {
+            $this->db->query("
+                INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, jam_pulang, status, keterangan)
+                SELECT
+                    g.id,
+                    :tgl1,
+                    NULL,
+                    NULL,
+                    CASE
+                        WHEN MAX(LOWER(pi.jenis)) = 'sakit' THEN 'sakit'
+                        WHEN MAX(pi.id) IS NOT NULL THEN 'izin'
+                        ELSE 'alfa'
+                    END AS status_auto,
+                    CASE
+                        WHEN MAX(pi.id) IS NOT NULL THEN
+                            COALESCE(NULLIF(CONCAT('Izin disetujui: ', COALESCE(MAX(pi.alasan), '')), 'Izin disetujui: '), 'Izin disetujui')
+                        ELSE 'Tidak melakukan presensi (tanpa scan QR / izin)'
+                    END AS ket_auto
+                FROM guru g
+                JOIN users u ON u.id = g.user_id
+                LEFT JOIN absensi_guru a ON a.guru_id = g.id AND a.tanggal = :tgl2
+                LEFT JOIN pengajuan_izin pi ON pi.user_id = g.user_id
+                    AND pi.status = 'approved'
+                    AND :tgl3 BETWEEN pi.tanggal_mulai AND pi.tanggal_selesai
+                WHERE u.role IN ('guru', 'wali_kelas', 'walikelas')
+                  AND a.id IS NULL
+                GROUP BY g.id
+            ");
+            $this->db->bind(':tgl1', $tanggal);
+            $this->db->bind(':tgl2', $tanggal);
+            $this->db->bind(':tgl3', $tanggal);
+            $this->db->execute();
+            return;
+        }
+
+        $cutoffClause = ($isToday && $respectCutoff)
+            ? " AND :now_time >= LEAST(COALESCE(NULLIF(j.batas_terlambat, '00:00:00'), '23:59:59'), COALESCE(NULLIF(j.jam_pulang, '00:00:00'), '23:59:59')) "
+            : "";
+
+        $this->db->query("
+            INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, jam_pulang, status, keterangan)
+            SELECT
+                g.id,
+                :tgl1,
+                NULL,
+                NULL,
+                CASE
+                    WHEN MAX(LOWER(pi.jenis)) = 'sakit' THEN 'sakit'
+                    WHEN MAX(pi.id) IS NOT NULL THEN 'izin'
+                    ELSE 'alfa'
+                END AS status_auto,
+                CASE
+                    WHEN MAX(pi.id) IS NOT NULL THEN
+                        COALESCE(NULLIF(CONCAT('Izin disetujui: ', COALESCE(MAX(pi.alasan), '')), 'Izin disetujui: '), 'Izin disetujui')
+                    ELSE 'Tidak melakukan presensi (tanpa scan QR / izin)'
+                END AS ket_auto
+            FROM jadwal_guru j
+            JOIN guru g ON g.id = j.guru_id
+            JOIN users u ON u.id = g.user_id
+            LEFT JOIN absensi_guru a ON a.guru_id = g.id AND a.tanggal = :tgl2
+            LEFT JOIN pengajuan_izin pi ON pi.user_id = g.user_id
+                AND pi.status = 'approved'
+                AND :tgl3 BETWEEN pi.tanggal_mulai AND pi.tanggal_selesai
+            WHERE j.hari = :hari
+              AND j.is_active = 1
+              AND a.id IS NULL
+              {$cutoffClause}
+            GROUP BY g.id
+        ");
+        $this->db->bind(':tgl1', $tanggal);
+        $this->db->bind(':tgl2', $tanggal);
+        $this->db->bind(':tgl3', $tanggal);
+        $this->db->bind(':hari', $hariIndo);
+        if ($isToday && $respectCutoff) {
+            $this->db->bind(':now_time', $nowTime);
+        }
+        $this->db->execute();
+    }
+
+    /**
+     * Generate data absensi Alfa & Izin untuk siswa reguler (non-PKL) yang belum memiliki catatan presensi.
+     * Siswa PKL dibebaskan dari aturan auto-alfa sekolah karena jadwal mengikuti kondisi industri masing-masing.
+     */
+    public function generateAlfaSiswaHariIni($tanggal = null, $respectCutoff = false) {
         if (!$tanggal) {
             $tanggal = date('Y-m-d');
         }
+        if ($tanggal > date('Y-m-d')) {
+            return [
+                'success' => false,
+                'message' => 'Tanggal belum berlangsung.',
+                'total_alfa' => 0,
+                'total_izin' => 0
+            ];
+        }
 
         $hariIndo = $this->getHariIndo($tanggal);
-        $this->db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari AND status_aktif = 1");
+        $this->db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari AND status_aktif = 1 LIMIT 1");
         $this->db->bind(':hari', $hariIndo);
         $jadwal = $this->db->single();
         if (!$jadwal) {
-            // Periksa juga apakah pada tanggal ini sudah ada presensi siswa yang masuk
             $this->db->query("SELECT COUNT(*) as c FROM absensi_siswa WHERE tanggal = :tgl");
             $this->db->bind(':tgl', $tanggal);
             $hasAtt = (int)($this->db->single()->c ?? 0);
@@ -153,96 +341,62 @@ class Absensi extends Model {
             }
         }
 
-        // Ambil semua siswa yang belum tercatat absensi pada tanggal ini (Kecuali kelas PKL yang berstatus scan bebas)
-        $this->db->query("
-            SELECT s.id as siswa_id, s.user_id, u.name 
-            FROM siswa s
-            JOIN users u ON u.id = s.user_id
-            LEFT JOIN kelas k ON s.kelas_id = k.id
-            WHERE (k.status IS NULL OR k.status != 'pkl')
-              AND s.id NOT IN (
-                SELECT siswa_id FROM absensi_siswa WHERE tanggal = :tgl
-            )
-        ");
-        $this->db->bind(':tgl', $tanggal);
-        $unrecorded = $this->db->resultSet();
-
-        if (empty($unrecorded)) {
+        if ($jadwal && !$this->isCutoffPassed($tanggal, $jadwal->batas_terlambat ?? null, $jadwal->jam_pulang ?? null, $respectCutoff)) {
             return [
                 'success' => true,
-                'message' => 'Semua siswa sudah memiliki catatan absensi.',
+                'message' => 'Batas waktu presensi siswa hari ini belum berakhir.',
                 'total_alfa' => 0,
                 'total_izin' => 0
             ];
         }
 
-        $countAlfa = 0;
-        $countIzin = 0;
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN a.status = 'alfa' THEN 1 ELSE 0 END) AS alfa_cnt,
+                SUM(CASE WHEN a.status IN ('izin','sakit') THEN 1 ELSE 0 END) AS izin_cnt
+            FROM absensi_siswa a
+            JOIN siswa s ON s.id = a.siswa_id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id
+            WHERE a.tanggal = :tgl
+              AND (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+              AND pks.id IS NULL
+        ");
+        $this->db->bind(':tgl', $tanggal);
+        $before = $this->db->single();
 
-        // Optimasi Bulk: Ambil seluruh perizinan disetujui untuk siswa hari ini dalam 1 query
-        $userIds = array_map(function($s) { return (int)$s->user_id; }, $unrecorded);
-        $izinMap = [];
-        if (!empty($userIds)) {
-            $inUids = implode(',', $userIds);
-            $this->db->query("
-                SELECT user_id, jenis, alasan FROM pengajuan_izin 
-                WHERE user_id IN ($inUids) 
-                AND status = 'approved' 
-                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai
-            ");
-            $this->db->bind(':tgl', $tanggal);
-            $izins = $this->db->resultSet();
-            if ($izins) {
-                foreach ($izins as $iz) {
-                    $izinMap[$iz->user_id] = $iz;
-                }
-            }
-        }
+        $this->bulkInsertAlfaSiswaDate($tanggal);
 
-        $rowsToInsert = [];
-        foreach ($unrecorded as $siswa) {
-            $izin = $izinMap[$siswa->user_id] ?? null;
-            if ($izin) {
-                $status = ($izin->jenis === 'sakit') ? 'sakit' : 'izin';
-                $keterangan = $izin->alasan ? 'Izin disetujui: ' . $izin->alasan : 'Izin disetujui';
-                $countIzin++;
-            } else {
-                $status = 'alfa';
-                $keterangan = 'Tidak hadir tanpa scan RFID';
-                $countAlfa++;
-            }
-            $rowsToInsert[] = [
-                'siswa_id'   => (int)$siswa->siswa_id,
-                'status'     => $status,
-                'keterangan' => $keterangan
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN a.status = 'alfa' THEN 1 ELSE 0 END) AS alfa_cnt,
+                SUM(CASE WHEN a.status IN ('izin','sakit') THEN 1 ELSE 0 END) AS izin_cnt
+            FROM absensi_siswa a
+            JOIN siswa s ON s.id = a.siswa_id
+            LEFT JOIN kelas k ON s.kelas_id = k.id
+            LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id
+            WHERE a.tanggal = :tgl
+              AND (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+              AND pks.id IS NULL
+        ");
+        $this->db->bind(':tgl', $tanggal);
+        $after = $this->db->single();
+
+        $countAlfa = max(0, (int)($after->alfa_cnt ?? 0) - (int)($before->alfa_cnt ?? 0));
+        $countIzin = max(0, (int)($after->izin_cnt ?? 0) - (int)($before->izin_cnt ?? 0));
+
+        if ($countAlfa === 0 && $countIzin === 0) {
+            return [
+                'success' => true,
+                'message' => 'Semua siswa reguler sudah memiliki catatan absensi.',
+                'total_alfa' => 0,
+                'total_izin' => 0
             ];
-        }
-
-        // Bulk insert dalam chunk 100 rows
-        $chunks = array_chunk($rowsToInsert, 100);
-        foreach ($chunks as $chunk) {
-            $sqlValues = [];
-            $bindParams = [':tgl' => $tanggal];
-            foreach ($chunk as $idx => $row) {
-                $sidKey = ":sid_{$idx}";
-                $stKey  = ":st_{$idx}";
-                $ktKey  = ":kt_{$idx}";
-                $sqlValues[] = "({$sidKey}, :tgl, NULL, NULL, {$stKey}, {$ktKey})";
-                $bindParams[$sidKey] = $row['siswa_id'];
-                $bindParams[$stKey]  = $row['status'];
-                $bindParams[$ktKey]  = $row['keterangan'];
-            }
-            $sql = "INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, jam_pulang, status, keterangan) VALUES " . implode(',', $sqlValues);
-            $this->db->query($sql);
-            foreach ($bindParams as $pKey => $pVal) {
-                $this->db->bind($pKey, $pVal);
-            }
-            $this->db->execute();
         }
 
         return [
             'success' => true,
-            'message' => "Berhasil memproses absensi siswa: {$countAlfa} siswa tercatat Alfa (tanpa scan RFID), {$countIzin} siswa tercatat Izin/Sakit.",
+            'message' => "Berhasil memproses absensi siswa reguler: {$countAlfa} siswa tercatat Alfa (tanpa scan RFID/izin), {$countIzin} siswa tercatat Izin/Sakit.",
             'total_alfa' => $countAlfa,
             'total_izin' => $countIzin
         ];
@@ -252,59 +406,76 @@ class Absensi extends Model {
      * Generate data absensi otomatis untuk guru yang memiliki jadwal dinas/mengajar aktif hari ini
      * tetapi belum scan QR hingga jam kedatangan/kepulangan berakhir (Auto-Alfa / Sync Izin Guru).
      */
-    public function generateAlfaGuruHariIni($tanggal = null) {
+    public function generateAlfaGuruHariIni($tanggal = null, $respectCutoff = false) {
         if (!$tanggal) {
             $tanggal = date('Y-m-d');
+        }
+        if ($tanggal > date('Y-m-d')) {
+            return [
+                'success'    => false,
+                'message'    => 'Tanggal belum berlangsung.',
+                'total_alfa' => 0,
+                'total_izin' => 0
+            ];
         }
 
         $hariIndo = $this->getHariIndo($tanggal);
 
-        // 1. Ambil guru yang MEMILIKI JADWAL AKTIF hari ini tetapi belum scan QR (belum ada catatan absensi_guru)
-        $this->db->query("
-            SELECT g.id as guru_id, g.user_id, u.name, MIN(j.id) as jadwal_id, MAX(j.jam_pulang) as jam_pulang
-            FROM jadwal_guru j
-            JOIN guru g ON g.id = j.guru_id
-            JOIN users u ON u.id = g.user_id
-            WHERE j.hari = :hari 
-              AND j.is_active = 1
-              AND g.id NOT IN (
-                  SELECT guru_id FROM absensi_guru WHERE tanggal = :tgl
-              )
-            GROUP BY g.id, g.user_id, u.name
-        ");
+        // Cek apakah ada jadwal guru aktif untuk hari ini
+        $this->db->query("SELECT COUNT(*) as c FROM jadwal_guru WHERE hari = :hari AND is_active = 1");
         $this->db->bind(':hari', $hariIndo);
-        $this->db->bind(':tgl', $tanggal);
-        $unrecorded = $this->db->resultSet();
+        $countJadwalHari = (int)($this->db->single()->c ?? 0);
 
-        // 2. Fallback: Jika pada hari ini tidak ada entri terpisah di jadwal_guru (misal hari Minggu/kegiatan khusus),
-        // tetapi jadwal_siswa aktif sekolah, periksa seluruh guru aktif yang belum scan QR:
-        if (empty($unrecorded)) {
-            $this->db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari AND status_aktif = 1");
+        $useFallback = false;
+        if ($countJadwalHari === 0) {
+            $this->db->query("SELECT * FROM jadwal_siswa WHERE hari = :hari AND status_aktif = 1 LIMIT 1");
             $this->db->bind(':hari', $hariIndo);
             $jadwalSiswa = $this->db->single();
-
-            // Cek apakah ada jadwal guru sama sekali pada hari ini
-            $this->db->query("SELECT COUNT(*) as c FROM jadwal_guru WHERE hari = :hari AND is_active = 1");
-            $this->db->bind(':hari', $hariIndo);
-            $countJadwalHari = (int)($this->db->single()->c ?? 0);
-
-            if ($countJadwalHari === 0 && $jadwalSiswa) {
-                // Hari sekolah aktif, maka seluruh dewan guru aktif yang belum scan QR diproses
-                $this->db->query("
-                    SELECT g.id as guru_id, g.user_id, u.name
-                    FROM guru g
-                    JOIN users u ON u.id = g.user_id
-                    WHERE u.role IN ('guru', 'wali_kelas', 'walikelas')
-                      AND g.id NOT IN (
-                          SELECT guru_id FROM absensi_guru WHERE tanggal = :tgl
-                      )
-                ");
-                $this->db->bind(':tgl', $tanggal);
-                $unrecorded = $this->db->resultSet();
+            if (!$jadwalSiswa) {
+                return [
+                    'success'    => false,
+                    'message'    => "Hari ini ($hariIndo) tidak memiliki jadwal dinas guru aktif.",
+                    'total_alfa' => 0,
+                    'total_izin' => 0
+                ];
             }
+            if (!$this->isCutoffPassed($tanggal, $jadwalSiswa->batas_terlambat ?? null, $jadwalSiswa->jam_pulang ?? null, $respectCutoff)) {
+                return [
+                    'success'    => true,
+                    'message'    => 'Batas waktu presensi guru hari ini belum berakhir.',
+                    'total_alfa' => 0,
+                    'total_izin' => 0
+                ];
+            }
+            $useFallback = true;
         }
 
-        if (empty($unrecorded)) {
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) AS alfa_cnt,
+                SUM(CASE WHEN status IN ('izin','sakit') THEN 1 ELSE 0 END) AS izin_cnt
+            FROM absensi_guru
+            WHERE tanggal = :tgl
+        ");
+        $this->db->bind(':tgl', $tanggal);
+        $before = $this->db->single();
+
+        $this->bulkInsertAlfaGuruDate($tanggal, $hariIndo, $useFallback, $respectCutoff);
+
+        $this->db->query("
+            SELECT
+                SUM(CASE WHEN status = 'alfa' THEN 1 ELSE 0 END) AS alfa_cnt,
+                SUM(CASE WHEN status IN ('izin','sakit') THEN 1 ELSE 0 END) AS izin_cnt
+            FROM absensi_guru
+            WHERE tanggal = :tgl
+        ");
+        $this->db->bind(':tgl', $tanggal);
+        $after = $this->db->single();
+
+        $countAlfa = max(0, (int)($after->alfa_cnt ?? 0) - (int)($before->alfa_cnt ?? 0));
+        $countIzin = max(0, (int)($after->izin_cnt ?? 0) - (int)($before->izin_cnt ?? 0));
+
+        if ($countAlfa === 0 && $countIzin === 0) {
             return [
                 'success'    => true,
                 'message'    => "Semua guru yang memiliki jadwal hari {$hariIndo} sudah memiliki catatan absensi.",
@@ -313,113 +484,185 @@ class Absensi extends Model {
             ];
         }
 
-        $countAlfa = 0;
-        $countIzin = 0;
-
-        // Optimasi Bulk: Ambil seluruh perizinan disetujui untuk guru hari ini dalam 1 query
-        $userIds = array_map(function($g) { return (int)$g->user_id; }, $unrecorded);
-        $izinMap = [];
-        if (!empty($userIds)) {
-            $inUids = implode(',', $userIds);
-            $this->db->query("
-                SELECT user_id, jenis, alasan FROM pengajuan_izin 
-                WHERE user_id IN ($inUids) 
-                AND status = 'approved' 
-                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai
-            ");
-            $this->db->bind(':tgl', $tanggal);
-            $izins = $this->db->resultSet();
-            if ($izins) {
-                foreach ($izins as $iz) {
-                    $izinMap[$iz->user_id] = $iz;
-                }
-            }
-        }
-
-        $rowsToInsert = [];
-        foreach ($unrecorded as $guru) {
-            $izin = $izinMap[$guru->user_id] ?? null;
-            if ($izin) {
-                $status = ($izin->jenis === 'sakit') ? 'sakit' : 'izin';
-                $keterangan = $izin->alasan ? 'Izin disetujui: ' . $izin->alasan : 'Izin disetujui';
-                $countIzin++;
-            } else {
-                $status = 'alfa';
-                $keterangan = 'Tidak hadir tanpa scan QR';
-                $countAlfa++;
-            }
-            $rowsToInsert[] = [
-                'guru_id'    => (int)$guru->guru_id,
-                'status'     => $status,
-                'keterangan' => $keterangan
-            ];
-        }
-
-        // Bulk insert dalam chunk 100 rows
-        $chunks = array_chunk($rowsToInsert, 100);
-        foreach ($chunks as $chunk) {
-            $sqlValues = [];
-            $bindParams = [':tgl' => $tanggal];
-            foreach ($chunk as $idx => $row) {
-                $gidKey = ":gid_{$idx}";
-                $stKey  = ":st_{$idx}";
-                $ktKey  = ":kt_{$idx}";
-                $sqlValues[] = "({$gidKey}, :tgl, NULL, NULL, {$stKey}, {$ktKey})";
-                $bindParams[$gidKey] = $row['guru_id'];
-                $bindParams[$stKey]  = $row['status'];
-                $bindParams[$ktKey]  = $row['keterangan'];
-            }
-            $sql = "INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, jam_pulang, status, keterangan) VALUES " . implode(',', $sqlValues);
-            $this->db->query($sql);
-            foreach ($bindParams as $pKey => $pVal) {
-                $this->db->bind($pKey, $pVal);
-            }
-            $this->db->execute();
-        }
-
         return [
             'success'    => true,
-            'message'    => "Berhasil memproses absensi guru: {$countAlfa} guru tercatat Alfa (tanpa scan QR), {$countIzin} guru tercatat Izin/Sakit.",
+            'message'    => "Berhasil memproses absensi guru: {$countAlfa} guru tercatat Alfa (tanpa scan QR/izin), {$countIzin} guru tercatat Izin/Sakit.",
             'total_alfa' => $countAlfa,
             'total_izin' => $countIzin
         ];
     }
 
     /**
-     * Sinkronisasi data Alfa & Izin untuk suatu rentang tanggal (digunakan saat ekspor Excel atau monitoring rekap).
-     * Memastikan seluruh siswa yang tidak tap RFID dan guru yang tidak scan QR otomatis tercatat Alfa jika tidak ada izin/sakit.
+     * Sinkronisasi cepat data Alfa & Izin untuk rentang tanggal (digunakan saat ekspor Excel, dashboard, atau monitoring log).
+     * Mengecek tanggal yang belum lengkap secara batch dan membebaskan siswa PKL dari auto-alfa sekolah.
      */
-    public function syncAlfaDanIzinRange($dari, $sampai) {
+    public function syncAlfaDanIzinRange($dari, $sampai, $respectTodayCutoff = true, $syncSiswa = true, $syncGuru = true, $maxDays = 62) {
+        $today = date('Y-m-d');
         $start = strtotime($dari);
-        $end = min(strtotime($sampai), strtotime(date('Y-m-d')));
-        
-        if ($start > $end) return;
+        $end   = min(strtotime($sampai), strtotime($today));
 
-        // Ambil daftar hari yang aktif dari jadwal_siswa
-        $this->db->query("SELECT hari FROM jadwal_siswa WHERE status_aktif = 1");
+        if (!$start || !$end || $start > $end) return;
+
+        if ($maxDays > 0) {
+            $minAllowed = strtotime('-' . ($maxDays - 1) . ' days', $end);
+            if ($start < $minAllowed) {
+                $start = $minAllowed;
+            }
+        }
+
+        $rangeStart = date('Y-m-d', $start);
+        $rangeEnd   = date('Y-m-d', $end);
+
+        // 1. Pastikan izin disetujui selalu memperbarui placeholder alfa pada rentang tanggal
+        if ($syncSiswa) {
+            $this->syncApprovedIzinOntoAlfa('absensi_siswa', 'siswa_id', 'siswa', $rangeStart, $rangeEnd);
+        }
+        if ($syncGuru) {
+            $this->syncApprovedIzinOntoAlfa('absensi_guru', 'guru_id', 'guru', $rangeStart, $rangeEnd);
+        }
+
+        // 2. Muat jadwal aktif siswa per hari
+        $this->db->query("SELECT hari, batas_terlambat, jam_pulang FROM jadwal_siswa WHERE status_aktif = 1");
         $aktifRows = $this->db->resultSet();
-        $hariAktif = array_map(function($r) { return $r->hari; }, $aktifRows ?: []);
+        $jadwalSiswaMap = [];
+        foreach ($aktifRows ?: [] as $r) {
+            $jadwalSiswaMap[$r->hari] = $r;
+        }
 
+        // 3. Hitung jumlah siswa reguler (non-PKL) & rekaman per tanggal
+        $expectedSiswaCount = 0;
+        $recordedSiswaMap   = [];
+        if ($syncSiswa) {
+            $this->db->query("
+                SELECT COUNT(*) AS cnt
+                FROM siswa s
+                LEFT JOIN kelas k ON s.kelas_id = k.id
+                LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id
+                WHERE (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+                  AND pks.id IS NULL
+            ");
+            $expectedSiswaCount = (int)($this->db->single()->cnt ?? 0);
+
+            if ($expectedSiswaCount > 0) {
+                $this->db->query("
+                    SELECT a.tanggal, COUNT(DISTINCT a.siswa_id) AS cnt
+                    FROM absensi_siswa a
+                    JOIN siswa s ON s.id = a.siswa_id
+                    LEFT JOIN kelas k ON s.kelas_id = k.id
+                    LEFT JOIN pkl_kelompok_siswa pks ON pks.siswa_id = s.id
+                    WHERE a.tanggal BETWEEN :d1 AND :d2
+                      AND (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+                      AND pks.id IS NULL
+                    GROUP BY a.tanggal
+                ");
+                $this->db->bind(':d1', $rangeStart);
+                $this->db->bind(':d2', $rangeEnd);
+                foreach ($this->db->resultSet() ?: [] as $row) {
+                    $recordedSiswaMap[$row->tanggal] = (int)$row->cnt;
+                }
+            }
+        }
+
+        // 4. Muat konfigurasi jadwal guru aktif per hari & rekaman per tanggal
+        $activeGuruCountHari = [];
+        $recordedGuruMap     = [];
+        $totalGuruCount      = 0;
+        if ($syncGuru) {
+            $this->db->query("SELECT hari, COUNT(*) AS act_cnt FROM jadwal_guru WHERE is_active = 1 GROUP BY hari");
+            foreach ($this->db->resultSet() ?: [] as $row) {
+                $activeGuruCountHari[$row->hari] = (int)$row->act_cnt;
+            }
+            $this->db->query("SELECT COUNT(*) AS cnt FROM guru g JOIN users u ON u.id = g.user_id WHERE u.role IN ('guru', 'wali_kelas', 'walikelas')");
+            $totalGuruCount = (int)($this->db->single()->cnt ?? 0);
+
+            $this->db->query("
+                SELECT tanggal, COUNT(DISTINCT guru_id) AS cnt
+                FROM absensi_guru
+                WHERE tanggal BETWEEN :d1 AND :d2
+                GROUP BY tanggal
+            ");
+            $this->db->bind(':d1', $rangeStart);
+            $this->db->bind(':d2', $rangeEnd);
+            foreach ($this->db->resultSet() ?: [] as $row) {
+                $recordedGuruMap[$row->tanggal] = (int)$row->cnt;
+            }
+        }
+
+        // 5. Hanya proses tanggal yang benar-benar belum lengkap
         for ($curr = $start; $curr <= $end; $curr += 86400) {
-            $tgl = date('Y-m-d', $curr);
+            $tgl      = date('Y-m-d', $curr);
             $hariIndo = $this->getHariIndo($tgl);
+            $jSiswa   = $jadwalSiswaMap[$hariIndo] ?? null;
 
-            // Cek apakah hari ini sekolah aktif
-            $isAktif = in_array($hariIndo, $hariAktif);
-            if (!$isAktif) {
-                // Periksa apakah ada transaksi absensi di tanggal ini
-                $this->db->query("SELECT COUNT(*) as c FROM absensi_siswa WHERE tanggal = :tgl");
-                $this->db->bind(':tgl', $tgl);
-                $hasAtt = (int)($this->db->single()->c ?? 0);
-                if ($hasAtt > 0) {
-                    $isAktif = true;
+            if ($syncSiswa && $expectedSiswaCount > 0) {
+                $recSiswa = $recordedSiswaMap[$tgl] ?? 0;
+                if ($recSiswa < $expectedSiswaCount && ($jSiswa !== null || $recSiswa > 0)) {
+                    $cutoffOk = !$jSiswa || $this->isCutoffPassed($tgl, $jSiswa->batas_terlambat ?? null, $jSiswa->jam_pulang ?? null, $respectTodayCutoff);
+                    if ($cutoffOk) {
+                        $this->bulkInsertAlfaSiswaDate($tgl);
+                    }
                 }
             }
 
-            if ($isAktif) {
-                $this->generateAlfaSiswaHariIni($tgl);
-                $this->generateAlfaGuruHariIni($tgl);
+            if ($syncGuru) {
+                $activeGuruHari = $activeGuruCountHari[$hariIndo] ?? 0;
+                $recGuru        = $recordedGuruMap[$tgl] ?? 0;
+                if ($activeGuruHari > 0) {
+                    if ($recGuru < $activeGuruHari) {
+                        $this->bulkInsertAlfaGuruDate($tgl, $hariIndo, false, $respectTodayCutoff);
+                    }
+                } elseif ($jSiswa !== null && $totalGuruCount > 0) {
+                    if ($recGuru < $totalGuruCount) {
+                        $cutoffOk = $this->isCutoffPassed($tgl, $jSiswa->batas_terlambat ?? null, $jSiswa->jam_pulang ?? null, $respectTodayCutoff);
+                        if ($cutoffOk) {
+                            $this->bulkInsertAlfaGuruDate($tgl, $hariIndo, true, $respectTodayCutoff);
+                        }
+                    }
+                }
             }
         }
+    }
+
+    /**
+     * Sinkronisasi otomatis dengan throttle agar dashboard, log kehadiran, rekap, dan live monitor tetap cepat.
+     */
+    public function syncAlfaAutoThrottled($dari = null, $sampai = null, $ttlSeconds = 60, $syncSiswa = true, $syncGuru = true, $useGlobalLock = false, $respectTodayCutoff = true) {
+        $today  = date('Y-m-d');
+        $dari   = !empty($dari) ? $dari : $today;
+        $sampai = !empty($sampai) ? min($sampai, $today) : $today;
+        if ($dari > $sampai) return;
+
+        $lockHash = md5($dari . '|' . $sampai . '|' . (int)$syncSiswa . '|' . (int)$syncGuru);
+
+        if (!$useGlobalLock && session_status() === PHP_SESSION_ACTIVE) {
+            $sessKey  = 'last_auto_alfa_sync_' . $lockHash;
+            $lastSync = (int)($_SESSION[$sessKey] ?? 0);
+            if (time() - $lastSync < $ttlSeconds) {
+                return;
+            }
+            $this->syncAlfaDanIzinRange($dari, $sampai, $respectTodayCutoff, $syncSiswa, $syncGuru);
+            $_SESSION[$sessKey] = time();
+            return;
+        }
+
+        $settingKey = 'alfa_sync_ts_' . substr($lockHash, 0, 12);
+        try {
+            $this->db->query("SELECT setting_value FROM app_settings WHERE setting_key = :k LIMIT 1");
+            $this->db->bind(':k', $settingKey);
+            $row    = $this->db->single();
+            $lastTs = $row ? (int)$row->setting_value : 0;
+            if (time() - $lastTs < $ttlSeconds) {
+                return;
+            }
+            $this->db->query("INSERT INTO app_settings (setting_key, setting_value) VALUES (:k, :v) ON DUPLICATE KEY UPDATE setting_value = :v2");
+            $this->db->bind(':k', $settingKey);
+            $this->db->bind(':v', (string)time());
+            $this->db->bind(':v2', (string)time());
+            $this->db->execute();
+        } catch (Throwable $e) {
+            // Lanjutkan sync meskipun setting gagal diakses
+        }
+
+        $this->syncAlfaDanIzinRange($dari, $sampai, $respectTodayCutoff, $syncSiswa, $syncGuru);
     }
 }

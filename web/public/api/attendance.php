@@ -221,23 +221,44 @@ try {
     }
 
     // ── 6. Cek absensi existing ──
-    $absensiExisting = $absensiModel->cekAbsensiGuru($guru->id, $tanggal_hari_ini);
+    $absensiExisting   = $absensiModel->cekAbsensiGuru($guru->id, $tanggal_hari_ini);
+    $isPlaceholderAlfa = ($absensiExisting && strtolower((string)$absensiExisting->status) === 'alfa' && empty($absensiExisting->jam_datang) && empty($absensiExisting->jam_pulang));
+    $isApprovedIzin    = ($absensiExisting && in_array(strtolower((string)$absensiExisting->status), ['izin', 'sakit'], true) && empty($absensiExisting->jam_datang) && empty($absensiExisting->jam_pulang));
 
-    if (!$absensiExisting || $absensiExisting->status === 'gagal') {
+    if ($isApprovedIzin) {
+        respondJson(false, 'Anda sudah tercatat ' . strtoupper((string)$absensiExisting->status) . ' yang disetujui pada hari ini.', [
+            'type'   => 'already_excused',
+            'status' => $absensiExisting->status,
+            'guru'   => [
+                'nama' => $guru->name ?? $guru->nama ?? null,
+                'nip'  => $guru->nip ?? null,
+            ]
+        ], 409);
+    }
+
+    if (!$absensiExisting || $absensiExisting->status === 'gagal' || $isPlaceholderAlfa) {
         // ── Scan pertama ──
         // Jika scan pertama saat/setelah jam pulang: catat sebagai absen pulang
         if ($jam_sekarang >= $jadwal->jam_pulang) {
-            $dataInsert = [
-                'guru_id'          => $guru->id,
-                'tanggal'          => $tanggal_hari_ini,
-                'jam_datang'       => null,
-                'jam_pulang'       => $jam_sekarang,
-                'status'           => 'alfa',
-                'keterangan'       => 'Hanya absen pulang (tidak scan masuk)',
-                'source_device_id' => null,
-            ];
-
-            $absensiModel->insertAbsensiGuru($dataInsert);
+            $ketPulangSaja = 'Hanya absen pulang (tidak scan masuk)';
+            if ($absensiExisting && ($absensiExisting->status === 'gagal' || $isPlaceholderAlfa)) {
+                $absensiModel->db->query("UPDATE absensi_guru SET jam_datang = NULL, jam_pulang = :jam_pulang, status = 'alfa', keterangan = :keterangan WHERE id = :id");
+                $absensiModel->db->bind(':jam_pulang', $jam_sekarang);
+                $absensiModel->db->bind(':keterangan', $ketPulangSaja);
+                $absensiModel->db->bind(':id', $absensiExisting->id);
+                $absensiModel->db->execute();
+            } else {
+                $dataInsert = [
+                    'guru_id'          => $guru->id,
+                    'tanggal'          => $tanggal_hari_ini,
+                    'jam_datang'       => null,
+                    'jam_pulang'       => $jam_sekarang,
+                    'status'           => 'alfa',
+                    'keterangan'       => $ketPulangSaja,
+                    'source_device_id' => null,
+                ];
+                $absensiModel->insertAbsensiGuru($dataInsert);
+            }
 
             respondJson(true, 'Absensi pulang guru berhasil', [
                 'type'       => 'check_out',
@@ -284,8 +305,8 @@ try {
             'source_device_id' => null,
         ];
 
-        if ($absensiExisting && $absensiExisting->status === 'gagal') {
-            // Update the existing gagal record
+        if ($absensiExisting && ($absensiExisting->status === 'gagal' || $isPlaceholderAlfa)) {
+            // Update the existing gagal / placeholder alfa record
             $absensiModel->db->query("UPDATE absensi_guru SET jam_datang = :jam_datang, status = :status, keterangan = :keterangan WHERE id = :id");
             $absensiModel->db->bind(':jam_datang', $jam_sekarang);
             $absensiModel->db->bind(':status', $status);

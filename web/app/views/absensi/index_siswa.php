@@ -109,12 +109,14 @@
                                     <?php if (!empty($row->foto_masuk) || !empty($row->foto_pulang)): ?>
                                         <div class="flex items-center gap-1">
                                             <?php if (!empty($row->foto_masuk)): ?>
-                                                <a href="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($row->foto_masuk) ?>" target="_blank" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-[10px] font-semibold hover:bg-indigo-100" title="Foto Masuk">
+                                                <?php $srcSiswaMasuk = (strpos($row->foto_masuk, 'data:image/') === 0) ? $row->foto_masuk : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($row->foto_masuk); ?>
+                                                <a href="<?= $srcSiswaMasuk ?>" target="_blank" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-[10px] font-semibold hover:bg-indigo-100" title="Foto Masuk">
                                                     <i class="fa-solid fa-camera"></i> Masuk
                                                 </a>
                                             <?php endif; ?>
                                             <?php if (!empty($row->foto_pulang)): ?>
-                                                <a href="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($row->foto_pulang) ?>" target="_blank" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-[10px] font-semibold hover:bg-indigo-100" title="Foto Pulang">
+                                                <?php $srcSiswaPulang = (strpos($row->foto_pulang, 'data:image/') === 0) ? $row->foto_pulang : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($row->foto_pulang); ?>
+                                                <a href="<?= $srcSiswaPulang ?>" target="_blank" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 text-[10px] font-semibold hover:bg-indigo-100" title="Foto Pulang">
                                                     <i class="fa-solid fa-camera"></i> Pulang
                                                 </a>
                                             <?php endif; ?>

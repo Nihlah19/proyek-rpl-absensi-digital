@@ -72,6 +72,15 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
         </div>
     </div>
 
+    <!-- ── NOTIFIKASI FLASH & INFO FLEKSIBILITAS PKL ── -->
+    <?php Flasher::flash(); ?>
+    <div class="px-4 py-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 text-[11px] text-emerald-900 dark:text-emerald-200 flex items-center gap-2.5">
+        <i class="fa-solid fa-industry text-emerald-600 dark:text-emerald-400 shrink-0"></i>
+        <span>
+            <strong>Aturan Fleksibel PKL:</strong> Siswa PKL dibebaskan dari auto-alfa harian sekolah karena jam &amp; hari kerja menyesuaikan kondisi instansi mitra masing-masing. Pembimbing PKL / Admin dapat menyesuaikan presensi kapan saja.
+        </span>
+    </div>
+
     <!-- ── STATS ROW (4 METRIC CARDS) ── -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
         <!-- Card 1: Total Siswa PKL -->
@@ -214,12 +223,13 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                         <th class="px-4 py-3.5">Presensi Masuk</th>
                         <th class="px-4 py-3.5">Presensi Pulang</th>
                         <th class="px-4 py-3.5 text-center">Status</th>
+                        <th class="px-4 py-3.5 text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-700/60">
                     <?php if (empty($rows)): ?>
                         <tr>
-                            <td colspan="6" class="px-5 py-12 text-center text-slate-400">
+                            <td colspan="7" class="px-5 py-12 text-center text-slate-400">
                                 <i class="fa-solid fa-inbox text-3xl mb-2.5 block text-slate-300 dark:text-slate-600"></i>
                                 Tidak ada data siswa untuk kelas ini.
                             </td>
@@ -261,16 +271,17 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                                     <?php if (!empty($r->jam_datang)): ?>
                                         <div class="flex items-center gap-3">
                                             <?php if (!empty($r->foto_masuk)): ?>
-                                                <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_masuk) ?>"
+                                                <?php $srcMonMasuk = (strpos($r->foto_masuk, 'data:image/') === 0) ? $r->foto_masuk : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($r->foto_masuk); ?>
+                                                <img src="<?= $srcMonMasuk ?>"
                                                      alt="Foto Masuk" class="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-2xs"
-                                                     onclick="previewFoto('<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_masuk) ?>', 'Foto Masuk - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
+                                                     onclick="previewFoto(this.src, 'Foto Masuk - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
                                             <?php endif; ?>
                                             <div>
                                                 <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400 tabular-nums">
                                                     <?= date('H:i', strtotime($r->jam_datang)) ?> WIB
                                                 </div>
                                                 <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                                    GPS: <strong class="text-slate-700 dark:text-slate-300 font-mono"><?= $r->jarak_meter !== null ? round((float)$r->jarak_meter) . 'm' : '-' ?></strong>
+                                                    GPS: <strong class="text-slate-700 dark:text-slate-300 font-mono"><?= $r->jarak_meter !== null ? round((float)$r->jarak_meter) . 'm' : 'Fleksibel' ?></strong>
                                                 </div>
                                             </div>
                                         </div>
@@ -282,9 +293,10 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                                     <?php if (!empty($r->jam_pulang)): ?>
                                         <div class="flex items-center gap-3">
                                             <?php if (!empty($r->foto_pulang)): ?>
-                                                <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_pulang) ?>"
+                                                <?php $srcMonPulang = (strpos($r->foto_pulang, 'data:image/') === 0) ? $r->foto_pulang : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($r->foto_pulang); ?>
+                                                <img src="<?= $srcMonPulang ?>"
                                                      alt="Foto Pulang" class="w-10 h-10 rounded-xl object-cover border border-slate-200 dark:border-slate-700 cursor-pointer hover:scale-105 transition-transform shadow-2xs"
-                                                     onclick="previewFoto('<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_pulang) ?>', 'Foto Pulang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
+                                                     onclick="previewFoto(this.src, 'Foto Pulang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
                                             <?php endif; ?>
                                             <div>
                                                 <div class="font-mono font-bold text-sky-700 dark:text-sky-400 tabular-nums">
@@ -298,19 +310,40 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                                     <?php endif; ?>
                                 </td>
                                 <td class="px-4 py-3 text-center">
+                                    <?php $rowSt = strtolower((string)($r->status ?? '')); ?>
                                     <?php if (!empty($r->jam_pulang)): ?>
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60">
                                             <i class="fa-solid fa-circle-check text-[10px]"></i> Selesai
                                         </span>
-                                    <?php elseif (!empty($r->jam_datang)): ?>
+                                    <?php elseif (!empty($r->jam_datang) || $rowSt === 'pkl'): ?>
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800">
-                                            <i class="fa-solid fa-briefcase text-[10px]"></i> Sedang PKL
+                                            <i class="fa-solid fa-briefcase text-[10px]"></i> Hadir PKL
+                                        </span>
+                                    <?php elseif (in_array($rowSt, ['izin', 'sakit'])): ?>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                                            <i class="fa-solid fa-file-medical text-[10px]"></i> <?= strtoupper($rowSt) ?>
+                                        </span>
+                                    <?php elseif ($rowSt === 'alfa'): ?>
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                                            <i class="fa-solid fa-circle-xmark text-[10px]"></i> ALFA
                                         </span>
                                     <?php else: ?>
                                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600">
                                             <i class="fa-regular fa-clock text-[10px]"></i> Belum Absen
                                         </span>
                                     <?php endif; ?>
+                                    <?php if (!empty($r->keterangan)): ?>
+                                        <div class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 max-w-[160px] mx-auto truncate" title="<?= htmlspecialchars($r->keterangan) ?>">
+                                            <?= htmlspecialchars($r->keterangan) ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <button type="button"
+                                            onclick='openManualPklModal(<?= (int)$r->siswa_id ?>, <?= json_encode($r->nama_siswa) ?>, <?= json_encode($rowSt ?: "pkl") ?>, <?= json_encode($r->jam_datang ? substr($r->jam_datang, 0, 5) : "") ?>, <?= json_encode($r->jam_pulang ? substr($r->jam_pulang, 0, 5) : "") ?>, <?= json_encode($r->keterangan ?? "") ?>)'
+                                            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition">
+                                        <i class="fa-solid fa-pen-to-square text-[10px]"></i> Sesuaikan
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -329,8 +362,9 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
             </div>
         <?php else: ?>
             <?php foreach ($rows as $r):
-                $statusType = !empty($r->jam_pulang) ? 'pulang' : (!empty($r->jam_datang) ? 'masuk' : 'belum');
-                $searchText = strtolower($r->nama_siswa . ' ' . $r->nis . ' ' . ($r->nama_kelompok ?? '') . ' ' . ($r->nama_tempat ?? ''));
+                $rowSt = strtolower((string)($r->status ?? ''));
+                $statusType = !empty($r->jam_pulang) ? 'pulang' : ((!empty($r->jam_datang) || $rowSt === 'pkl') ? 'masuk' : (in_array($rowSt, ['izin', 'sakit', 'alfa']) ? $rowSt : 'belum'));
+                $searchText = strtolower($r->nama_siswa . ' ' . $r->nis . ' ' . ($r->nama_kelompok ?? '') . ' ' . ($r->nama_tempat ?? '') . ' ' . ($r->keterangan ?? ''));
             ?>
                 <div class="row-log-pkl bg-white dark:bg-slate-800 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl p-4 shadow-xs space-y-3"
                      data-status="<?= $statusType ?>"
@@ -352,9 +386,17 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/60 shrink-0">
                                 <i class="fa-solid fa-circle-check text-[9px]"></i> Selesai
                             </span>
-                        <?php elseif (!empty($r->jam_datang)): ?>
+                        <?php elseif (!empty($r->jam_datang) || $rowSt === 'pkl'): ?>
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
-                                <i class="fa-solid fa-briefcase text-[9px]"></i> Sedang PKL
+                                <i class="fa-solid fa-briefcase text-[9px]"></i> Hadir PKL
+                            </span>
+                        <?php elseif (in_array($rowSt, ['izin', 'sakit'])): ?>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 shrink-0">
+                                <i class="fa-solid fa-file-medical text-[9px]"></i> <?= strtoupper($rowSt) ?>
+                            </span>
+                        <?php elseif ($rowSt === 'alfa'): ?>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 shrink-0">
+                                <i class="fa-solid fa-circle-xmark text-[9px]"></i> ALFA
                             </span>
                         <?php else: ?>
                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-600 shrink-0">
@@ -381,9 +423,10 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                         <!-- Presensi Masuk -->
                         <div class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70 bg-slate-50/50 dark:bg-slate-900/30 flex items-center gap-2">
                             <?php if (!empty($r->foto_masuk)): ?>
-                                <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_masuk) ?>"
+                                <?php $srcMobMasuk = (strpos($r->foto_masuk, 'data:image/') === 0) ? $r->foto_masuk : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($r->foto_masuk); ?>
+                                <img src="<?= $srcMobMasuk ?>"
                                      alt="Foto Masuk" class="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0 cursor-pointer"
-                                     onclick="previewFoto('<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_masuk) ?>', 'Foto Datang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
+                                     onclick="previewFoto(this.src, 'Foto Datang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
                             <?php else: ?>
                                 <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xs shrink-0">
                                     <i class="fa-solid fa-camera"></i>
@@ -403,9 +446,10 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                         <!-- Presensi Pulang -->
                         <div class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/70 bg-slate-50/50 dark:bg-slate-900/30 flex items-center gap-2">
                             <?php if (!empty($r->foto_pulang)): ?>
-                                <img src="<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_pulang) ?>"
+                                <?php $srcMobPulang = (strpos($r->foto_pulang, 'data:image/') === 0) ? $r->foto_pulang : BASEURL . '/uploads/absensi_pkl/' . htmlspecialchars($r->foto_pulang); ?>
+                                <img src="<?= $srcMobPulang ?>"
                                      alt="Foto Pulang" class="w-9 h-9 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0 cursor-pointer"
-                                     onclick="previewFoto('<?= BASEURL ?>/uploads/absensi_pkl/<?= htmlspecialchars($r->foto_pulang) ?>', 'Foto Pulang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
+                                     onclick="previewFoto(this.src, 'Foto Pulang - <?= htmlspecialchars(addslashes($r->nama_siswa)) ?>')">
                             <?php else: ?>
                                 <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center text-xs shrink-0">
                                     <i class="fa-solid fa-camera"></i>
@@ -419,6 +463,20 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                                 <div class="text-[9px] text-slate-400">Selesai</div>
                             </div>
                         </div>
+                    </div>
+
+                    <?php if (!empty($r->keterangan)): ?>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/40 rounded-lg px-2.5 py-1.5 border border-slate-100 dark:border-slate-700/60">
+                            <span class="font-semibold text-slate-600 dark:text-slate-300">Catatan:</span> <?= htmlspecialchars($r->keterangan) ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="pt-1 flex justify-end">
+                        <button type="button"
+                                onclick='openManualPklModal(<?= (int)$r->siswa_id ?>, <?= json_encode($r->nama_siswa) ?>, <?= json_encode($rowSt ?: "pkl") ?>, <?= json_encode($r->jam_datang ? substr($r->jam_datang, 0, 5) : "") ?>, <?= json_encode($r->jam_pulang ? substr($r->jam_pulang, 0, 5) : "") ?>, <?= json_encode($r->keterangan ?? "") ?>)'
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition">
+                            <i class="fa-solid fa-pen-to-square text-[11px]"></i> Sesuaikan Presensi
+                        </button>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -444,6 +502,56 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
                 Tutup
             </button>
         </div>
+    </div>
+</div>
+
+<!-- ── MODAL INPUT / SESUAIKAN PRESENSI FLEKSIBEL PKL ── -->
+<div id="modalManualPkl" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-md overflow-hidden animate-fade-in">
+        <form action="<?= BASEURL ?>/pkl/save_presensi_manual" method="POST">
+            <input type="hidden" name="kelas_id" value="<?= $activeKid ?>">
+            <input type="hidden" name="tanggal" value="<?= htmlspecialchars($tanggal) ?>">
+            <input type="hidden" name="siswa_id" id="manualPklSiswaId" value="">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Sesuaikan Presensi PKL</h3>
+                    <p id="manualPklNamaSiswa" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold"></p>
+                </div>
+                <button type="button" onclick="closeManualPklModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-base"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Status Kehadiran (Fleksibel Industri)</label>
+                    <select name="status" id="manualPklStatus" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100">
+                        <option value="pkl">Hadir PKL (Sesuai Jam Industri)</option>
+                        <option value="libur_industri">Libur / Off Shift Industri (Tercatat Izin)</option>
+                        <option value="izin">Izin Instansi / Pribadi</option>
+                        <option value="sakit">Sakit</option>
+                        <option value="alfa">Alfa (Tanpa Keterangan ke DU/DI)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jam Datang (Opsional)</label>
+                        <input type="time" name="jam_datang" id="manualPklJamDatang" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Jam Pulang (Opsional)</label>
+                        <input type="time" name="jam_pulang" id="manualPklJamPulang" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 font-mono">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Keterangan / Kondisi Industri</label>
+                    <textarea name="keterangan" id="manualPklKeterangan" rows="2" placeholder="Contoh: Shift malam pabrik, libur bengkel hari Senin, atau konfirmasi pembimbing DUDI..." class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 resize-none"></textarea>
+                </div>
+            </div>
+            <div class="px-5 py-3.5 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
+                <button type="button" onclick="closeManualPklModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200">Batal</button>
+                <button type="submit" class="px-4 py-2 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700">Simpan Presensi PKL</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -526,5 +634,21 @@ function closeModalFoto() {
     const img = document.getElementById('imgPreview');
     if (m) m.classList.add('hidden');
     if (img) img.src = '';
+}
+
+function openManualPklModal(siswaId, nama, status, jamDatang, jamPulang, keterangan) {
+    document.getElementById('manualPklSiswaId').value = siswaId;
+    document.getElementById('manualPklNamaSiswa').textContent = nama || '';
+    const sel = document.getElementById('manualPklStatus');
+    const valid = ['pkl', 'libur_industri', 'izin', 'sakit', 'alfa'];
+    sel.value = valid.includes(status) ? status : 'pkl';
+    document.getElementById('manualPklJamDatang').value = jamDatang || '';
+    document.getElementById('manualPklJamPulang').value = jamPulang || '';
+    document.getElementById('manualPklKeterangan').value = keterangan || '';
+    document.getElementById('modalManualPkl').classList.remove('hidden');
+}
+
+function closeManualPklModal() {
+    document.getElementById('modalManualPkl').classList.add('hidden');
 }
 </script>

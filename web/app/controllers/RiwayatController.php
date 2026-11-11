@@ -14,9 +14,10 @@ class RiwayatController extends Controller {
     }
 
     public function get_latest_absensi() {
-        $db = new Database();
-        
         $today = date('Y-m-d');
+        $this->model('Absensi')->syncAlfaAutoThrottled($today, $today, 90, true, false, true);
+
+        $db = new Database();
         $db->query("
             SELECT ab.id, u.name, u.avatar, k.nama_kelas, ab.jam_datang, ab.jam_pulang, ab.status, ab.tanggal
             FROM absensi_siswa ab
@@ -24,9 +25,12 @@ class RiwayatController extends Controller {
             JOIN users u ON s.user_id = u.id
             LEFT JOIN kelas k ON s.kelas_id = k.id
             WHERE ab.tanggal = :today
-              AND (ab.jam_datang IS NOT NULL OR ab.jam_pulang IS NOT NULL)
-            ORDER BY COALESCE(ab.jam_pulang, ab.jam_datang) DESC, ab.id DESC
-            LIMIT 100
+              AND (k.status IS NULL OR LOWER(TRIM(k.status)) != 'pkl')
+              AND (ab.status IS NULL OR ab.status != 'pkl')
+            ORDER BY (CASE WHEN ab.jam_datang IS NOT NULL OR ab.jam_pulang IS NOT NULL THEN 0 ELSE 1 END) ASC,
+                     COALESCE(ab.jam_pulang, ab.jam_datang) DESC,
+                     ab.id DESC
+            LIMIT 250
         ");
         $db->bind(':today', $today);
         $result = $db->resultSet();
@@ -48,17 +52,19 @@ class RiwayatController extends Controller {
     }
 
     public function get_latest_absensi_guru() {
-        $db = new Database();
-        
         $today = date('Y-m-d');
+        $this->model('Absensi')->syncAlfaAutoThrottled($today, $today, 90, false, true, true);
+
+        $db = new Database();
         $db->query("
             SELECT ag.id, u.name, u.avatar, g.nip, ag.jam_datang, ag.jam_pulang, ag.status, ag.tanggal
             FROM absensi_guru ag
             JOIN guru g ON ag.guru_id = g.id
             JOIN users u ON g.user_id = u.id
             WHERE ag.tanggal = :today
-              AND (ag.jam_datang IS NOT NULL OR ag.jam_pulang IS NOT NULL)
-            ORDER BY COALESCE(ag.jam_pulang, ag.jam_datang) DESC, ag.id DESC
+            ORDER BY (CASE WHEN ag.jam_datang IS NOT NULL OR ag.jam_pulang IS NOT NULL THEN 0 ELSE 1 END) ASC,
+                     COALESCE(ag.jam_pulang, ag.jam_datang) DESC,
+                     ag.id DESC
             LIMIT 100
         ");
         $db->bind(':today', $today);

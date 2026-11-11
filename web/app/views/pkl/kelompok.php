@@ -425,7 +425,38 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                             <option value="100">100 meter</option>
                             <option value="150">150 meter</option>
                             <option value="200">200 meter</option>
+                            <option value="500">500 meter (Area Pabrik/Luas)</option>
+                            <option value="1000">1000 meter (Lapangan)</option>
                         </select>
+                    </div>
+                </div>
+
+                <!-- Pengaturan Fleksibilitas Jadwal Industri -->
+                <div class="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 space-y-3">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <label class="font-semibold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-industry text-emerald-600"></i> Hari Kerja &amp; Jam Fleksibel Industri (DU/DI)
+                        </label>
+                        <div class="flex items-center gap-2 text-[11px]">
+                            <button type="button" onclick="setPklHariPreset(5)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">5 Hari (Sen-Jum)</button>
+                            <button type="button" onclick="setPklHariPreset(6)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">6 Hari (Sen-Sab)</button>
+                            <button type="button" onclick="setPklHariPreset(7)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">Semua Hari (Shift)</button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <?php foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $hk): ?>
+                            <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                                <input type="checkbox" name="hari_kerja[]" value="<?= $hk ?>" class="chk-hari-pkl rounded text-emerald-600 focus:ring-emerald-500" <?= in_array($hk, ['Senin','Selasa','Rabu','Kamis','Jumat']) ? 'checked' : '' ?>>
+                                <span><?= $hk ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div>
+                        <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-slate-700 dark:text-slate-300">
+                            <input type="hidden" name="is_jam_bebas" value="0">
+                            <input type="checkbox" name="is_jam_bebas" id="inputIsJamBebas" value="1" checked class="rounded text-emerald-600 focus:ring-emerald-500">
+                            <span>Bebaskan jam masuk/pulang sesuai shift kondisi industri (Bebas Auto-Alfa sekolah)</span>
+                        </label>
                     </div>
                 </div>
 
@@ -615,11 +646,24 @@ function filterSidebarSiswa() {
     }
 }
 
+function setPklHariPreset(daysCount) {
+    const days5 = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+    const days6 = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    document.querySelectorAll('.chk-hari-pkl').forEach(chk => {
+        if (daysCount === 7) chk.checked = true;
+        else if (daysCount === 6) chk.checked = days6.includes(chk.value);
+        else chk.checked = days5.includes(chk.value);
+    });
+}
+
 function openAddKelompokModal() {
     document.getElementById('modalTitle').innerText = 'Tambah Kelompok PKL Baru';
     document.getElementById('formKelompok').reset();
     document.getElementById('kelompok_id').value = '';
     document.getElementById('inputRadius').value = '50';
+    setPklHariPreset(5);
+    const chkJamBebasAdd = document.getElementById('inputIsJamBebas');
+    if (chkJamBebasAdd) chkJamBebasAdd.checked = true;
     const inpGuruAdd = document.getElementById('inputPembimbingGuruId');
     if (inpGuruAdd) inpGuruAdd.value = '';
     const stGmaps = document.getElementById('gmapsParseStatus');
@@ -656,6 +700,19 @@ async function openEditKelompokModal(kelompokId) {
             document.getElementById('inputKontak').value       = d.pembimbing_kontak || '';
             const inpGuruEdit = document.getElementById('inputPembimbingGuruId');
             if (inpGuruEdit) inpGuruEdit.value = d.pembimbing_guru_id || '';
+
+            let hkList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+            if (d.hari_kerja) {
+                try {
+                    const parsedHk = typeof d.hari_kerja === 'string' ? JSON.parse(d.hari_kerja) : d.hari_kerja;
+                    if (Array.isArray(parsedHk) && parsedHk.length > 0) hkList = parsedHk;
+                } catch (e) {}
+            }
+            document.querySelectorAll('.chk-hari-pkl').forEach(chk => {
+                chk.checked = hkList.includes(chk.value);
+            });
+            const chkJamBebasEdit = document.getElementById('inputIsJamBebas');
+            if (chkJamBebasEdit) chkJamBebasEdit.checked = (String(d.is_jam_bebas ?? '1') === '1');
 
             const memberIds = d.anggota_ids || [];
             document.querySelectorAll('.chk-siswa').forEach(chk => {
