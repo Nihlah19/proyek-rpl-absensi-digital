@@ -308,9 +308,9 @@ class DashboardController extends Controller {
     // DOWNLOAD CSV — ADMIN
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Download rekap absensi siswa (CSV) */
+    /** Download rekap absensi siswa (CSV) - Hanya Admin */
     public function download_siswa() {
-        AuthHelper::checkRole(['admin', 'kepsek']);
+        AuthHelper::checkRole(['admin']);
         $dari   = $_GET['dari']   ?? date('Y-m-01');
         $sampai = $_GET['sampai'] ?? date('Y-m-d');
         

@@ -16,9 +16,15 @@ class RekapAbsensiController extends Controller {
         $userId = SessionHelper::get('user_id');
         
         // Tentukan tipe absensi: Siswa atau Guru
-        if (in_array($role, ['admin', 'kepsek'])) {
-            $defaultTipe = ($role === 'kepsek') ? 'guru' : 'siswa';
-            $tipe = isset($_GET['tipe']) && in_array(strtolower($_GET['tipe']), ['siswa', 'guru']) ? strtolower($_GET['tipe']) : $defaultTipe;
+        if ($role === 'kepsek') {
+            $tipe = 'guru';
+            if (isset($_GET['tipe']) && $_GET['tipe'] === 'siswa') {
+                Flasher::setFlash('Kepala Sekolah hanya memiliki akses ke rekap absensi dewan guru.', 'warning');
+                header('Location: ' . BASEURL . '/rekap-absensi?tipe=guru');
+                exit;
+            }
+        } elseif ($role === 'admin') {
+            $tipe = isset($_GET['tipe']) && in_array(strtolower($_GET['tipe']), ['siswa', 'guru']) ? strtolower($_GET['tipe']) : 'siswa';
         } else {
             $tipe = 'siswa';
         }
@@ -179,9 +185,10 @@ class RekapAbsensiController extends Controller {
         $kategori = isset($_GET['kategori']) && in_array(strtolower($_GET['kategori']), ['biasa', 'pkl']) ? strtolower($_GET['kategori']) : 'biasa';
 
         // Tentukan tipe
-        if (in_array($role, ['admin', 'kepsek'])) {
-            $defaultTipe = ($role === 'kepsek') ? 'guru' : 'siswa';
-            $tipe = isset($_GET['tipe']) && in_array(strtolower($_GET['tipe']), ['siswa', 'guru']) ? strtolower($_GET['tipe']) : $defaultTipe;
+        if ($role === 'kepsek') {
+            $tipe = 'guru';
+        } elseif ($role === 'admin') {
+            $tipe = isset($_GET['tipe']) && in_array(strtolower($_GET['tipe']), ['siswa', 'guru']) ? strtolower($_GET['tipe']) : 'siswa';
         } else {
             $tipe = 'siswa';
         }

@@ -65,47 +65,65 @@ class IzinController extends Controller {
 
             $file = $_FILES['file_bukti'];
             
-            // Max 2MB
-            if ($file['size'] > 2000000) {
-                Flasher::setFlash('gagal', 'Ukuran file maksimal 2MB.', 'danger');
+            // Max 3MB
+            if ($file['size'] > 3145728) {
+                Flasher::setFlash('gagal', 'Ukuran file maksimal 3MB.', 'danger');
                 header('Location: ' . BASEURL . '/izin/ajukan');
                 exit;
             }
 
             // Extension & MIME validation
             $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png'];
-            $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png'];
+            $allowedExts = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx'];
+            $allowedMimes = [
+                'application/pdf',
+                'image/jpeg',
+                'image/png',
+                'image/webp',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/zip',
+                'application/octet-stream'
+            ];
             
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $file['tmp_name']);
-            finfo_close($finfo);
+            $mime = 'application/octet-stream';
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $file['tmp_name']) ?: 'application/octet-stream';
+                finfo_close($finfo);
+            } elseif (!empty($file['type'])) {
+                $mime = $file['type'];
+            }
 
-            if (!in_array($ext, $allowedExts) || !in_array($mime, $allowedMimes)) {
-                Flasher::setFlash('gagal', 'Format file tidak didukung. Gunakan PDF/JPG/PNG.', 'danger');
+            if (!in_array($ext, $allowedExts) || (!in_array($mime, $allowedMimes) && !empty($mime))) {
+                Flasher::setFlash('gagal', 'Format file tidak didukung. Gunakan PDF, JPG, PNG, WEBP, DOC, atau DOCX.', 'danger');
+                header('Location: ' . BASEURL . '/izin/ajukan');
+                exit;
+            }
+
+            // Baca konten biner file untuk disimpan secara persisten di database (Aman untuk Vercel Serverless)
+            $fileData = file_get_contents($file['tmp_name']);
+            if ($fileData === false) {
+                Flasher::setFlash('gagal', 'Gagal membaca file bukti yang diunggah.', 'danger');
                 header('Location: ' . BASEURL . '/izin/ajukan');
                 exit;
             }
 
             // Generate random filename
             $filename = bin2hex(random_bytes(16)) . '.' . $ext;
+            $fileBukti = $filename;
             
-            // Save out of public directory or in specific storage
-            // We'll store it in `web/storage/uploads/izin`
-            $uploadDir = __DIR__ . '/../../storage/uploads/izin/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0755, true);
-            }
+            // Simpan salinan lokal jika sistem berkas writable (opsional/secondary fallback)
+            try {
+                $uploadDir = __DIR__ . '/../../storage/uploads/izin/';
+                if (!is_dir($uploadDir)) {
+                    @mkdir($uploadDir, 0755, true);
+                }
+                if (is_writable($uploadDir) || is_writable(dirname($uploadDir))) {
+                    @move_uploaded_file($file['tmp_name'], $uploadDir . $filename);
+                }
+            } catch (Exception $e) {}
 
-            $destination = $uploadDir . $filename;
-            
-            if (move_uploaded_file($file['tmp_name'], $destination)) {
-                $fileBukti = $filename;
-            } else {
-                Flasher::setFlash('gagal', 'Gagal mengupload file bukti.', 'danger');
-                header('Location: ' . BASEURL . '/izin/ajukan');
-                exit;
-            }
             $data = [
                 'user_id' => $userId,
                 'tanggal_mulai' => $_POST['tanggal_mulai'],
@@ -113,7 +131,10 @@ class IzinController extends Controller {
                 'jenis' => $_POST['jenis'],
                 'alasan' => $_POST['alasan'],
                 'keterangan' => $_POST['keterangan'] ?? '',
-                'file_bukti' => $fileBukti
+                'file_bukti' => $fileBukti,
+                'file_data' => $fileData,
+                'file_mime' => $mime,
+                'file_original_name' => $file['name'] ?? $filename
             ];
 
             $izinModel = $this->model('Izin');
@@ -321,14 +342,49 @@ class IzinController extends Controller {
         AuthHelper::check();
         // Prevent path traversal
         $filename = basename($filename);
+
+        // 1. Cek dari database TiDB Cloud terlebih dahulu (Aman untuk Vercel Serverless / multi-instance)
+        try {
+            $db = new Database();
+            $db->query("SELECT file_data, file_mime, file_original_name FROM pengajuan_izin WHERE file_bukti = :f LIMIT 1");
+            $db->bind(':f', $filename);
+            $fileRow = $db->single();
+
+            if ($fileRow && !empty($fileRow->file_data)) {
+                $mime = !empty($fileRow->file_mime) ? $fileRow->file_mime : 'application/octet-stream';
+                $origName = !empty($fileRow->file_original_name) ? $fileRow->file_original_name : $filename;
+                $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+                $disposition = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp']) ? 'inline' : 'attachment';
+
+                header('Content-Type: ' . $mime);
+                header('Content-Disposition: ' . $disposition . '; filename="' . rawurlencode($origName) . '"');
+                header('Content-Length: ' . strlen($fileRow->file_data));
+                header('Cache-Control: public, max-age=86400');
+                echo $fileRow->file_data;
+                exit;
+            }
+        } catch (Exception $e) {}
+
+        // 2. Fallback disk storage lokal
         $filepath = __DIR__ . '/../../storage/uploads/izin/' . $filename;
+        if (!file_exists($filepath)) {
+            $filepath = sys_get_temp_dir() . '/uploads/izin/' . $filename;
+        }
         
         if (file_exists($filepath)) {
-            $finfo = finfo_open(FILEINFO_MIME_TYPE);
-            $mime = finfo_file($finfo, $filepath);
-            finfo_close($finfo);
+            $mime = 'application/octet-stream';
+            if (function_exists('finfo_open')) {
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                $mime = finfo_file($finfo, $filepath);
+                finfo_close($finfo);
+            }
             
+            $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $disposition = in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp']) ? 'inline' : 'attachment';
+
             header('Content-Type: ' . $mime);
+            header('Content-Disposition: ' . $disposition . '; filename="' . $filename . '"');
             header('Content-Length: ' . filesize($filepath));
             readfile($filepath);
             exit;

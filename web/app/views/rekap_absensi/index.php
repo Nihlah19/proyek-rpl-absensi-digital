@@ -140,7 +140,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
     <?php endif; ?>
 
     <!-- ── 2. SEGMENTED TABS UNTUK ADMIN (SISWA VS GURU) ── -->
-    <?php if (in_array($role, ['admin', 'kepsek'])): ?>
+    <?php if ($role === 'admin'): ?>
     <?php
         $tabParamSiswa = http_build_query(['tipe' => 'siswa', 'view' => $viewMode, 'dari' => $filters['dari'], 'sampai' => $filters['sampai']]);
         $tabParamGuru  = http_build_query(['tipe' => 'guru',  'view' => $viewMode, 'dari' => $filters['dari'], 'sampai' => $filters['sampai']]);

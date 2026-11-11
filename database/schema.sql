@@ -10,7 +10,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     name VARCHAR(100) NOT NULL,
-    avatar VARCHAR(255) NULL,
+    avatar MEDIUMTEXT NULL,
     role ENUM('admin', 'kepsek', 'wali_kelas', 'guru', 'siswa') NOT NULL,
     telegram_chat_id VARCHAR(50) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -141,6 +141,9 @@ CREATE TABLE pengajuan_izin (
     alasan TEXT NOT NULL,
     keterangan TEXT NULL,
     file_bukti VARCHAR(255) NULL,
+    file_data MEDIUMBLOB NULL,
+    file_mime VARCHAR(100) NULL,
+    file_original_name VARCHAR(255) NULL,
     status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
     approved_by INT NULL, -- FK ke users (kepsek/walikelas)
     catatan_approval TEXT NULL,

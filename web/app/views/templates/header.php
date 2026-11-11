@@ -619,9 +619,10 @@
                 $currentAvatar = SessionHelper::get('avatar');
                 $activeUid = SessionHelper::get('user_id');
                 $avatarUploadDir = __DIR__ . '/../../../public/uploads/avatars/';
+                $isDataUriAvatar = (!empty($currentAvatar) && strpos($currentAvatar, 'data:image/') === 0);
                 
-                // Sinkronkan avatar dari DB jika session belum terisi
-                if ($activeUid && (empty($currentAvatar) || !file_exists($avatarUploadDir . $currentAvatar))) {
+                // Sinkronkan avatar dari DB jika session belum terisi atau file fisik tidak ada
+                if ($activeUid && (empty($currentAvatar) || (!$isDataUriAvatar && !file_exists($avatarUploadDir . $currentAvatar)))) {
                     try {
                         $dbSyncAvatar = new Database();
                         $dbSyncAvatar->query("SELECT avatar FROM users WHERE id = :id");
@@ -629,11 +630,13 @@
                         $userRowSync = $dbSyncAvatar->single();
                         if ($userRowSync && !empty($userRowSync->avatar)) {
                             $currentAvatar = $userRowSync->avatar;
+                            $isDataUriAvatar = (strpos($currentAvatar, 'data:image/') === 0);
                             SessionHelper::set('avatar', $currentAvatar);
                         }
                     } catch (Exception $e) {}
                 }
-                $hasValidAvatar = (!empty($currentAvatar) && file_exists($avatarUploadDir . $currentAvatar));
+                $hasDiskAvatar  = (!empty($currentAvatar) && !$isDataUriAvatar && file_exists($avatarUploadDir . $currentAvatar));
+                $hasValidAvatar = ($isDataUriAvatar || $hasDiskAvatar);
 
                 // Cek Barcode ID untuk Guru / Wali / Kepsek
                 $headerBarcodeId = null;
@@ -696,7 +699,11 @@
                         <!-- Avatar -->
                         <div class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center overflow-hidden shrink-0 font-bold text-xs border border-emerald-200 dark:border-emerald-800/60 ring-1 ring-emerald-500/20">
                             <?php if ($hasValidAvatar): ?>
-                                <img src="<?= BASEURL; ?>/uploads/avatars/<?= htmlspecialchars($currentAvatar) ?>?v=<?= filemtime($avatarUploadDir . $currentAvatar) ?>" alt="Avatar" class="w-full h-full object-cover">
+                                <?php if ($isDataUriAvatar): ?>
+                                    <img src="<?= $currentAvatar ?>" alt="Avatar" class="w-full h-full object-cover">
+                                <?php else: ?>
+                                    <img src="<?= BASEURL; ?>/uploads/avatars/<?= htmlspecialchars($currentAvatar) ?>?v=<?= filemtime($avatarUploadDir . $currentAvatar) ?>" alt="Avatar" class="w-full h-full object-cover">
+                                <?php endif; ?>
                             <?php else: ?>
                                 <?= strtoupper(substr(SessionHelper::get('name') ?? 'U', 0, 1)) ?>
                             <?php endif; ?>
@@ -721,7 +728,11 @@
                         <div class="p-3.5 bg-slate-50/70 dark:bg-[#18261c]/60 flex items-center gap-3">
                             <div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 flex items-center justify-center overflow-hidden shrink-0 font-bold text-sm border border-emerald-200 dark:border-emerald-800/60">
                                 <?php if ($hasValidAvatar): ?>
-                                    <img src="<?= BASEURL; ?>/uploads/avatars/<?= htmlspecialchars($currentAvatar) ?>?v=<?= filemtime($avatarUploadDir . $currentAvatar) ?>" alt="Avatar" class="w-full h-full object-cover">
+                                    <?php if ($isDataUriAvatar): ?>
+                                        <img src="<?= $currentAvatar ?>" alt="Avatar" class="w-full h-full object-cover">
+                                    <?php else: ?>
+                                        <img src="<?= BASEURL; ?>/uploads/avatars/<?= htmlspecialchars($currentAvatar) ?>?v=<?= filemtime($avatarUploadDir . $currentAvatar) ?>" alt="Avatar" class="w-full h-full object-cover">
+                                    <?php endif; ?>
                                 <?php else: ?>
                                     <?= strtoupper(substr(SessionHelper::get('name') ?? 'U', 0, 1)) ?>
                                 <?php endif; ?>
@@ -1176,13 +1187,6 @@ function downloadHeaderQr() {
                                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? 'guru') === 'guru')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
                                     <i class="fa-solid fa-chalkboard-user text-xs w-4 text-center shrink-0 text-sky-600"></i>
                                     <span class="truncate">Rekap Presensi Guru</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="<?= BASEURL; ?>/rekap-absensi?tipe=siswa"
-                                   class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs transition-colors <?= ($isRekapActive && (($_GET['tipe'] ?? '') === 'siswa')) ? 'text-emerald-700 dark:text-emerald-300 font-semibold bg-emerald-50 dark:bg-emerald-950/50' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/60 font-medium' ?>">
-                                    <i class="fa-solid fa-graduation-cap text-xs w-4 text-center shrink-0 text-emerald-600"></i>
-                                    <span class="truncate">Monitoring Siswa</span>
                                 </a>
                             </li>
                             <li>

@@ -360,8 +360,9 @@
                     statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">${escapeHtml(status ? status.toUpperCase() : '-')}</span>`;
                 }
 
-                const profileAvatar = item.avatar 
-                    ? `<img src="${RIWAYAT_BASEURL}/uploads/avatars/${escapeHtml(item.avatar)}" alt="${escapeHtml(item.name)}" class="w-full h-full object-cover">`
+                const avatarSrc = item.avatar ? (item.avatar.startsWith('data:image/') ? item.avatar : `${RIWAYAT_BASEURL}/uploads/avatars/${escapeHtml(item.avatar)}`) : '';
+                const profileAvatar = avatarSrc 
+                    ? `<img src="${avatarSrc}" alt="${escapeHtml(item.name)}" class="w-full h-full object-cover">`
                     : `<i class="fa-solid fa-user text-xs"></i>`;
 
                 tbody.innerHTML += `

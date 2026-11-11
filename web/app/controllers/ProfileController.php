@@ -88,7 +88,7 @@ class ProfileController extends Controller {
             $db = new Database();
             
             // Proses Upload Avatar jika ada
-            $avatarPath = null;
+            $avatarDataUri = null;
             if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] === UPLOAD_ERR_OK) {
                 $fileTmpPath = $_FILES['avatar']['tmp_name'];
                 $fileName = $_FILES['avatar']['name'];
@@ -97,28 +97,57 @@ class ProfileController extends Controller {
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
                 
                 if (in_array($fileExtension, $allowedExtensions)) {
-                    $newFileName = 'avatar_' . $user_id . '_' . time() . '.' . $fileExtension;
-                    
-                    // Folder upload tujuan
-                    $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
-                    if (!is_dir($uploadDir)) {
-                        mkdir($uploadDir, 0755, true);
+                    $mime = 'image/jpeg';
+                    if (function_exists('finfo_open')) {
+                        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                        $mime = finfo_file($finfo, $fileTmpPath) ?: 'image/jpeg';
+                        finfo_close($finfo);
                     }
-                    
-                    $destPath = $uploadDir . $newFileName;
-                    
-                    if (move_uploaded_file($fileTmpPath, $destPath)) {
-                        $avatarPath = $newFileName;
-                        
-                        // Hapus avatar lama jika ada
-                        $db->query("SELECT avatar FROM users WHERE id = :id");
-                        $db->bind(':id', $user_id);
-                        $oldAvatarRow = $db->single();
-                        $oldAvatar = $oldAvatarRow ? $oldAvatarRow->avatar : null;
-                        if ($oldAvatar && file_exists($uploadDir . $oldAvatar)) {
-                            unlink($uploadDir . $oldAvatar);
+
+                    $rawBytes = file_get_contents($fileTmpPath);
+                    if ($rawBytes !== false) {
+                        // Kompres / resize gambar ke max 256x256 jika ekstensi GD tersedia untuk hemat ukuran & cepat
+                        if (function_exists('imagecreatefromstring')) {
+                            $srcImg = @imagecreatefromstring($rawBytes);
+                            if ($srcImg) {
+                                $origW = imagesx($srcImg);
+                                $origH = imagesy($srcImg);
+                                $maxDim = 256;
+                                if ($origW > $maxDim || $origH > $maxDim) {
+                                    $scale = min($maxDim / $origW, $maxDim / $origH);
+                                    $newW = max(1, (int)($origW * $scale));
+                                    $newH = max(1, (int)($origH * $scale));
+                                    $dstImg = imagecreatetruecolor($newW, $newH);
+                                    imagealphablending($dstImg, false);
+                                    imagesavealpha($dstImg, true);
+                                    imagecopyresampled($dstImg, $srcImg, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+                                    ob_start();
+                                    imagejpeg($dstImg, null, 85);
+                                    $resizedBytes = ob_get_clean();
+                                    imagedestroy($dstImg);
+                                    if ($resizedBytes) {
+                                        $rawBytes = $resizedBytes;
+                                        $mime = 'image/jpeg';
+                                    }
+                                }
+                                imagedestroy($srcImg);
+                            }
                         }
+                        // Encode sebagai Data URI persisten (Aman untuk Vercel Serverless tanpa storage disk)
+                        $avatarDataUri = 'data:' . $mime . ';base64,' . base64_encode($rawBytes);
                     }
+
+                    // Opsional: simpan salinan fisik jika disk writable
+                    try {
+                        $newFileName = 'avatar_' . $user_id . '_' . time() . '.' . $fileExtension;
+                        $uploadDir = __DIR__ . '/../../public/uploads/avatars/';
+                        if (!is_dir($uploadDir)) {
+                            @mkdir($uploadDir, 0755, true);
+                        }
+                        if (is_writable($uploadDir)) {
+                            @move_uploaded_file($fileTmpPath, $uploadDir . $newFileName);
+                        }
+                    } catch (Exception $e) {}
                 } else {
                     Flasher::setFlash('gagal', 'Ekstensi file tidak diizinkan. Gunakan JPG, PNG, atau WEBP.', 'danger');
                     header('Location: ' . BASEURL . '/profile');
@@ -129,17 +158,17 @@ class ProfileController extends Controller {
             // Update Data
             if (!empty($password)) {
                 $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-                if ($avatarPath) {
+                if ($avatarDataUri) {
                     $db->query("UPDATE users SET name = :name, password = :password, avatar = :avatar WHERE id = :id");
-                    $db->bind(':avatar', $avatarPath);
+                    $db->bind(':avatar', $avatarDataUri);
                 } else {
                     $db->query("UPDATE users SET name = :name, password = :password WHERE id = :id");
                 }
                 $db->bind(':password', $hashedPassword);
             } else {
-                if ($avatarPath) {
+                if ($avatarDataUri) {
                     $db->query("UPDATE users SET name = :name, avatar = :avatar WHERE id = :id");
-                    $db->bind(':avatar', $avatarPath);
+                    $db->bind(':avatar', $avatarDataUri);
                 } else {
                     $db->query("UPDATE users SET name = :name WHERE id = :id");
                 }
@@ -160,17 +189,31 @@ class ProfileController extends Controller {
             }
             
             if ($success) {
-                SessionHelper::set('name', $name); // Update nama di session agar UI navbar berubah
-                if ($avatarPath) {
-                    SessionHelper::set('avatar', $avatarPath);
-                } else {
-                    $db->query("SELECT avatar FROM users WHERE id = :id");
-                    $db->bind(':id', $user_id);
-                    $uAvRow = $db->single();
-                    if ($uAvRow && !empty($uAvRow->avatar)) {
-                        SessionHelper::set('avatar', $uAvRow->avatar);
-                    }
+                // Ambil data user terbaru dari DB untuk konsistensi sempurna
+                $db->query("SELECT id, username, name, role, avatar FROM users WHERE id = :id");
+                $db->bind(':id', $user_id);
+                $uRow = $db->single();
+
+                $activeName = $uRow->name ?? $name;
+                $activeAvatar = $uRow->avatar ?? null;
+                $activeRole = $uRow->role ?? SessionHelper::get('role');
+                $activeUsername = $uRow->username ?? SessionHelper::get('username');
+
+                SessionHelper::set('name', $activeName);
+                if ($activeAvatar) {
+                    SessionHelper::set('avatar', $activeAvatar);
                 }
+
+                // Terbitkan ulang token persisten HMAC agar perubahan profil tidak tertimpa cookie lama di Vercel
+                SessionHelper::issueAuthCookie(
+                    $user_id,
+                    $activeUsername,
+                    $activeRole,
+                    $activeName,
+                    SessionHelper::get('class_code'),
+                    $activeAvatar
+                );
+
                 Flasher::setFlash('berhasil', 'Profil berhasil diperbarui.', 'success');
             } else {
                 Flasher::setFlash('gagal', 'Profil gagal diperbarui.', 'danger');

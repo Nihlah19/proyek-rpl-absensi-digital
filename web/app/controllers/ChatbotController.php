@@ -324,19 +324,24 @@ class ChatbotController extends Controller {
                 $profile['wali_kelas_id']     = $g->wali_kelas_id ?? null;
             }
         } elseif ($userRole === 'siswa') {
-            $db->query("SELECT s.id as siswa_id, s.nis, s.rfid_uid, s.kelas_id, k.nama_kelas, k.status as status_kelas
+            $db->query("SELECT s.id as siswa_id, s.nis, s.rfid_uid, s.kelas_id, k.nama_kelas, k.status as status_kelas,
+                               k.wali_kelas_id, w.name as nama_wali_kelas, gw.nip as nip_wali_kelas
                         FROM siswa s 
                         LEFT JOIN kelas k ON s.kelas_id = k.id 
+                        LEFT JOIN users w ON k.wali_kelas_id = w.id
+                        LEFT JOIN guru gw ON gw.user_id = w.id
                         WHERE s.user_id = :uid");
             $db->bind(':uid', $userId);
             $s = $db->single();
             if ($s) {
-                $profile['siswa_id']      = $s->siswa_id;
-                $profile['nis']           = $s->nis;
-                $profile['rfid_uid']      = $s->rfid_uid;
-                $profile['kelas_id']      = $s->kelas_id;
-                $profile['nama_kelas']    = $s->nama_kelas;
-                $profile['status_kelas']  = $s->status_kelas;
+                $profile['siswa_id']        = $s->siswa_id;
+                $profile['nis']             = $s->nis;
+                $profile['rfid_uid']        = $s->rfid_uid;
+                $profile['kelas_id']        = $s->kelas_id;
+                $profile['nama_kelas']      = $s->nama_kelas;
+                $profile['status_kelas']    = $s->status_kelas;
+                $profile['nama_wali_kelas'] = $s->nama_wali_kelas ?? null;
+                $profile['nip_wali_kelas']  = $s->nip_wali_kelas ?? null;
             }
         }
 
@@ -621,6 +626,30 @@ class ChatbotController extends Controller {
         if (preg_match('/\b(kartu\s+saya|rfid\s+saya|uid\s+saya)\b/i', $lower) && $userRole === 'siswa') {
             $uid = !empty($profile['rfid_uid']) ? "`{$profile['rfid_uid']}` (Aktif)" : "Belum didaftarkan kartu RFID";
             return "Status kartu RFID Anda: {$uid}.";
+        }
+
+        // ── 6. WALI KELAS SAYA ──────────────────────────────────────────────
+        $isMyWali = preg_match('/\b(siapa\s+wali\s+kelas\s+(saya|aku|ku)|wali\s+kelas\s+(saya|aku)|wali\s+kelasku|siapakah\s+wali\s+kelas\s+(saya|aku|ku)|nama\s+wali\s+kelas\s+(saya|aku|ku))\b/i', $lower) ||
+                    (preg_match('/\b(wali\s*kelas)\b/i', $lower) && preg_match('/\b(saya|aku|ku)\b/i', $lower));
+
+        if ($isMyWali) {
+            if ($userRole === 'siswa') {
+                $namaKelas = !empty($profile['nama_kelas']) ? $profile['nama_kelas'] : 'kelas Anda';
+                $namaWali  = !empty($profile['nama_wali_kelas']) ? $profile['nama_wali_kelas'] : null;
+                $nipWali   = (!empty($profile['nip_wali_kelas']) && $profile['nip_wali_kelas'] !== '-') ? " (NIP: {$profile['nip_wali_kelas']})" : "";
+                
+                if ($namaWali) {
+                    return "Wali kelas Anda di kelas **{$namaKelas}** adalah **{$namaWali}**{$nipWali}.";
+                } else {
+                    return "Wali kelas untuk kelas **{$namaKelas}** belum ditentukan di sistem.";
+                }
+            } elseif (in_array($userRole, ['guru', 'wali_kelas', 'walikelas'])) {
+                if (!empty($profile['wali_kelas'])) {
+                    return "Anda bertugas sebagai wali kelas di kelas **{$profile['wali_kelas']}**.";
+                } else {
+                    return "Anda tidak ditugaskan sebagai wali kelas di sistem.";
+                }
+            }
         }
 
         return false;
@@ -2209,10 +2238,14 @@ class ChatbotController extends Controller {
 
         // ── 1. SISWA (Hanya Data Pribadi Siswa) ─────────────────────────
         if ($role === 'siswa') {
-            $db->query("SELECT s.id as siswa_id, s.nis, u.name, u.username, k.nama_kelas, COALESCE(s.rfid_uid, r.uid) as rfid_uid 
+            $db->query("SELECT s.id as siswa_id, s.nis, u.name, u.username, k.nama_kelas, 
+                               w.name as nama_wali_kelas, gw.nip as nip_wali_kelas,
+                               COALESCE(s.rfid_uid, r.uid) as rfid_uid 
                         FROM siswa s 
                         JOIN users u ON u.id = s.user_id 
                         LEFT JOIN kelas k ON k.id = s.kelas_id 
+                        LEFT JOIN users w ON k.wali_kelas_id = w.id
+                        LEFT JOIN guru gw ON gw.user_id = w.id
                         LEFT JOIN rfid_cards r ON r.student_id = s.id AND r.status = 'active' 
                         WHERE s.user_id = :uid");
             $db->bind(':uid', $userId);
@@ -2264,11 +2297,14 @@ class ChatbotController extends Controller {
 
                 $rfidStr = $siswa->rfid_uid ? "UID {$siswa->rfid_uid} (Aktif)" : "Belum terdaftar kartu RFID";
 
+                $waliStr = $siswa->nama_wali_kelas ? ($siswa->nama_wali_kelas . (!empty($siswa->nip_wali_kelas) && $siswa->nip_wali_kelas !== '-' ? " (NIP: {$siswa->nip_wali_kelas})" : '')) : 'Belum ditentukan';
+
                 $contextText = 
                     "=== DATA SINKRONISASI PRIBADI SISWA ===\n" .
                     "Nama Siswa: {$siswa->name}\n" .
                     "NIS: {$siswa->nis}\n" .
                     "Kelas: " . ($siswa->nama_kelas ?? '-') . "\n" .
+                    "Wali Kelas: {$waliStr}\n" .
                     "Status Kartu RFID: {$rfidStr}\n" .
                     "{$schStr}\n" .
                     "Kehadiran Hari Ini: {$absenHariIniStr}\n" .
@@ -2280,10 +2316,12 @@ class ChatbotController extends Controller {
                 $roleInstruction = 
                     "PERAN PENGGUNA SAAT INI: SISWA (Nama: {$siswa->name}, Kelas: " . ($siswa->nama_kelas ?? '-') . ").\n" .
                     "ATURAN BATASAN HAK AKSES SISWA (KETAT):\n" .
-                    "- Anda HANYA BERHAK menjawab seputar data pribadi siswa ini (profil, kartu RFID, kehadiran, rekap, riwayat, izin, dan jadwal sekolah).\n" .
+                    "- Anda HANYA BERHAK menjawab seputar data pribadi siswa ini (profil, wali kelas siswa sendiri, kartu RFID, kehadiran, rekap, riwayat, izin, dan jadwal sekolah).\n" .
+                    "- Jika siswa bertanya tentang wali kelas ('siapa wali kelas saya', dll), jawab HANYA nama wali kelas dari siswa ini. JANGAN membuat daftar wali kelas dari kelas lain.\n" .
+                    "- Jawab HANYA apa yang ditanyakan secara tepat dan presisi tanpa memberikan komentar atau informasi tambahan yang tidak diminta.\n" .
                     "- DILARANG KERAS memberikan data siswa lain (nama, kontak, absensi orang lain, atau daftar nama teman sekelas).\n" .
-                    "- DILARANG KERAS memberikan data guru (NIP, nomor HP, jadwal guru, barcode) atau data perangkat IoT dan statistik admin.\n" .
-                    "- Jika pengguna bertanya tentang data siswa lain atau guru, TOLAK DENGAN RAMAH dan katakan bahwa Anda hanya dapat menampilkan informasi pribadi milik akun yang sedang aktif demi menjaga privasi data sekolah.";
+                    "- DILARANG KERAS memberikan data guru lain (NIP, nomor HP, jadwal guru, barcode) atau data perangkat IoT dan statistik admin.\n" .
+                    "- Jika pengguna bertanya tentang data siswa lain atau guru lain, TOLAK DENGAN RAMAH dan katakan bahwa Anda hanya dapat menampilkan informasi pribadi milik akun yang sedang aktif demi menjaga privasi data sekolah.";
             }
         }
 
@@ -2740,7 +2778,8 @@ class ChatbotController extends Controller {
             "2. DILARANG menambahkan komentar, evaluasi pribadi, saran tambahan, atau rekomendasi/tips yang tidak diminta agar menghemat token.\n" .
             "3. Pengguna yang sedang berbicara langsung dengan Anda tertera di dalam DATA SINKRONISASI PRIBADI. Kenali dirinya saat dia bertanya tentang dirinya ('siapa saya', 'jadwal saya', 'izin saya', dll).\n" .
             "4. Jika ditanya jumlah umum (seperti 'ada berapa jumlah guru', 'jumlah siswa', 'jumlah kelas'), berikan jawaban singkat dan langsung (misal: 'Ada 27 guru terdaftar di database.').\n" .
-            "5. DILARANG membuatkan kode program (coding) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n\n" .
+            "5. DILARANG membuatkan kode program (coding) atau mengerjakan soal ujian/PR tugas sekolah siswa.\n" .
+            "6. Jawab HANYA apa yang secara persis ditanyakan pengguna. JANGAN memberikan daftar atau informasi lain di luar pertanyaan (misalnya: jika ditanya 'siapa wali kelas saya', jawab HANYA nama wali kelas siswa yang bersangkutan, JANGAN melist wali kelas dari kelas-kelas lainnya).\n\n" .
             "DATA SINKRONISASI DATABASE SEKOLAH:\n" .
             "{$contextText}\n";
 
@@ -3119,10 +3158,10 @@ class ChatbotController extends Controller {
         // 2. QUERY WALI KELAS (SEMUA KELAS ATAU KELAS TERTENTU)
         // ─────────────────────────────────────────────────────────────────────
         if (preg_match('/\b(wali\s+kelas|walikelas)\b/i', $lower)) {
-            // Cek apakah menanyakan kelas spesifik
+            // 1. Cek apakah menanyakan kelas spesifik (misal: 10 TKJ, 11 TKR, 12 TSM)
             if (preg_match('/(10|11|12)\s*(tkj|tkr|tsm)/i', $lower, $mK)) {
                 $targetK = strtoupper($mK[1] . ' ' . $mK[2]);
-                $db->query("SELECT k.nama_kelas, k.tingkat, k.jurusan, k.status, u.name as wali_nama, g.nip, g.subject 
+                $db->query("SELECT k.nama_kelas, u.name as wali_nama, g.nip 
                             FROM kelas k 
                             LEFT JOIN users u ON k.wali_kelas_id = u.id 
                             LEFT JOIN guru g ON g.user_id = u.id 
@@ -3131,30 +3170,41 @@ class ChatbotController extends Controller {
                 $kRow = $db->single();
                 if ($kRow) {
                     $wali = !empty($kRow->wali_nama) ? $kRow->wali_nama : 'Belum Ditentukan';
-                    $nip = !empty($kRow->nip) ? " (NIP: `{$kRow->nip}`)" : "";
-                    $mapel = !empty($kRow->subject) ? " · Guru Mapel: {$kRow->subject}" : "";
-                    $status = ($kRow->status === 'pkl') ? " [Status: Sedang PKL]" : " [Status: Reguler]";
-                    return "Wali kelas untuk **Kelas {$kRow->nama_kelas}**{$status} adalah Bapak/Ibu **{$wali}**{$nip}{$mapel}.";
+                    $nip = (!empty($kRow->nip) && $kRow->nip !== '-') ? " (NIP: `{$kRow->nip}`)" : "";
+                    return "Wali kelas untuk **Kelas {$kRow->nama_kelas}** adalah **{$wali}**{$nip}.";
                 }
             }
 
-            // Jika umum / daftar seluruh wali kelas
-            $db->query("SELECT k.nama_kelas, k.tingkat, k.jurusan, k.status, u.name as wali_nama, g.nip 
-                        FROM kelas k 
-                        LEFT JOIN users u ON k.wali_kelas_id = u.id 
-                        LEFT JOIN guru g ON g.user_id = u.id 
-                        ORDER BY k.nama_kelas ASC");
-            $allKelas = $db->resultSet();
-
-            $respon = "**Daftar Wali Kelas SMK NU Wargabinangun**\n\n";
-            foreach ($allKelas as $i => $k) {
-                $no = $i + 1;
-                $wali = !empty($k->wali_nama) ? $k->wali_nama : 'Belum Ditentukan';
-                $nip = (!empty($k->nip) && $k->nip !== '-') ? " (`{$k->nip}`)" : "";
-                $pklBadge = ($k->status === 'pkl') ? " _(PKL)_" : "";
-                $respon .= "{$no}. Kelas **{$k->nama_kelas}**{$pklBadge} : **{$wali}**{$nip}\n";
+            // 2. Jika pengguna adalah siswa dan tidak menanyakan kelas lain secara eksplisit, jawab hanya wali kelasnya
+            if ($userRole === 'siswa') {
+                $profile = $this->getUserPersonalProfile($userId, $userRole, $db);
+                if (!empty($profile['nama_wali_kelas'])) {
+                    $namaKelas = $profile['nama_kelas'] ?? 'kelas Anda';
+                    $nipWali   = (!empty($profile['nip_wali_kelas']) && $profile['nip_wali_kelas'] !== '-') ? " (NIP: `{$profile['nip_wali_kelas']}`)" : "";
+                    return "Wali kelas Anda di kelas **{$namaKelas}** adalah **{$profile['nama_wali_kelas']}**{$nipWali}.";
+                }
             }
-            return trim($respon);
+
+            // 3. Hanya tampilkan daftar seluruh wali kelas jika secara eksplisit diminta (daftar, semua, seluruh, list)
+            if (preg_match('/\b(daftar|semua|seluruh|list)\b/i', $lower)) {
+                $db->query("SELECT k.nama_kelas, u.name as wali_nama, g.nip 
+                            FROM kelas k 
+                            LEFT JOIN users u ON k.wali_kelas_id = u.id 
+                            LEFT JOIN guru g ON g.user_id = u.id 
+                            ORDER BY k.nama_kelas ASC");
+                $allKelas = $db->resultSet();
+
+                $respon = "**Daftar Wali Kelas SMK NU Wargabinangun:**\n";
+                foreach ($allKelas as $i => $k) {
+                    $no = $i + 1;
+                    $wali = !empty($k->wali_nama) ? $k->wali_nama : 'Belum Ditentukan';
+                    $nip = (!empty($k->nip) && $k->nip !== '-') ? " (`{$k->nip}`)" : "";
+                    $respon .= "{$no}. Kelas **{$k->nama_kelas}**: **{$wali}**{$nip}\n";
+                }
+                return trim($respon);
+            }
+
+            return "Sebutkan kelas yang ingin dicari (contoh: *wali kelas 10 TKJ*).";
         }
 
         // ─────────────────────────────────────────────────────────────────────

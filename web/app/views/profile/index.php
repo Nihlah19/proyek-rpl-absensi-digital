@@ -14,8 +14,13 @@
                 <!-- Kiri: Foto Profil -->
                 <div class="flex-shrink-0 flex flex-col items-center">
                     <div class="w-32 h-32 rounded-full bg-slate-100 border-4 border-white shadow-md overflow-hidden relative group">
-                        <?php if(!empty($data['user']->avatar)): ?>
-                            <img src="<?= BASEURL; ?>/uploads/avatars/<?= $data['user']->avatar ?>" alt="Avatar" id="preview-avatar" class="w-full h-full object-cover">
+                        <?php 
+                        $uAv = $data['user']->avatar ?? '';
+                        $isUAvDataUri = (!empty($uAv) && strpos($uAv, 'data:image/') === 0);
+                        $uAvSrc = $isUAvDataUri ? $uAv : (BASEURL . '/uploads/avatars/' . htmlspecialchars($uAv));
+                        ?>
+                        <?php if(!empty($uAv)): ?>
+                            <img src="<?= $uAvSrc ?>" alt="Avatar" id="preview-avatar" class="w-full h-full object-cover">
                         <?php else: ?>
                             <div id="preview-avatar-placeholder" class="w-full h-full flex items-center justify-center bg-emerald-100 text-emerald-600 font-bold text-4xl">
                                 <?= strtoupper(substr($data['user']->name, 0, 1)) ?>

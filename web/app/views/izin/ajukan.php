@@ -92,8 +92,8 @@
                         <div class="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-primary/40 transition-colors cursor-pointer" onclick="document.getElementById('file_bukti').click()">
                             <i class="fa-solid fa-cloud-upload-alt text-4xl text-slate-300 mb-3"></i>
                             <p class="text-sm text-slate-500 font-medium">Klik untuk memilih file</p>
-                            <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG, PDF. Maksimal 2MB</p>
-                            <input type="file" class="hidden" id="file_bukti" name="file_bukti" accept=".jpg,.jpeg,.png,.pdf" onchange="updateFileName(this)" required>
+                            <p class="text-xs text-slate-400 mt-1">Format: JPG, PNG, WEBP, PDF, DOC, DOCX. Maksimal 3MB</p>
+                            <input type="file" class="hidden" id="file_bukti" name="file_bukti" accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="updateFileName(this)" required>
                         </div>
                         <p id="file-name" class="mt-2 text-xs text-primary font-medium hidden"></p>
                     </div>

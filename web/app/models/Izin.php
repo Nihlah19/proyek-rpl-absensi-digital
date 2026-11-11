@@ -3,9 +3,9 @@ class Izin extends Model {
 
     public function ajukan($data) {
         $query = "INSERT INTO pengajuan_izin 
-                  (user_id, tanggal_mulai, tanggal_selesai, jenis, alasan, keterangan, file_bukti, status) 
+                  (user_id, tanggal_mulai, tanggal_selesai, jenis, alasan, keterangan, file_bukti, file_data, file_mime, file_original_name, status) 
                   VALUES 
-                  (:user_id, :tanggal_mulai, :tanggal_selesai, :jenis, :alasan, :keterangan, :file_bukti, 'pending')";
+                  (:user_id, :tanggal_mulai, :tanggal_selesai, :jenis, :alasan, :keterangan, :file_bukti, :file_data, :file_mime, :file_original_name, 'pending')";
         $this->db->query($query);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':tanggal_mulai', $data['tanggal_mulai']);
@@ -14,6 +14,9 @@ class Izin extends Model {
         $this->db->bind(':alasan', $data['alasan']);
         $this->db->bind(':keterangan', $data['keterangan']);
         $this->db->bind(':file_bukti', $data['file_bukti']);
+        $this->db->bind(':file_data', $data['file_data'] ?? null);
+        $this->db->bind(':file_mime', $data['file_mime'] ?? null);
+        $this->db->bind(':file_original_name', $data['file_original_name'] ?? null);
         
         $this->db->execute();
         return $this->db->rowCount();
