@@ -55,26 +55,47 @@ class AbsensiMonitor extends Model {
     }
 
     public function getTrendKehadiran7Hari() {
+        $startDate = date('Y-m-d', strtotime("-6 days"));
+
+        $siswaByDate = [];
+        $this->db->query("
+            SELECT tanggal, COUNT(*) as jml 
+            FROM absensi_siswa 
+            WHERE tanggal >= :startDate AND status IN ('hadir', 'terlambat', 'pkl') 
+            GROUP BY tanggal
+        ");
+        $this->db->bind(':startDate', $startDate);
+        $rowsSiswa = $this->db->resultSet();
+        if ($rowsSiswa) {
+            foreach ($rowsSiswa as $r) {
+                $siswaByDate[$r->tanggal] = (int)$r->jml;
+            }
+        }
+
+        $guruByDate = [];
+        $this->db->query("
+            SELECT tanggal, COUNT(*) as jml 
+            FROM absensi_guru 
+            WHERE tanggal >= :startDate AND status IN ('hadir', 'terlambat') 
+            GROUP BY tanggal
+        ");
+        $this->db->bind(':startDate', $startDate);
+        $rowsGuru = $this->db->resultSet();
+        if ($rowsGuru) {
+            foreach ($rowsGuru as $r) {
+                $guruByDate[$r->tanggal] = (int)$r->jml;
+            }
+        }
+
         $trend = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = date('Y-m-d', strtotime("-$i days"));
             $displayDate = date('d M', strtotime($date));
-
-            // Siswa hadir + terlambat + pkl
-            $this->db->query("SELECT COUNT(*) as jml FROM absensi_siswa WHERE tanggal = :tgl AND status IN ('hadir', 'terlambat', 'pkl')");
-            $this->db->bind(':tgl', $date);
-            $siswaCount = (int)($this->db->single()->jml ?? 0);
-
-            // Guru hadir + terlambat
-            $this->db->query("SELECT COUNT(*) as jml FROM absensi_guru WHERE tanggal = :tgl AND status IN ('hadir', 'terlambat')");
-            $this->db->bind(':tgl', $date);
-            $guruCount = (int)($this->db->single()->jml ?? 0);
-
             $trend[] = [
                 'tanggal' => $date,
                 'label'   => $displayDate,
-                'siswa'   => $siswaCount,
-                'guru'    => $guruCount
+                'siswa'   => $siswaByDate[$date] ?? 0,
+                'guru'    => $guruByDate[$date] ?? 0
             ];
         }
         return $trend;

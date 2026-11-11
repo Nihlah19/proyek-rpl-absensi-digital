@@ -30,6 +30,7 @@ class Database {
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $option);
             $this->dbh->exec("SET time_zone = '+07:00'");
+            $this->dbh->exec("SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'");
         } catch (PDOException $e) {
             error_log("Database Error: " . $e->getMessage());
             

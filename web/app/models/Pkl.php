@@ -230,7 +230,7 @@ class Pkl extends Model {
             LEFT JOIN pkl_pembimbing_kelas ppk ON g.id = ppk.guru_id
             LEFT JOIN kelas k ON ppk.kelas_id = k.id
             WHERE g.is_pembimbing_pkl = 1
-            GROUP BY g.id
+            GROUP BY g.id, g.user_id, u.name, g.nip
             ORDER BY u.name ASC
         ");
         $pembimbingList = $this->db->resultSet();
@@ -463,7 +463,7 @@ class Pkl extends Model {
             LEFT JOIN guru g ON k.pembimbing_guru_id = g.id
             LEFT JOIN users ug ON g.user_id = ug.id
             WHERE k.kelas_id = :kid
-            GROUP BY k.id
+            GROUP BY k.id, ug.name
             ORDER BY k.id DESC
         ");
         $this->db->bind(':kid', $kelasId);

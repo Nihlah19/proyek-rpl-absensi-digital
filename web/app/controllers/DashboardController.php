@@ -45,19 +45,22 @@ class DashboardController extends Controller {
 
         // Otomatis sinkronisasi Alfa jika jam kepulangan sekolah hari ini telah usai
         // dan masih ada siswa/guru yang belum tercatat presensi (tidak scan RFID / QR)
-        // Dibatasi 1x per 15 menit per sesi agar loading dashboard cepat dan responsif
-        $lastDashSync = $_SESSION['last_dash_alfa_sync_' . $today] ?? 0;
-        if (time() - $lastDashSync > 900) {
-            $absensiModel = $this->model('Absensi');
-            $jadwalSiswa = $absensiModel->getJadwalHariIni();
-            if ($jadwalSiswa && !empty($jadwalSiswa->status_aktif) && !empty($jadwalSiswa->jam_pulang)) {
-                $nowTime = date('H:i:s');
-                if ($nowTime >= $jadwalSiswa->jam_pulang) {
-                    $absensiModel->generateAlfaSiswaHariIni($today);
-                    $absensiModel->generateAlfaGuruHariIni($today);
+        // Di lingkungan Vercel serverless, hindari blocking execution pada synchronous page request
+        $isVercelEnv = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
+        if (!$isVercelEnv) {
+            $lastDashSync = $_SESSION['last_dash_alfa_sync_' . $today] ?? 0;
+            if (time() - $lastDashSync > 900) {
+                $absensiModel = $this->model('Absensi');
+                $jadwalSiswa = $absensiModel->getJadwalHariIni();
+                if ($jadwalSiswa && !empty($jadwalSiswa->status_aktif) && !empty($jadwalSiswa->jam_pulang)) {
+                    $nowTime = date('H:i:s');
+                    if ($nowTime >= $jadwalSiswa->jam_pulang) {
+                        $absensiModel->generateAlfaSiswaHariIni($today);
+                        $absensiModel->generateAlfaGuruHariIni($today);
+                    }
                 }
+                $_SESSION['last_dash_alfa_sync_' . $today] = time();
             }
-            $_SESSION['last_dash_alfa_sync_' . $today] = time();
         }
 
         $absensiSiswaHariIni = $this->laporan->getRekapSiswa(['dari' => $today, 'sampai' => $today, 'limit' => 50, 'offset' => 0]);

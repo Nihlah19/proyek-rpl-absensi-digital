@@ -179,19 +179,29 @@ class Absensi extends Model {
         $countAlfa = 0;
         $countIzin = 0;
 
-        foreach ($unrecorded as $siswa) {
-            // Cek apakah ada pengajuan izin yang disetujui (approved)
+        // Optimasi Bulk: Ambil seluruh perizinan disetujui untuk siswa hari ini dalam 1 query
+        $userIds = array_map(function($s) { return (int)$s->user_id; }, $unrecorded);
+        $izinMap = [];
+        if (!empty($userIds)) {
+            $inUids = implode(',', $userIds);
             $this->db->query("
-                SELECT jenis, alasan FROM pengajuan_izin 
-                WHERE user_id = :uid 
+                SELECT user_id, jenis, alasan FROM pengajuan_izin 
+                WHERE user_id IN ($inUids) 
                 AND status = 'approved' 
-                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai 
-                LIMIT 1
+                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai
             ");
-            $this->db->bind(':uid', $siswa->user_id);
             $this->db->bind(':tgl', $tanggal);
-            $izin = $this->db->single();
+            $izins = $this->db->resultSet();
+            if ($izins) {
+                foreach ($izins as $iz) {
+                    $izinMap[$iz->user_id] = $iz;
+                }
+            }
+        }
 
+        $rowsToInsert = [];
+        foreach ($unrecorded as $siswa) {
+            $izin = $izinMap[$siswa->user_id] ?? null;
             if ($izin) {
                 $status = ($izin->jenis === 'sakit') ? 'sakit' : 'izin';
                 $keterangan = $izin->alasan ? 'Izin disetujui: ' . $izin->alasan : 'Izin disetujui';
@@ -201,15 +211,32 @@ class Absensi extends Model {
                 $keterangan = 'Tidak hadir tanpa scan RFID';
                 $countAlfa++;
             }
+            $rowsToInsert[] = [
+                'siswa_id'   => (int)$siswa->siswa_id,
+                'status'     => $status,
+                'keterangan' => $keterangan
+            ];
+        }
 
-            $this->db->query("
-                INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, jam_pulang, status, keterangan)
-                VALUES (:sid, :tgl, NULL, NULL, :status, :ket)
-            ");
-            $this->db->bind(':sid', $siswa->siswa_id);
-            $this->db->bind(':tgl', $tanggal);
-            $this->db->bind(':status', $status);
-            $this->db->bind(':ket', $keterangan);
+        // Bulk insert dalam chunk 100 rows
+        $chunks = array_chunk($rowsToInsert, 100);
+        foreach ($chunks as $chunk) {
+            $sqlValues = [];
+            $bindParams = [':tgl' => $tanggal];
+            foreach ($chunk as $idx => $row) {
+                $sidKey = ":sid_{$idx}";
+                $stKey  = ":st_{$idx}";
+                $ktKey  = ":kt_{$idx}";
+                $sqlValues[] = "({$sidKey}, :tgl, NULL, NULL, {$stKey}, {$ktKey})";
+                $bindParams[$sidKey] = $row['siswa_id'];
+                $bindParams[$stKey]  = $row['status'];
+                $bindParams[$ktKey]  = $row['keterangan'];
+            }
+            $sql = "INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, jam_pulang, status, keterangan) VALUES " . implode(',', $sqlValues);
+            $this->db->query($sql);
+            foreach ($bindParams as $pKey => $pVal) {
+                $this->db->bind($pKey, $pVal);
+            }
             $this->db->execute();
         }
 
@@ -289,19 +316,29 @@ class Absensi extends Model {
         $countAlfa = 0;
         $countIzin = 0;
 
-        foreach ($unrecorded as $guru) {
-            // Cek apakah ada pengajuan izin yang disetujui (approved)
+        // Optimasi Bulk: Ambil seluruh perizinan disetujui untuk guru hari ini dalam 1 query
+        $userIds = array_map(function($g) { return (int)$g->user_id; }, $unrecorded);
+        $izinMap = [];
+        if (!empty($userIds)) {
+            $inUids = implode(',', $userIds);
             $this->db->query("
-                SELECT jenis, alasan FROM pengajuan_izin 
-                WHERE user_id = :uid 
+                SELECT user_id, jenis, alasan FROM pengajuan_izin 
+                WHERE user_id IN ($inUids) 
                 AND status = 'approved' 
-                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai 
-                LIMIT 1
+                AND :tgl BETWEEN tanggal_mulai AND tanggal_selesai
             ");
-            $this->db->bind(':uid', $guru->user_id);
             $this->db->bind(':tgl', $tanggal);
-            $izin = $this->db->single();
+            $izins = $this->db->resultSet();
+            if ($izins) {
+                foreach ($izins as $iz) {
+                    $izinMap[$iz->user_id] = $iz;
+                }
+            }
+        }
 
+        $rowsToInsert = [];
+        foreach ($unrecorded as $guru) {
+            $izin = $izinMap[$guru->user_id] ?? null;
             if ($izin) {
                 $status = ($izin->jenis === 'sakit') ? 'sakit' : 'izin';
                 $keterangan = $izin->alasan ? 'Izin disetujui: ' . $izin->alasan : 'Izin disetujui';
@@ -311,15 +348,32 @@ class Absensi extends Model {
                 $keterangan = 'Tidak hadir tanpa scan QR';
                 $countAlfa++;
             }
+            $rowsToInsert[] = [
+                'guru_id'    => (int)$guru->guru_id,
+                'status'     => $status,
+                'keterangan' => $keterangan
+            ];
+        }
 
-            $this->db->query("
-                INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, jam_pulang, status, keterangan)
-                VALUES (:gid, :tgl, NULL, NULL, :status, :ket)
-            ");
-            $this->db->bind(':gid', $guru->guru_id);
-            $this->db->bind(':tgl', $tanggal);
-            $this->db->bind(':status', $status);
-            $this->db->bind(':ket', $keterangan);
+        // Bulk insert dalam chunk 100 rows
+        $chunks = array_chunk($rowsToInsert, 100);
+        foreach ($chunks as $chunk) {
+            $sqlValues = [];
+            $bindParams = [':tgl' => $tanggal];
+            foreach ($chunk as $idx => $row) {
+                $gidKey = ":gid_{$idx}";
+                $stKey  = ":st_{$idx}";
+                $ktKey  = ":kt_{$idx}";
+                $sqlValues[] = "({$gidKey}, :tgl, NULL, NULL, {$stKey}, {$ktKey})";
+                $bindParams[$gidKey] = $row['guru_id'];
+                $bindParams[$stKey]  = $row['status'];
+                $bindParams[$ktKey]  = $row['keterangan'];
+            }
+            $sql = "INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, jam_pulang, status, keterangan) VALUES " . implode(',', $sqlValues);
+            $this->db->query($sql);
+            foreach ($bindParams as $pKey => $pVal) {
+                $this->db->bind($pKey, $pVal);
+            }
             $this->db->execute();
         }
 
