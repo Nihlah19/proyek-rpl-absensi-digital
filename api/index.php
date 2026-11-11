@@ -52,8 +52,15 @@ if (preg_match('#^(assets/|uploads/|favicon\.ico|manifest\.json|sw\.js|offline\.
         $contentType = $mimeTypes[$ext] ?? 'application/octet-stream';
         header("Content-Type: {$contentType}");
         header("Cache-Control: public, max-age=31536000, immutable");
-        header("Content-Length: " . filesize($filePath));
+        if (in_array($ext, ['css', 'js', 'json', 'svg', 'html']) && extension_loaded('zlib') && !ob_get_level()) {
+            ob_start('ob_gzhandler');
+        } else {
+            header("Content-Length: " . filesize($filePath));
+        }
         readfile($filePath);
+        if (ob_get_level()) {
+            ob_end_flush();
+        }
         exit;
     }
 }

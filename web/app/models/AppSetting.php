@@ -6,11 +6,11 @@
  */
 class AppSetting extends Model {
     private static $cache = [];
-    private static $tableChecked = false;
+    private static $allLoaded = false;
+    private static $tableChecked = true;
 
     public function __construct() {
         parent::__construct();
-        self::ensureTable();
     }
 
     /**
@@ -34,29 +34,37 @@ class AppSetting extends Model {
     }
 
     /**
+     * Muat seluruh pengaturan sekaligus dalam 1 query untuk kecepatan tinggi
+     */
+    public static function loadAll() {
+        if (self::$allLoaded) return;
+        try {
+            $db = new Database();
+            $db->query("SELECT setting_key, setting_value FROM app_settings");
+            $rows = $db->resultSet();
+            if ($rows) {
+                foreach ($rows as $r) {
+                    self::$cache[$r->setting_key] = $r->setting_value;
+                }
+            }
+            self::$allLoaded = true;
+        } catch (Exception $e) {
+            error_log('[AppSetting] Error loadAll: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Ambil nilai pengaturan berdasarkan key (dengan fallback default)
      */
     public static function get($key, $default = null) {
-        if (array_key_exists($key, self::$cache)) {
+        if (!self::$allLoaded) {
+            self::loadAll();
+        }
+
+        if (array_key_exists($key, self::$cache) && self::$cache[$key] !== null && self::$cache[$key] !== '') {
             return self::$cache[$key];
         }
 
-        self::ensureTable();
-        try {
-            $db = new Database();
-            $db->query("SELECT setting_value FROM app_settings WHERE setting_key = :k LIMIT 1");
-            $db->bind(':k', $key);
-            $row = $db->single();
-
-            if ($row && $row->setting_value !== null && $row->setting_value !== '') {
-                self::$cache[$key] = $row->setting_value;
-                return $row->setting_value;
-            }
-        } catch (Exception $e) {
-            error_log('[AppSetting] Error get ' . $key . ': ' . $e->getMessage());
-        }
-
-        self::$cache[$key] = $default;
         return $default;
     }
 

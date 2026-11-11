@@ -1,5 +1,6 @@
 <?php
 class Database {
+    private static $sharedDbh = null;
     private $host = DB_HOST;
     private $user = DB_USER;
     private $pass = DB_PASS;
@@ -9,13 +10,18 @@ class Database {
     private $stmt;
 
     public function __construct() {
+        if (self::$sharedDbh !== null) {
+            $this->dbh = self::$sharedDbh;
+            return;
+        }
+
         $portStr = (defined('DB_PORT') && DB_PORT) ? ';port=' . DB_PORT : '';
         $dsn = 'mysql:host=' . $this->host . $portStr . ';dbname=' . $this->db_name . ';charset=utf8mb4';
         
         $isVercel = isset($_SERVER['VERCEL']) || isset($_ENV['VERCEL']) || (isset($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'vercel.app') !== false);
 
         $option = [
-            PDO::ATTR_PERSISTENT => !$isVercel, // Non-persistent pada serverless Vercel
+            PDO::ATTR_PERSISTENT => true, // Reusable connection pooling on warm serverless workers
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_TIMEOUT => 5, // Timeout 5 detik agar aman dari 504 Timeout Vercel
             PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+07:00'"
@@ -31,6 +37,7 @@ class Database {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $option);
             $this->dbh->exec("SET time_zone = '+07:00'");
             $this->dbh->exec("SET SESSION sql_mode = 'NO_ENGINE_SUBSTITUTION'");
+            self::$sharedDbh = $this->dbh;
         } catch (PDOException $e) {
             error_log("Database Error: " . $e->getMessage());
             

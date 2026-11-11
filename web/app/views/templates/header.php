@@ -36,17 +36,14 @@
     <!-- Google Fonts: Plus Jakarta Sans, Inter, JetBrains Mono (Professional Balanced Dashboard Typography) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Preload Critical Icon WebFont for Zero FOIT & Fast Icon Paint -->
-    <link rel="preload" href="<?= BASEURL; ?>/assets/vendor/fontawesome/webfonts/fa-solid-900.woff2" as="font" type="font/woff2" crossorigin>
-
-    <!-- Local Vendor Libraries (Precompiled CSS first, JS non-blocking defer) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Precompiled Fast CSS First (Render-Blocking Zero Delay) -->
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/css/tailwind.css">
-    <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css">
-    <script defer src="<?= BASEURL; ?>/assets/vendor/tailwindcss/tailwind.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous">
+    
+    <!-- Non-Blocking Deferred Tailwind Script for Runtime Helpers -->
+    <script defer src="https://cdn.tailwindcss.com"></script>
     <!-- Conditional Module Loading (Only load heavy JS on pages that actually use them to boost performance) -->
     <?php
     $curUrl = $_GET['url'] ?? '';
