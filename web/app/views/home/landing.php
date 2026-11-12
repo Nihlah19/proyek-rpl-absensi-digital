@@ -324,8 +324,8 @@
             <div class="lg:col-span-7 space-y-6 hero-entrance">
                 
                 <!-- Massive Wise Display Headline -->
-                <h1 class="wise-headline text-4xl sm:text-6xl lg:text-[76px] uppercase leading-none">
-                    Presensi gerbang secepat kedipan mata.
+                <h1 class="wise-headline text-4xl sm:text-5xl lg:text-6xl uppercase leading-none">
+                    ABSENSI DIGITAL SMK NU WARGABINANGUN
                 </h1>
 
                 <!-- Body Copy in Warm Charcoal (18px) -->
@@ -766,14 +766,20 @@
     <div class="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-8">
         
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-fog">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center">
+                <picture>
+                    <source srcset="<?= BASEURL; ?>/assets/img/smk-bisa-hebat.webp?v=1" type="image/webp">
+                    <img src="<?= BASEURL; ?>/assets/img/smk-bisa-hebat.png?v=1" alt="Logo SMK Bisa Hebat" width="190" height="56" class="h-12 sm:h-14 w-auto object-contain shrink-0" loading="lazy" decoding="async">
+                </picture>
+            </div>
+            <div class="flex items-center gap-3 sm:flex-row-reverse sm:text-right">
                 <picture>
                     <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
-                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" loading="lazy" decoding="async">
+                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="44" height="44" class="h-11 w-11 object-contain shrink-0" loading="lazy" decoding="async">
                 </picture>
                 <div>
                     <h4 class="text-sm font-extrabold text-obsidian uppercase leading-none font-sans">SMK NU WARGABINANGUN</h4>
-                    <p class="text-xs text-slate mt-1">Jl. Lapangan Bola Wargabinangun, Cirebon, Jawa Barat</p>
+                    <p class="text-xs text-slate mt-1 max-w-md">Jl. Raya Wargabinangun No. 107, Desa Wargabinangun, Kecamatan Kaliwedi, Kabupaten Cirebon, Jawa Barat 45165</p>
                 </div>
             </div>
         </div>

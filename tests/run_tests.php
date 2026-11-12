@@ -526,6 +526,16 @@ assertTest(
 );
 
 assertTest(
+    "Landing page menampilkan judul ABSENSI DIGITAL SMK NU WARGABINANGUN, logo SMK Bisa Hebat, & alamat Kaliwedi",
+    strpos($landingUpdatedSrc, 'ABSENSI DIGITAL SMK NU WARGABINANGUN') !== false
+    && strpos($landingUpdatedSrc, 'Presensi gerbang secepat kedipan mata') === false
+    && strpos($landingUpdatedSrc, 'smk-bisa-hebat.png') !== false
+    && file_exists(__DIR__ . '/../web/public/assets/img/smk-bisa-hebat.png')
+    && strpos($landingUpdatedSrc, 'Jl. Raya Wargabinangun No. 107, Desa Wargabinangun, Kecamatan Kaliwedi, Kabupaten Cirebon, Jawa Barat 45165') !== false
+    && strpos($landingUpdatedSrc, 'Jl. Lapangan Bola') === false
+);
+
+assertTest(
     "Folder figma lama sudah dihapus dan README memakai tautan Figma baru (8u9jDgeLnZYtYpfKmOWqhU)",
     !is_dir(__DIR__ . '/../presentasi/figma')
     && !is_dir(__DIR__ . '/../web/public/presentasi/figma')
