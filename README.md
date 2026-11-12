@@ -54,11 +54,11 @@
 | Tahap Video | Fokus Bahasan | Tautan Video | Status |
 | :--- | :--- | :--- | :--- |
 | **Video Progres 1** | Penjelasan Dokumen PRD / SRS & Konsep Aplikasi | `[Lengkapi Link Video Progres 1 di Sini]` | Menunggu Tautan Upload |
-| **Video Progres 2** | Pemodelan UML (Use Case, ERD, Activity, Sequence) & UI/UX Figma | `[Lengkapi Link Video Progres 2 di Sini]` | Menunggu Tautan Upload |
+| **Video Progres 2** | Pemodelan UML (Use Case, ERD, Class, Sequence) & UI/UX Figma | `[Lengkapi Link Video Progres 2 di Sini]` | Menunggu Tautan Upload |
 | **Video Final Demo** | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | `[Lengkapi Link Video Final Demo di Sini]` | Menunggu Tautan Upload |
 
 > **Berkas Referensi Terkait di Repositori:**
-> - Naskah Skrip Video Presentasi Lengkap: [`docs/NASKAH_VIDEO_PRESENTASI_LENGKAP.md`](docs/NASKAH_VIDEO_PRESENTASI_LENGKAP.md)
+> - Dokumen PRD Terpilih: [`docs/PRD_ABSENSISMKNU.docx`](docs/PRD_ABSENSISMKNU.docx)
 > - Dokumen Lengkap Terjilid (PRD/SRS + SDD UML & Figma + Laporan Pengujian/CI-CD): [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf)
 > - Dokumentasi Endpoint IoT API: [`docs/api.md`](docs/api.md)
 
@@ -104,15 +104,10 @@
      php -S localhost:8080 -t web/public
      ```
 
-### 3. Menjalankan Pengujian Otomatis & Linting (CI Check Mandiri)
-Jalankan seluruh unit test dan validasi database dengan perintah:
+### 3. Pemeriksaan Sintaks PHP (CI Check Mandiri)
+Untuk memeriksa sintaks PHP pada seluruh controller, model, dan core aplikasi:
 ```bash
-php tests/run_tests.php
-```
-Untuk memeriksa sintaks PHP pada seluruh controller dan model:
-```bash
-php -l web/app/controllers/CatatanController.php
-php -l web/app/models/Catatan.php
+find web/app -name "*.php" -exec php -l {} \;
 ```
 
 ---
@@ -120,13 +115,12 @@ php -l web/app/models/Catatan.php
 ## Struktur Direktori Utama
 ```text
 .
-├── .github/workflows/ci.yml       # Pipeline CI/CD GitHub Actions (PHP Lint & Unit Tests)
+├── .github/workflows/ci.yml       # Pipeline CI/CD GitHub Actions (PHP Lint)
 ├── database/                      # Skema SQL & migrasi tabel MySQL/TiDB
-├── docs/                          # PRD, API Docs, Diagram Activity, & PDF Lengkap Terjilid
+├── docs/                          # PRD (PRD_ABSENSISMKNU.docx), API Docs, & PDF Lengkap Terjilid
 ├── iot/                           # Firmware ESP8266/ESP32 untuk mesin tap RFID & QR
-├── presentasi/                    # Diagram UML & berkas presentasi proyek
+├── presentasi/                    # Diagram UML proyek
 ├── src/input.css                  # Sumber CSS Tailwind (dikompilasi ke web/public/assets/css/tailwind.css)
-├── tests/run_tests.php            # Suite pengujian otomatis end-to-end
 └── web/
     ├── api/                       # Entry point Vercel Serverless PHP
     ├── app/                       # Inti MVC (Controllers, Models, Views, Helpers)
