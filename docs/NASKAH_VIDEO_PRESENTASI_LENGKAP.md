@@ -187,7 +187,7 @@
 > - Tabel `absensi` dan `siswa_pkl_lokasi` mencatat riwayat presensi harian lengkap dengan koordinat geolokasi, jam datang, jam pulang, dan lampiran swafoto."
 
 #### [04:45 - 05:50] Walkthrough Prototipe Interaktif UI/UX Figma
-*(Aksi Layar: Beralih ke browser, buka Figma file proyek `presentasi/figma/`. Lakukan klik interaktif antarmuka).*
+*(Aksi Layar: Beralih ke browser, buka file desain Figma proyek di https://www.figma.com/design/8u9jDgeLnZYtYpfKmOWqhU/ui-ux-absensi-digital?node-id=0-1&t=9AOYUDDeMCdWBhJl-1).*
 
 > "Sekarang, mari kita tinjau rancangan prototipe interaktif UI/UX di **Figma**. Desain ini mengadopsi standar **Wise Modern Design System** dengan palet dominan Forest Green (`#163300`), Neon Lime (`#9fe870`), dan dark-mode slate yang tenang dan profesional.
 > 

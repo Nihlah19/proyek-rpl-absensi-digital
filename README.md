@@ -19,7 +19,7 @@
 | **Tema Topik Kelompok** | **Absensi Digital Siswa SMK** |
 | **Institusi Mitra / Studi Kasus** | SMK NU Wargabinangun Cirebon |
 | **Repositori Publik Pribadi** | `Nihlah19/proyek-rpl-absensi-digital` |
-| **Desain UI/UX (Figma)** | [Buka Desain Wise Design System di Figma](https://www.figma.com/design/OyGaCBcYHkG2aUvQzFnM9m) |
+| **Desain UI/UX (Figma)** | [Buka Desain UI/UX Absensi Digital di Figma](https://www.figma.com/design/8u9jDgeLnZYtYpfKmOWqhU/ui-ux-absensi-digital?node-id=0-1&t=9AOYUDDeMCdWBhJl-1) |
 | **Berkas Dokumen Lengkap (PDF)** | [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf) |
 
 ---
@@ -124,7 +124,7 @@ php -l web/app/models/Catatan.php
 ├── database/                      # Skema SQL & migrasi tabel MySQL/TiDB
 ├── docs/                          # PRD, API Docs, Diagram Activity, & PDF Lengkap Terjilid
 ├── iot/                           # Firmware ESP8266/ESP32 untuk mesin tap RFID & QR
-├── presentasi/figma/              # Aset SVG layar Figma & panduan desain
+├── presentasi/                    # Diagram UML & berkas presentasi proyek
 ├── src/input.css                  # Sumber CSS Tailwind (dikompilasi ke web/public/assets/css/tailwind.css)
 ├── tests/run_tests.php            # Suite pengujian otomatis end-to-end
 └── web/

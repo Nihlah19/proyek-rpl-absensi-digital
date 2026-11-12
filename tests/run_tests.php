@@ -525,6 +525,14 @@ assertTest(
     && strpos($landingUpdatedSrc, 'Scan QR Barcode Guru') !== false
 );
 
+assertTest(
+    "Folder figma lama sudah dihapus dan README memakai tautan Figma baru (8u9jDgeLnZYtYpfKmOWqhU)",
+    !is_dir(__DIR__ . '/../presentasi/figma')
+    && !is_dir(__DIR__ . '/../web/public/presentasi/figma')
+    && strpos($readmeSrc, '8u9jDgeLnZYtYpfKmOWqhU') !== false
+    && strpos($readmeSrc, 'OyGaCBcYHkG2aUvQzFnM9m') === false
+);
+
 
 // -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN
