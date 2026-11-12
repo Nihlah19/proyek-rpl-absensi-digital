@@ -19,8 +19,13 @@ class Laporan {
             $binds[':sampai'] = $filters['sampai'];
         }
         if (!empty($filters['status'])) {
-            $where .= " AND ag.status = :status";
-            $binds[':status'] = $filters['status'];
+            $stFilter = strtolower(trim((string)$filters['status']));
+            if ($stFilter === 'hadir') {
+                $where .= " AND ag.status IN ('hadir', 'terlambat')";
+            } else {
+                $where .= " AND ag.status = :status";
+                $binds[':status'] = $stFilter;
+            }
         }
         if (!empty($filters['search'])) {
             $where .= " AND (u.name LIKE :search OR g.nip LIKE :search)";
@@ -43,8 +48,13 @@ class Laporan {
             $binds[':sampai'] = $filters['sampai'];
         }
         if (!empty($filters['status'])) {
-            $where .= " AND ab.status = :status";
-            $binds[':status'] = $filters['status'];
+            $stFilter = strtolower(trim((string)$filters['status']));
+            if ($stFilter === 'hadir') {
+                $where .= " AND ab.status IN ('hadir', 'terlambat')";
+            } else {
+                $where .= " AND ab.status = :status";
+                $binds[':status'] = $stFilter;
+            }
         }
         if (!empty($filters['search'])) {
             $where .= " AND (u.name LIKE :search OR s.nis LIKE :search)";

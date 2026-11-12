@@ -326,9 +326,8 @@ if (!empty($data['statsPerKelas'])) {
             <div class="w-full sm:w-56">
                 <select id="selectAdminGuruStatus" onchange="filterAdminGuruDash()"
                         class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-sky-500">
-                    <option value="">-- Semua Status Guru --</option>
-                    <option value="hadir">Hadir Tepat</option>
-                    <option value="terlambat">Terlambat</option>
+                    <option value="">-- Semua Keterangan --</option>
+                    <option value="hadir">Hadir</option>
                     <option value="izin">Izin</option>
                     <option value="sakit">Sakit</option>
                     <option value="alfa">Alfa</option>
@@ -351,15 +350,19 @@ if (!empty($data['statsPerKelas'])) {
                         <th class="py-3 px-4">Nama Guru &amp; NIP</th>
                         <th class="py-3 px-4 text-center">Jam Datang</th>
                         <th class="py-3 px-4 text-center">Jam Pulang</th>
-                        <th class="py-3 px-4 text-center">Status</th>
-                        <th class="py-3 px-4">Keterangan</th>
+                        <th class="py-3 px-4 text-center">Keterangan</th>
+                        <th class="py-3 px-4 text-center">Status Waktu</th>
+                        <th class="py-3 px-4">Catatan</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300">
                     <?php if (!empty($data['absensiGuruHariIni'])): ?>
-                        <?php $noG = 1; foreach ($data['absensiGuruHariIni'] as $g): ?>
+                        <?php $noG = 1; foreach ($data['absensiGuruHariIni'] as $g):
+                            $rawSt = strtolower($g->status ?? 'alfa');
+                            $ketKey = ($rawSt === 'terlambat') ? 'hadir' : $rawSt;
+                        ?>
                             <tr class="row-admin-guru-dash hover:bg-slate-50/60 dark:hover:bg-slate-800/50 transition-colors"
-                                data-status="<?= strtolower($g->status ?? '') ?>"
+                                data-status="<?= htmlspecialchars($ketKey) ?>"
                                 data-nama="<?= strtolower(htmlspecialchars($g->name ?? '')) ?>"
                                 data-nip="<?= strtolower(htmlspecialchars($g->nip ?? '')) ?>">
                                 <td class="py-3 px-4 text-center font-mono text-slate-400 text-[11px]"><?= $noG++ ?></td>
@@ -375,10 +378,8 @@ if (!empty($data['statsPerKelas'])) {
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     <?php
-                                    $st = strtolower($g->status ?? '');
-                                    $badgeCls = match($st) {
+                                    $badgeCls = match($ketKey) {
                                         'hadir'     => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-                                        'terlambat' => 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
                                         'izin'      => 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800',
                                         'sakit'     => 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
                                         'alfa'      => 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700',
@@ -386,8 +387,21 @@ if (!empty($data['statsPerKelas'])) {
                                     };
                                     ?>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border <?= $badgeCls ?>">
-                                        <?= ucfirst($st ?: 'Alfa') ?>
+                                        <?= ucfirst($ketKey ?: 'Alfa') ?>
                                     </span>
+                                </td>
+                                <td class="py-3 px-4 text-center whitespace-nowrap">
+                                    <?php if ($rawSt === 'hadir'): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                                            Tepat Waktu
+                                        </span>
+                                    <?php elseif ($rawSt === 'terlambat'): ?>
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800">
+                                            Terlambat
+                                        </span>
+                                    <?php else: ?>
+                                        <span class="text-slate-400">-</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="py-3 px-4 text-slate-500 text-xs">
                                     <?= htmlspecialchars($g->keterangan ?? '-') ?>
@@ -396,7 +410,7 @@ if (!empty($data['statsPerKelas'])) {
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="6" class="py-8 text-center text-slate-400 text-xs">
+                            <td colspan="7" class="py-8 text-center text-slate-400 text-xs">
                                 <i class="fa-solid fa-inbox text-2xl mb-2 block opacity-40"></i>
                                 Belum ada riwayat presensi guru untuk hari ini.
                             </td>

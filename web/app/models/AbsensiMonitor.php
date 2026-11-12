@@ -262,7 +262,12 @@ class AbsensiMonitor extends Model {
         $where = "WHERE ag.guru_id = :gid";
         if ($dari)   $where .= " AND ag.tanggal >= :dari";
         if ($sampai) $where .= " AND ag.tanggal <= :sampai";
-        if ($status) $where .= " AND ag.status = :status";
+        $stFilter = strtolower(trim((string)$status));
+        if ($stFilter === 'hadir') {
+            $where .= " AND ag.status IN ('hadir', 'terlambat')";
+        } elseif ($stFilter !== '') {
+            $where .= " AND ag.status = :status";
+        }
         if ($search) $where .= " AND u.name LIKE :search";
 
         $this->db->query("
@@ -278,7 +283,7 @@ class AbsensiMonitor extends Model {
         $this->db->bind(':gid', $guru_id, PDO::PARAM_INT);
         if ($dari)   $this->db->bind(':dari', $dari);
         if ($sampai) $this->db->bind(':sampai', $sampai);
-        if ($status) $this->db->bind(':status', $status);
+        if ($stFilter !== '' && $stFilter !== 'hadir') $this->db->bind(':status', $stFilter);
         if ($search) $this->db->bind(':search', '%' . $search . '%');
         $this->db->bind(':lim', $limit, PDO::PARAM_INT);
         $this->db->bind(':off', $offset, PDO::PARAM_INT);
@@ -289,7 +294,12 @@ class AbsensiMonitor extends Model {
         $where = "WHERE ag.guru_id = :gid";
         if ($dari)   $where .= " AND ag.tanggal >= :dari";
         if ($sampai) $where .= " AND ag.tanggal <= :sampai";
-        if ($status) $where .= " AND ag.status = :status";
+        $stFilter = strtolower(trim((string)$status));
+        if ($stFilter === 'hadir') {
+            $where .= " AND ag.status IN ('hadir', 'terlambat')";
+        } elseif ($stFilter !== '') {
+            $where .= " AND ag.status = :status";
+        }
         if ($search) $where .= " AND u.name LIKE :search";
 
         $this->db->query("
@@ -302,7 +312,7 @@ class AbsensiMonitor extends Model {
         $this->db->bind(':gid', $guru_id, PDO::PARAM_INT);
         if ($dari)   $this->db->bind(':dari', $dari);
         if ($sampai) $this->db->bind(':sampai', $sampai);
-        if ($status) $this->db->bind(':status', $status);
+        if ($stFilter !== '' && $stFilter !== 'hadir') $this->db->bind(':status', $stFilter);
         if ($search) $this->db->bind(':search', '%' . $search . '%');
         $r = $this->db->single();
         return (int)($r->total ?? 0);
@@ -324,7 +334,12 @@ class AbsensiMonitor extends Model {
         $where = "WHERE ab.siswa_id = :sid";
         if ($dari)   $where .= " AND ab.tanggal >= :dari";
         if ($sampai) $where .= " AND ab.tanggal <= :sampai";
-        if ($status) $where .= " AND ab.status = :status";
+        $stFilter = strtolower(trim((string)$status));
+        if ($stFilter === 'hadir') {
+            $where .= " AND ab.status IN ('hadir', 'terlambat')";
+        } elseif ($stFilter !== '') {
+            $where .= " AND ab.status = :status";
+        }
 
         $this->db->query("
             SELECT ab.id, ab.tanggal, ab.jam_datang, ab.jam_pulang, ab.status, ab.keterangan, ab.foto_masuk, ab.foto_pulang, ab.jarak_meter
@@ -336,7 +351,7 @@ class AbsensiMonitor extends Model {
         $this->db->bind(':sid', $siswa_id, PDO::PARAM_INT);
         if ($dari)   $this->db->bind(':dari', $dari);
         if ($sampai) $this->db->bind(':sampai', $sampai);
-        if ($status) $this->db->bind(':status', $status);
+        if ($stFilter !== '' && $stFilter !== 'hadir') $this->db->bind(':status', $stFilter);
         $this->db->bind(':lim', $limit, PDO::PARAM_INT);
         $this->db->bind(':off', $offset, PDO::PARAM_INT);
         return $this->db->resultSet();
@@ -346,13 +361,18 @@ class AbsensiMonitor extends Model {
         $where = "WHERE ab.siswa_id = :sid";
         if ($dari)   $where .= " AND ab.tanggal >= :dari";
         if ($sampai) $where .= " AND ab.tanggal <= :sampai";
-        if ($status) $where .= " AND ab.status = :status";
+        $stFilter = strtolower(trim((string)$status));
+        if ($stFilter === 'hadir') {
+            $where .= " AND ab.status IN ('hadir', 'terlambat')";
+        } elseif ($stFilter !== '') {
+            $where .= " AND ab.status = :status";
+        }
 
         $this->db->query("SELECT COUNT(*) AS total FROM absensi_siswa ab $where");
         $this->db->bind(':sid', $siswa_id, PDO::PARAM_INT);
         if ($dari)   $this->db->bind(':dari', $dari);
         if ($sampai) $this->db->bind(':sampai', $sampai);
-        if ($status) $this->db->bind(':status', $status);
+        if ($stFilter !== '' && $stFilter !== 'hadir') $this->db->bind(':status', $stFilter);
         $r = $this->db->single();
         return (int)($r->total ?? 0);
     }

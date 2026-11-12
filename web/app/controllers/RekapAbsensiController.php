@@ -310,11 +310,12 @@ class RekapAbsensiController extends Controller {
                 fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i')], ';');
                 fputcsv($out, [''], ';');
 
-                fputcsv($out, ['No', 'NIP', 'Nama Guru', 'Hadir (H)', 'Terlambat (T)', 'Izin (I)', 'Sakit (S)', 'Alfa (A)', 'Total Masuk', 'Persentase (%)'], ';');
+                fputcsv($out, ['No', 'NIP', 'Nama Guru', 'Hadir (H)', 'Izin (I)', 'Sakit (S)', 'Alfa (A)', 'Total Masuk', 'Persentase (%)'], ';');
 
                 $no = 1;
                 foreach ($rows as $r) {
-                    $totalMasuk = (int)$r->hadir + (int)$r->terlambat;
+                    $hadirTotal = (int)$r->hadir + (int)$r->terlambat;
+                    $totalMasuk = $hadirTotal;
                     $totalHari  = $totalMasuk + (int)$r->izin + (int)$r->sakit + (int)$r->alfa;
                     $pct = $totalHari > 0 ? round(($totalMasuk / $totalHari) * 100, 1) : 0;
 
@@ -322,8 +323,7 @@ class RekapAbsensiController extends Controller {
                         $no++,
                         $r->nip ?? '-',
                         $r->name,
-                        $r->hadir ?? 0,
-                        $r->terlambat ?? 0,
+                        $hadirTotal,
                         $r->izin ?? 0,
                         $r->sakit ?? 0,
                         $r->alfa ?? 0,
@@ -375,11 +375,12 @@ class RekapAbsensiController extends Controller {
                 fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i')], ';');
                 fputcsv($out, [''], ';');
 
-                fputcsv($out, ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Terlambat (T)', 'Izin (I)', 'Sakit (S)', 'Alfa (A)', 'PKL', 'Total Masuk', 'Persentase (%)'], ';');
+                fputcsv($out, ['No', 'NIS', 'Nama Siswa', 'Kelas', 'Hadir (H)', 'Izin (I)', 'Sakit (S)', 'Alfa (A)', 'PKL', 'Total Masuk', 'Persentase (%)'], ';');
 
                 $no = 1;
                 foreach ($rows as $r) {
-                    $totalMasuk = (int)$r->hadir + (int)$r->terlambat + (int)$r->pkl;
+                    $hadirTotal = (int)$r->hadir + (int)$r->terlambat;
+                    $totalMasuk = $hadirTotal + (int)$r->pkl;
                     $totalHari  = $totalMasuk + (int)$r->izin + (int)$r->sakit + (int)$r->alfa;
                     $pct = $totalHari > 0 ? round(($totalMasuk / $totalHari) * 100, 1) : 0;
 
@@ -388,8 +389,7 @@ class RekapAbsensiController extends Controller {
                         $r->nis ?? '-',
                         $r->name,
                         $r->nama_kelas ?? '-',
-                        $r->hadir ?? 0,
-                        $r->terlambat ?? 0,
+                        $hadirTotal,
                         $r->izin ?? 0,
                         $r->sakit ?? 0,
                         $r->alfa ?? 0,
@@ -405,16 +405,22 @@ class RekapAbsensiController extends Controller {
         }
 
         // ================= EXPORT MODE DETAIL TRANSAKSI HARIAN =================
-        $singkatanStatus = function($status) {
+        $keteranganStatus = function($status) {
             $map = [
-                'hadir'     => 'H',
-                'terlambat' => 'T',
-                'izin'      => 'I',
-                'sakit'     => 'S',
-                'alfa'      => 'A',
-                'pkl'       => 'PKL',
+                'hadir'     => 'H - Hadir',
+                'terlambat' => 'H - Hadir',
+                'izin'      => 'I - Izin',
+                'sakit'     => 'S - Sakit',
+                'alfa'      => 'A - Alfa',
+                'pkl'       => 'PKL - PKL',
             ];
             return $map[strtolower($status)] ?? strtoupper($status);
+        };
+        $statusWaktuLabel = function($status) {
+            $st = strtolower((string)$status);
+            if ($st === 'hadir') return 'Tepat Waktu';
+            if ($st === 'terlambat') return 'Terlambat';
+            return '-';
         };
 
         if ($tipe === 'guru') {
@@ -433,12 +439,11 @@ class RekapAbsensiController extends Controller {
             fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i')], ';');
             fputcsv($out, [''], ';');
 
-            fputcsv($out, ['No', 'Tanggal', 'NIP', 'Nama Guru', 'Jam Datang', 'Jam Pulang', 'Status', 'Keterangan Absensi', 'Catatan Evaluasi'], ';');
+            fputcsv($out, ['No', 'Tanggal', 'NIP', 'Nama Guru', 'Jam Datang', 'Jam Pulang', 'Keterangan Absen', 'Status Waktu', 'Catatan', 'Catatan Evaluasi'], ';');
             
             $no = 1;
             foreach ($rows as $r) {
                 $tgl = date('d/m/Y', strtotime($r->tanggal));
-                $statusLabel = $singkatanStatus($r->status) . ' - ' . ucfirst($r->status);
                 fputcsv($out, [
                     $no++,
                     $tgl,
@@ -446,7 +451,8 @@ class RekapAbsensiController extends Controller {
                     $r->name,
                     $r->jam_datang ? substr($r->jam_datang, 0, 5) : '-',
                     $r->jam_pulang ? substr($r->jam_pulang, 0, 5) : '-',
-                    $statusLabel,
+                    $keteranganStatus($r->status),
+                    $statusWaktuLabel($r->status),
                     $r->keterangan ?? '-',
                     $r->data_catatan ?? '-',
                 ], ';');
@@ -495,12 +501,11 @@ class RekapAbsensiController extends Controller {
             fputcsv($out, ['Dicetak: ' . date('d/m/Y H:i')], ';');
             fputcsv($out, [''], ';');
 
-            fputcsv($out, ['No', 'Tanggal', 'NIS', 'Nama Siswa', 'Kelas', 'Jam Datang', 'Jam Pulang', 'Status', 'Keterangan Absensi', 'Catatan Evaluasi'], ';');
+            fputcsv($out, ['No', 'Tanggal', 'NIS', 'Nama Siswa', 'Kelas', 'Jam Datang', 'Jam Pulang', 'Keterangan Absen', 'Status Waktu', 'Catatan', 'Catatan Evaluasi'], ';');
             
             $no = 1;
             foreach ($rows as $r) {
                 $tgl = date('d/m/Y', strtotime($r->tanggal));
-                $statusLabel = $singkatanStatus($r->status) . ' - ' . ucfirst($r->status);
                 fputcsv($out, [
                     $no++,
                     $tgl,
@@ -509,7 +514,8 @@ class RekapAbsensiController extends Controller {
                     $r->nama_kelas ?? '-',
                     $r->jam_datang ? substr($r->jam_datang, 0, 5) : '-',
                     $r->jam_pulang ? substr($r->jam_pulang, 0, 5) : '-',
-                    $statusLabel,
+                    $keteranganStatus($r->status),
+                    $statusWaktuLabel($r->status),
                     $r->keterangan ?? '-',
                     $r->data_catatan ?? '-',
                 ], ';');

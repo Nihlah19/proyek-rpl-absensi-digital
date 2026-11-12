@@ -6,13 +6,13 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- HEADER SECTION                                                          -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="flex items-center justify-between gap-4 bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
-        <div>
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-xs">
+        <div class="min-w-0">
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
                 Konfigurasi mode ESP
             </h1>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 shrink-0">
             <a href="<?= BASEURL; ?>/dashboard/admin" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold border border-slate-200 dark:border-slate-600 transition inline-flex items-center gap-1.5 shadow-xs">
                 <i class="fa-solid fa-arrow-left text-[11px]"></i> Dashboard
             </a>
@@ -36,15 +36,15 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- TAB PEMILIHAN MODE ESP (CLIENT & AP)                                    -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 w-full sm:w-auto self-start">
+    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl border border-slate-200 dark:border-slate-700 w-full lg:w-auto lg:self-start">
         <button type="button" id="tabModeClient" onclick="handleTabClick('client')"
-                class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-600 inline-flex items-center justify-center gap-2 cursor-pointer">
-            <i class="fa-solid fa-wifi text-emerald-600 dark:text-emerald-400"></i>
+                class="flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-600 inline-flex items-center justify-center gap-2 text-center leading-snug cursor-pointer">
+            <i class="fa-solid fa-wifi text-emerald-600 dark:text-emerald-400 shrink-0"></i>
             <span>1. Mode Client (Jaringan Sekolah & Ping ESP)</span>
         </button>
         <button type="button" id="tabModeAp" onclick="handleTabClick('ap')"
-                class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center gap-2 cursor-pointer">
-            <i class="fa-solid fa-tower-broadcast text-amber-600 dark:text-amber-400"></i>
+                class="flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center gap-2 text-center leading-snug cursor-pointer">
+            <i class="fa-solid fa-tower-broadcast text-amber-600 dark:text-amber-400 shrink-0"></i>
             <span>2. Mode Access Point (Hotspot Pengaturan)</span>
         </button>
     </div>
@@ -56,34 +56,34 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <!-- Kolom Kiri: Status Koneksi & Input IP ESP -->
-            <div class="lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-xs space-y-4">
+            <div class="lg:col-span-7 min-w-0 overflow-hidden bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 shadow-xs space-y-4">
                 
                 <!-- Status Row -->
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
-                    <div>
+                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-slate-100 dark:border-slate-700 min-w-0">
+                    <div class="min-w-0 flex-1">
                         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Status Koneksi Ping</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span id="clientStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
-                                <span class="w-2 h-2 rounded-full bg-slate-400" id="clientStatusDot"></span>
-                                <span id="clientStatusText">Belum Diuji</span>
+                        <div class="flex flex-wrap items-center gap-2 mt-1.5 min-w-0">
+                            <span id="clientStatusBadge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 max-w-full">
+                                <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0" id="clientStatusDot"></span>
+                                <span id="clientStatusText" class="truncate">Belum Diuji</span>
                             </span>
-                            <span id="clientLatencyBadge" class="text-xs font-mono font-medium text-slate-500 dark:text-slate-400"></span>
+                            <span id="clientLatencyBadge" class="text-xs font-mono font-medium text-slate-500 dark:text-slate-400 break-words"></span>
                         </div>
                     </div>
-                    <div class="text-right">
+                    <div class="sm:text-right min-w-0 sm:max-w-[55%]">
                         <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Target Host Server</span>
-                        <span class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/20" id="currentHostBadge"><?= htmlspecialchars($serverHost) ?></span>
+                        <span class="inline-block max-w-full break-all text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 mt-1.5 rounded-md border border-emerald-200 dark:border-emerald-500/20 leading-relaxed" id="currentHostBadge"><?= htmlspecialchars($serverHost) ?></span>
                     </div>
                 </div>
 
                 <!-- Input IP Section -->
-                <div>
+                <div class="min-w-0">
                     <label for="inputEspIp" class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
                         Alamat IP ESP (Mode Client)
                     </label>
                     
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                        <div class="relative flex-1">
+                    <div class="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 min-w-0">
+                        <div class="relative flex-1 min-w-0 sm:min-w-[190px]">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-network-wired text-xs"></i>
                             </div>
@@ -91,26 +91,28 @@
                                    placeholder="Contoh: 192.168.1.50"
                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-xs font-mono font-semibold text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-600 focus:bg-white dark:focus:bg-slate-900 transition shadow-xs">
                         </div>
-                        <button type="button" onclick="pingEspDevice(false)" id="btnPingEsp"
-                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                            <i class="fa-solid fa-bolt text-[11px]"></i> Cek Ping
-                        </button>
-                        <button type="button" onclick="saveEspIp()" id="btnSaveIp"
-                                class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs transition shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
-                            <i class="fa-solid fa-floppy-disk text-[11px]"></i> Simpan IP
-                        </button>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="pingEspDevice(false)" id="btnPingEsp"
+                                    class="flex-1 sm:flex-none px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs transition shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                <i class="fa-solid fa-bolt text-[11px]"></i> Cek Ping
+                            </button>
+                            <button type="button" onclick="saveEspIp()" id="btnSaveIp"
+                                    class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs transition shadow-xs inline-flex items-center justify-center gap-1.5 shrink-0 cursor-pointer">
+                                <i class="fa-solid fa-floppy-disk text-[11px]"></i> Simpan IP
+                            </button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Alert Sinkronisasi Host Server ESP (Jika Berbeda) -->
-                <div id="hostMismatchWarning" class="hidden p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                    <div class="flex items-center gap-2.5">
+                <div id="hostMismatchWarning" class="hidden p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl text-xs text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs min-w-0">
+                    <div class="flex items-start sm:items-center gap-2.5 min-w-0">
                         <div class="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-center shrink-0">
                             <i class="fa-solid fa-triangle-exclamation text-xs"></i>
                         </div>
-                        <div>
-                            <span class="font-bold text-amber-900 dark:text-amber-200 block">Host ESP Berbeda: <span id="mismatchHostEsp" class="font-mono text-rose-600 dark:text-rose-400">192.168.4.100</span></span>
-                            <span class="text-[11px] text-amber-800 dark:text-amber-300">ESP mengirim data absen ke IP di atas. Samakan ke <strong><?= htmlspecialchars($serverHost) ?></strong>.</span>
+                        <div class="min-w-0">
+                            <span class="font-bold text-amber-900 dark:text-amber-200 block break-words">Host ESP Berbeda: <span id="mismatchHostEsp" class="font-mono text-rose-600 dark:text-rose-400 break-all">192.168.4.100</span></span>
+                            <span class="text-[11px] text-amber-800 dark:text-amber-300 block break-words">ESP mengirim data absen ke IP di atas. Samakan ke <strong class="break-all"><?= htmlspecialchars($serverHost) ?></strong>.</span>
                         </div>
                     </div>
                     <button type="button" onclick="syncHostToEsp()" id="btnSyncHost"
@@ -122,26 +124,26 @@
             </div>
 
             <!-- Kolom Kanan: Status Layar LCD Fisik -->
-            <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-xs space-y-4">
-                <div class="flex items-center justify-between">
+            <div class="lg:col-span-5 min-w-0 overflow-hidden bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 shadow-xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <h3 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Status Tampilan LCD Fisik</h3>
-                    <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-600">LCD 16x2</span>
+                    <span class="text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-600 shrink-0">LCD 16x2</span>
                 </div>
 
                 <!-- Info Box Tampilan LCD Sederhana & Bersih -->
-                <div class="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2 text-slate-700 dark:text-slate-200" id="lcdPreviewLine1">
-                        <span>IP ESP (Client):</span>
-                        <span class="text-[10px] text-slate-400 font-sans font-bold">STANDBY</span>
+                <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs space-y-2 overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700/80 pb-2 text-slate-700 dark:text-slate-200 min-w-0" id="lcdPreviewLine1">
+                        <span class="break-words">IP ESP (Client):</span>
+                        <span class="text-[10px] text-slate-400 font-sans font-bold shrink-0">STANDBY</span>
                     </div>
-                    <div class="flex items-center justify-between text-slate-800 dark:text-slate-100 font-bold" id="lcdPreviewLine2">
-                        <span>IP: <?= htmlspecialchars($activeIp ?: '192.168.1.15') ?></span>
-                        <span class="text-[10px] text-slate-400"><i class="fa-solid fa-wifi text-[10px]"></i></span>
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-slate-800 dark:text-slate-100 font-bold min-w-0" id="lcdPreviewLine2">
+                        <span class="break-all">IP: <?= htmlspecialchars($activeIp ?: '192.168.1.15') ?></span>
+                        <span class="text-[10px] text-slate-400 shrink-0"><i class="fa-solid fa-wifi text-[10px]"></i></span>
                     </div>
                 </div>
 
                 <!-- Tombol Tindakan -->
-                <div class="flex items-center gap-2 pt-1">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
                     <button type="button" onclick="testCardScanAnimation()" class="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-lg text-xs transition cursor-pointer inline-flex items-center justify-center gap-1.5 shadow-xs">
                         <i class="fa-solid fa-id-card text-emerald-600 dark:text-emerald-400 text-[11px]"></i> Tes Simulasi LCD
                     </button>
@@ -200,42 +202,42 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
             <!-- Kolom Kiri: Kredensial Hotspot ESP -->
-            <div class="lg:col-span-7 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-xs space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+            <div class="lg:col-span-7 min-w-0 overflow-hidden bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 shadow-xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-700">
                     <h3 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Kredensial Wi-Fi Hotspot</h3>
-                    <span class="text-[11px] font-mono text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20">192.168.4.1</span>
+                    <span class="text-[11px] font-mono text-amber-800 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20 shrink-0">192.168.4.1</span>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
+                    <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 min-w-0">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Nama Wi-Fi (SSID)</span>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-mono font-bold text-slate-800 dark:text-slate-100">ESP-ABSENSI-RFID</span>
-                            <button type="button" onclick="copyToClipboard('ESP-ABSENSI-RFID', this)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition cursor-pointer" title="Salin">
+                        <div class="flex items-center justify-between gap-2 min-w-0">
+                            <span class="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 break-all">ESP-ABSENSI-RFID</span>
+                            <button type="button" onclick="copyToClipboard('ESP-ABSENSI-RFID', this)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition cursor-pointer shrink-0" title="Salin">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div class="p-3.5 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 min-w-0">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Kata Sandi Wi-Fi</span>
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-mono font-bold text-slate-800 dark:text-slate-100">12345678</span>
-                            <button type="button" onclick="copyToClipboard('12345678', this)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition cursor-pointer" title="Salin">
+                        <div class="flex items-center justify-between gap-2 min-w-0">
+                            <span class="text-xs font-mono font-bold text-slate-800 dark:text-slate-100 break-all">12345678</span>
+                            <button type="button" onclick="copyToClipboard('12345678', this)" class="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 rounded hover:bg-slate-200 dark:hover:bg-slate-700 text-xs transition cursor-pointer shrink-0" title="Salin">
                                 <i class="fa-regular fa-copy"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="sm:col-span-2 p-3.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-between">
-                        <div>
+                    <div class="sm:col-span-2 p-3.5 rounded-lg bg-emerald-50/60 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+                        <div class="min-w-0">
                             <span class="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-wider block">Web Portal Konfigurasi</span>
-                            <a href="http://192.168.4.1" target="_blank" class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 hover:underline flex items-center gap-1.5">
+                            <a href="http://192.168.4.1" target="_blank" class="text-xs font-mono font-bold text-emerald-700 dark:text-emerald-400 hover:underline inline-flex items-center gap-1.5 break-all">
                                 <span>http://192.168.4.1</span>
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px] shrink-0"></i>
                             </a>
                         </div>
-                        <a href="http://192.168.4.1" target="_blank" class="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-emerald-50 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 shadow-xs transition">
+                        <a href="http://192.168.4.1" target="_blank" class="px-3 py-1.5 bg-white dark:bg-slate-800 hover:bg-emerald-50 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-semibold border border-emerald-200 dark:border-emerald-500/30 shadow-xs transition text-center shrink-0">
                             Buka Portal
                         </a>
                     </div>
@@ -243,20 +245,20 @@
             </div>
 
             <!-- Kolom Kanan: Info LCD Layar AP -->
-            <div class="lg:col-span-5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-xs space-y-4">
-                <div class="flex items-center justify-between">
+            <div class="lg:col-span-5 min-w-0 overflow-hidden bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 shadow-xs space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <h3 class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Layar LCD (Mode AP)</h3>
-                    <span class="text-[11px] font-mono text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20">Hotspot</span>
+                    <span class="text-[11px] font-mono text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded border border-amber-200 dark:border-amber-500/20 shrink-0">Hotspot</span>
                 </div>
 
-                <div class="p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs space-y-2">
-                    <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/80 pb-2 text-slate-700 dark:text-slate-200">
-                        <span>AP: ESP-ABSENSI</span>
-                        <span class="text-[10px] text-amber-600 dark:text-amber-400 font-sans font-bold">5 MENIT</span>
+                <div class="p-3.5 sm:p-4 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200 dark:border-slate-700 font-mono text-xs space-y-2 overflow-hidden">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700/80 pb-2 text-slate-700 dark:text-slate-200">
+                        <span class="break-words">AP: ESP-ABSENSI</span>
+                        <span class="text-[10px] text-amber-600 dark:text-amber-400 font-sans font-bold shrink-0">5 MENIT</span>
                     </div>
-                    <div class="flex items-center justify-between text-slate-800 dark:text-slate-100 font-bold">
-                        <span>PW: 12345678</span>
-                        <span class="text-[10px] text-slate-400"><i class="fa-solid fa-tower-broadcast text-[10px]"></i></span>
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-slate-800 dark:text-slate-100 font-bold">
+                        <span class="break-words">PW: 12345678</span>
+                        <span class="text-[10px] text-slate-400 shrink-0"><i class="fa-solid fa-tower-broadcast text-[10px]"></i></span>
                     </div>
                 </div>
             </div>
@@ -268,13 +270,13 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <!-- RIWAYAT DIAGNOSTIK & LOG PING JARINGAN (MINIMALIS MONOSPACE)            -->
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-xs">
-        <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider">
-                <i class="fa-solid fa-terminal text-emerald-600 dark:text-emerald-400"></i>
-                <span>Log Diagnostik Jaringan & Aktivitas IoT</span>
+    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 sm:p-5 shadow-xs overflow-hidden">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div class="flex items-center gap-2 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider min-w-0">
+                <i class="fa-solid fa-terminal text-emerald-600 dark:text-emerald-400 shrink-0"></i>
+                <span class="truncate">Log Diagnostik Jaringan & Aktivitas IoT</span>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <span class="text-[11px] text-slate-400 font-mono" id="logCountBadge">0 entri</span>
                 <button type="button" onclick="clearConsoleLog()" class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium px-2 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer">
                     Bersihkan Log
@@ -282,7 +284,7 @@
             </div>
         </div>
 
-        <div id="pingLogConsole" class="bg-slate-900 dark:bg-slate-950 rounded-lg p-3 font-mono text-xs text-slate-300 max-h-48 overflow-y-auto space-y-1 border border-slate-800">
+        <div id="pingLogConsole" class="bg-slate-900 dark:bg-slate-950 rounded-lg p-3 font-mono text-xs text-slate-300 max-h-48 overflow-y-auto overflow-x-auto break-words space-y-1 border border-slate-800">
             <div class="text-slate-500">[System Ready] Menunggu pengujian konektivitas perangkat ESP...</div>
         </div>
     </div>
@@ -427,8 +429,8 @@ function switchIotMode(mode) {
     const tabClient = document.getElementById('tabModeClient');
     const tabAp     = document.getElementById('tabModeAp');
 
-    const activeClasses = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-600 inline-flex items-center justify-center gap-2 cursor-pointer";
-    const inactiveClasses = "flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center gap-2 cursor-pointer";
+    const activeClasses = "flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-600 inline-flex items-center justify-center gap-2 text-center leading-snug cursor-pointer";
+    const inactiveClasses = "flex-1 lg:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center gap-2 text-center leading-snug cursor-pointer";
 
     if (secClient) secClient.classList.add('hidden');
     if (secAp) secAp.classList.add('hidden');
@@ -552,12 +554,12 @@ async function pingEspDevice(silent = false) {
         const json = await res.json();
 
         if (json.success && json.status === 'connected') {
-            if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 shadow-xs";
-            if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+            if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 shadow-xs max-w-full";
+            if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0";
             if (statusText) statusText.textContent = "CONNECTED";
             if (latencyBadge) {
                 latencyBadge.textContent = `${json.latency} ms`;
-                latencyBadge.className = "text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400";
+                latencyBadge.className = "text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 break-words";
             }
 
             // Update status di header bar
@@ -594,23 +596,23 @@ async function pingEspDevice(silent = false) {
 
             logToConsole(`Ping sukses: ${ip} CONNECTED (${json.latency} ms).`, 'success');
         } else {
-            if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 shadow-xs";
-            if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-rose-600";
+            if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 shadow-xs max-w-full";
+            if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-rose-600 shrink-0";
             if (statusText) statusText.textContent = "DISCONNECTED";
             if (latencyBadge) {
                 latencyBadge.textContent = "Timeout";
-                latencyBadge.className = "text-xs font-mono font-bold text-rose-600 dark:text-rose-400";
+                latencyBadge.className = "text-xs font-mono font-bold text-rose-600 dark:text-rose-400 break-words";
             }
 
             logToConsole(`Ping gagal: ${ip} tidak merespon (${json.message || 'Host Unreachable'}).`, 'error');
         }
     } catch (err) {
-        if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 shadow-xs";
-        if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-rose-600";
+        if (statusBadge) statusBadge.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 shadow-xs max-w-full";
+        if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-rose-600 shrink-0";
         if (statusText) statusText.textContent = "DISCONNECTED";
         if (latencyBadge) {
             latencyBadge.textContent = "Error";
-            latencyBadge.className = "text-xs font-mono font-bold text-rose-600 dark:text-rose-400";
+            latencyBadge.className = "text-xs font-mono font-bold text-rose-600 dark:text-rose-400 break-words";
         }
         logToConsole(`Error koneksi ping: ${err.message}`, 'error');
     } finally {

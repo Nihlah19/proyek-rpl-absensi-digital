@@ -346,9 +346,8 @@
                 <div class="w-full sm:w-56">
                     <select id="selectKepsekStatus" onchange="filterKepsekDash()"
                             class="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500">
-                        <option value="">-- Semua Status --</option>
-                        <option value="hadir">Hadir Tepat</option>
-                        <option value="terlambat">Terlambat</option>
+                        <option value="">-- Semua Keterangan --</option>
+                        <option value="hadir">Hadir</option>
                         <option value="izin">Izin</option>
                         <option value="sakit">Sakit</option>
                         <option value="alfa">Alfa</option>
@@ -375,14 +374,15 @@
                             <th class="px-4 py-3">Nama Guru</th>
                             <th class="px-4 py-3 text-center">Datang</th>
                             <th class="px-4 py-3 text-center">Pulang</th>
-                            <th class="px-4 py-3 text-center">Status</th>
-                            <th class="px-4 py-3">Keterangan</th>
+                            <th class="px-4 py-3 text-center">Keterangan</th>
+                            <th class="px-4 py-3 text-center">Status Waktu</th>
+                            <th class="px-4 py-3">Catatan</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyKepsekGuru" class="divide-y divide-slate-100 dark:divide-slate-800">
                         <?php if (empty($data['absensiGuruHariIni'])): ?>
                         <tr>
-                            <td colspan="7" class="px-4 py-10 text-center text-slate-400 font-medium">
+                            <td colspan="8" class="px-4 py-10 text-center text-slate-400 font-medium">
                                 <i class="fa-solid fa-inbox text-2xl mb-2 block text-slate-300 dark:text-slate-600"></i>
                                 Belum ada guru yang melakukan presensi hari ini.
                             </td>
@@ -392,11 +392,12 @@
                             $noKg = 1;
                             foreach ($data['absensiGuruHariIni'] as $row): 
                                 $st = strtolower($row->status ?? 'alfa');
+                                $ketKey = ($st === 'terlambat') ? 'hadir' : $st;
                             ?>
                             <tr class="row-kepsek-dash hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors h-11"
                                 data-nama="<?= htmlspecialchars(strtolower($row->name)) ?>"
                                 data-nip="<?= htmlspecialchars(strtolower($row->nip ?? '')) ?>"
-                                data-status="<?= htmlspecialchars($st) ?>">
+                                data-status="<?= htmlspecialchars($ketKey) ?>">
                                 <td class="px-4 py-2 text-center text-slate-400 font-mono tabular-nums"><?= $noKg++ ?></td>
                                 <td class="px-4 py-2 font-mono text-slate-500 dark:text-slate-400 tabular-nums"><?= htmlspecialchars($row->nip ?? '-') ?></td>
                                 <td class="px-4 py-2">
@@ -414,7 +415,16 @@
                                     <?= $row->jam_pulang ? substr($row->jam_pulang, 0, 5) : '&mdash;' ?>
                                 </td>
                                 <td class="px-4 py-2 text-center">
-                                    <?= BadgeHelper::render($row->status, strtoupper($row->status)) ?>
+                                    <?= BadgeHelper::render($ketKey, strtoupper($ketKey)) ?>
+                                </td>
+                                <td class="px-4 py-2 text-center whitespace-nowrap">
+                                    <?php if ($st === 'hadir'): ?>
+                                        <?= BadgeHelper::render('hadir', 'Tepat Waktu') ?>
+                                    <?php elseif ($st === 'terlambat'): ?>
+                                        <?= BadgeHelper::render('terlambat', 'Terlambat') ?>
+                                    <?php else: ?>
+                                        <span class="text-slate-400">&mdash;</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="px-4 py-2 text-slate-500 dark:text-slate-400 max-w-[200px] truncate" title="<?= htmlspecialchars($row->keterangan ?? '') ?>">
                                     <?= htmlspecialchars($row->keterangan ?? '-') ?>

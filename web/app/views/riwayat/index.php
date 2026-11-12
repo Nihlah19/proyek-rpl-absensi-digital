@@ -313,19 +313,22 @@
                     `;
                 }
 
-                // Status Badge & Row Theme
+                // Status Badge & Row Theme (Keterangan Absen hanya Hadir, Izin, Sakit, Alfa; Tepat Waktu / Terlambat sebagai Status Waktu)
                 if (isPulang) {
                     rowHover = 'hover:bg-blue-50/40';
                     avatarBg = 'text-blue-600 bg-blue-50 border-blue-200';
-                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80"><i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i> Pulang</span>`;
+                    const waktuStatusTag = status === 'terlambat'
+                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80">Terlambat</span>`
+                        : (status === 'hadir' ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">Tepat Waktu</span>` : '');
+                    statusBadge = `<div class="inline-flex flex-wrap items-center gap-1"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/80"><i class="fa-solid fa-arrow-right-from-bracket text-[10px]"></i> Hadir (Pulang)</span>${waktuStatusTag}</div>`;
                 } else if (status === 'hadir') {
                     rowHover = 'hover:bg-emerald-50/40';
                     avatarBg = 'text-emerald-600 bg-emerald-50 border-emerald-200';
-                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-check text-[10px]"></i> Hadir</span>`;
+                    statusBadge = `<div class="inline-flex flex-wrap items-center gap-1"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-check text-[10px]"></i> Hadir</span><span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80">Tepat Waktu</span></div>`;
                 } else if (status === 'terlambat') {
                     rowHover = 'hover:bg-amber-50/40';
                     avatarBg = 'text-amber-600 bg-amber-50 border-amber-200';
-                    statusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80"><i class="fa-solid fa-clock text-[10px]"></i> Terlambat</span>`;
+                    statusBadge = `<div class="inline-flex flex-wrap items-center gap-1"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80"><i class="fa-solid fa-check text-[10px]"></i> Hadir</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80"><i class="fa-solid fa-clock text-[9px]"></i> Terlambat</span></div>`;
                 } else if (status === 'izin') {
                     rowHover = 'hover:bg-purple-50/40';
                     avatarBg = 'text-purple-600 bg-purple-50 border-purple-200';

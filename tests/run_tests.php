@@ -344,6 +344,92 @@ if (is_array($vercelCfg) && !empty($vercelCfg['routes'])) {
 }
 assertTest("Konfigurasi vercel.json valid dengan header Cache-Control immutable untuk aset statis", is_array($vercelCfg) && $hasAssetsCache);
 
+// -----------------------------------------------------------
+// TEST SUITE 8: IoT Responsiveness & Pemisahan Keterangan vs Status Waktu
+// -----------------------------------------------------------
+echo "\n--- 8. Testing IoT UI Responsiveness & Pemisahan Keterangan Absensi ---\n";
+
+$iotHtml = @file_get_contents(__DIR__ . '/../web/app/views/admin/iot.php') ?: '';
+assertTest("Tampilan IoT (admin/iot.php) memiliki class responsif min-w-0, break-all, flex-wrap, dan sm:flex-row",
+    strpos($iotHtml, 'min-w-0') !== false &&
+    strpos($iotHtml, 'break-all') !== false &&
+    strpos($iotHtml, 'flex-wrap') !== false &&
+    strpos($iotHtml, 'sm:flex-row') !== false
+);
+
+assertTest("Tailwind CSS terkompilasi mencakup utilitas responsif IoT (.break-all, .min-w-0, .flex-wrap)",
+    strpos($cssContent, '.break-all{') !== false &&
+    strpos($cssContent, '.min-w-0{') !== false &&
+    strpos($cssContent, '.flex-wrap{') !== false
+);
+
+$filterViewsToCheck = [
+    __DIR__ . '/../web/app/views/rekap_absensi/index.php',
+    __DIR__ . '/../web/app/views/absensi/index_siswa.php',
+    __DIR__ . '/../web/app/views/absensi/index_guru.php',
+    __DIR__ . '/../web/app/views/dashboard/admin.php',
+    __DIR__ . '/../web/app/views/dashboard/kepala_sekolah.php',
+    __DIR__ . '/../web/app/views/dashboard/wali_kelas.php',
+];
+$noTerlambatDropdown = true;
+foreach ($filterViewsToCheck as $fv) {
+    $fvHtml = @file_get_contents($fv) ?: '';
+    if (preg_match('/<option[^>]*value=["\']terlambat["\']/i', $fvHtml)) {
+        $noTerlambatDropdown = false;
+        break;
+    }
+}
+assertTest("Dropdown filter Keterangan Absensi hanya berisi Hadir/Izin/Sakit/Alfa (+PKL) tanpa opsi Terlambat", $noTerlambatDropdown);
+
+$rekapHtml = @file_get_contents(__DIR__ . '/../web/app/views/rekap_absensi/index.php') ?: '';
+assertTest("Tabel detail rekap absensi memisahkan kolom Keterangan dan Status Waktu",
+    strpos($rekapHtml, '>Keterangan<') !== false &&
+    strpos($rekapHtml, '>Status Waktu<') !== false &&
+    strpos($rekapHtml, 'Akumulasi (H/I/S/A)') !== false
+);
+
+require_once __DIR__ . '/../web/app/models/Laporan.php';
+require_once __DIR__ . '/../web/app/models/AbsensiMonitor.php';
+$laporanModel = new Laporan();
+$monitorModel = new AbsensiMonitor();
+$testLateDate = '2099-12-30';
+
+try {
+    $dbTest->query("SELECT s.id FROM siswa s JOIN kelas k ON k.id = s.kelas_id WHERE k.status = 'aktif' LIMIT 1");
+    $sampleSiswaLate = $dbTest->single();
+    $dbTest->query("SELECT g.id FROM guru g JOIN users u ON u.id = g.user_id WHERE u.role IN ('guru', 'wali_kelas', 'walikelas', 'kepsek') LIMIT 1");
+    $sampleGuruLate = $dbTest->single();
+
+    if ($sampleSiswaLate && $sampleGuruLate) {
+        $dbTest->query("INSERT INTO absensi_siswa (siswa_id, tanggal, jam_datang, status, keterangan) VALUES (:sid, :tgl, '07:40:00', 'terlambat', 'Telat test')");
+        $dbTest->bind(':sid', $sampleSiswaLate->id);
+        $dbTest->bind(':tgl', $testLateDate);
+        $dbTest->execute();
+
+        $dbTest->query("INSERT INTO absensi_guru (guru_id, tanggal, jam_datang, status, keterangan) VALUES (:gid, :tgl, '07:45:00', 'terlambat', 'Telat guru test')");
+        $dbTest->bind(':gid', $sampleGuruLate->id);
+        $dbTest->bind(':tgl', $testLateDate);
+        $dbTest->execute();
+
+        $rekapSiswaHadir = $laporanModel->getRekapSiswa(['dari' => $testLateDate, 'sampai' => $testLateDate, 'status' => 'hadir', 'limit' => 10, 'offset' => 0]);
+        $rekapGuruHadir  = $laporanModel->getRekapGuru(['dari' => $testLateDate, 'sampai' => $testLateDate, 'status' => 'hadir', 'limit' => 10, 'offset' => 0]);
+        $monSiswaHadir   = $monitorModel->getRiwayatSiswa($sampleSiswaLate->id, $testLateDate, $testLateDate, 'hadir', '', 0, 10);
+        $monGuruHadir    = $monitorModel->getRiwayatGuru($sampleGuruLate->id, $testLateDate, $testLateDate, 'hadir', '', 0, 10);
+
+        assertTest("Filter Laporan status 'hadir' ikut menampilkan absensi terlambat sebagai Keterangan Hadir (Siswa & Guru)", count($rekapSiswaHadir) >= 1 && count($rekapGuruHadir) >= 1);
+        assertTest("Filter Riwayat Pribadi status 'hadir' ikut menampilkan absensi terlambat (Siswa & Guru)", count($monSiswaHadir) >= 1 && count($monGuruHadir) >= 1);
+    } else {
+        assertTest("Sample siswa & guru tersedia untuk uji filter Hadir", false);
+    }
+} finally {
+    $dbTest->query("DELETE FROM absensi_siswa WHERE tanggal = :t");
+    $dbTest->bind(':t', $testLateDate);
+    $dbTest->execute();
+    $dbTest->query("DELETE FROM absensi_guru WHERE tanggal = :t");
+    $dbTest->bind(':t', $testLateDate);
+    $dbTest->execute();
+}
+
 
 // -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN

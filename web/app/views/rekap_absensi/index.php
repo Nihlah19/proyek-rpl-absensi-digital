@@ -6,12 +6,12 @@
  */
 
 $statusMap = [
-    'hadir'     => ['singkat' => 'H',   'label' => 'Hadir',     'badge' => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'],
-    'terlambat' => ['singkat' => 'T',   'label' => 'Terlambat', 'badge' => 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'],
-    'izin'      => ['singkat' => 'I',   'label' => 'Izin',      'badge' => 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800'],
-    'sakit'     => ['singkat' => 'S',   'label' => 'Sakit',     'badge' => 'bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'],
-    'alfa'      => ['singkat' => 'A',   'label' => 'Alfa',      'badge' => 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800'],
-    'pkl'       => ['singkat' => 'PKL', 'label' => 'PKL',       'badge' => 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'],
+    'hadir'     => ['singkat' => 'H',   'label' => 'Hadir', 'ket' => 'Hadir', 'waktu' => 'Tepat Waktu', 'waktu_badge' => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800', 'badge' => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'],
+    'terlambat' => ['singkat' => 'H',   'label' => 'Hadir', 'ket' => 'Hadir', 'waktu' => 'Terlambat',   'waktu_badge' => 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',     'badge' => 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'],
+    'izin'      => ['singkat' => 'I',   'label' => 'Izin',  'ket' => 'Izin',  'waktu' => '-',           'waktu_badge' => '', 'badge' => 'bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800'],
+    'sakit'     => ['singkat' => 'S',   'label' => 'Sakit', 'ket' => 'Sakit', 'waktu' => '-',           'waktu_badge' => '', 'badge' => 'bg-purple-50 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800'],
+    'alfa'      => ['singkat' => 'A',   'label' => 'Alfa',  'ket' => 'Alfa',  'waktu' => '-',           'waktu_badge' => '', 'badge' => 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800'],
+    'pkl'       => ['singkat' => 'PKL', 'label' => 'PKL',   'ket' => 'PKL',   'waktu' => '-',           'waktu_badge' => '', 'badge' => 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-800 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800'],
 ];
 
 $role           = $data['role'] ?? '';
@@ -61,14 +61,15 @@ $urlKatBiasa = BASEURL . '/rekapabsensi?' . http_build_query($swKat);
 $swKat['kategori'] = 'pkl';
 $urlKatPkl = BASEURL . '/rekapabsensi?' . http_build_query($swKat);
 
-// Hitung total kehadiran keseluruhan untuk KPI
-$totHadir = (int)($stats['hadir'] ?? 0);
-$totTelat = (int)($stats['terlambat'] ?? 0);
-$totIzin  = (int)($stats['izin'] ?? 0);
-$totSakit = (int)($stats['sakit'] ?? 0);
-$totAlfa  = (int)($stats['alfa'] ?? 0);
-$totPkl   = (int)($stats['pkl'] ?? 0);
-$totalKehadiran = $totHadir + $totTelat + $totPkl;
+// Hitung total kehadiran keseluruhan untuk KPI (Terlambat tetap terhitung Hadir)
+$totHadirTepat = (int)($stats['hadir'] ?? 0);
+$totTelat      = (int)($stats['terlambat'] ?? 0);
+$totHadir      = $totHadirTepat + $totTelat;
+$totIzin       = (int)($stats['izin'] ?? 0);
+$totSakit      = (int)($stats['sakit'] ?? 0);
+$totAlfa       = (int)($stats['alfa'] ?? 0);
+$totPkl        = (int)($stats['pkl'] ?? 0);
+$totalKehadiran = $totHadir + $totPkl;
 $totalAkumulasi = $totalKehadiran + $totIzin + $totSakit + $totAlfa;
 $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 100, 1) : 0;
 ?>
@@ -188,28 +189,20 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
 
     <!-- ── 4. RINGKASAN METRIK KPI (CLEAN COHESIVE BAR) ── -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden">
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 divide-x divide-y sm:divide-y-0 divide-slate-100 dark:divide-slate-800">
-            <!-- Metrik 1: Hadir Tepat Waktu -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-slate-100 dark:divide-slate-800">
+            <!-- Metrik 1: Hadir -->
             <div class="p-3.5 sm:p-4">
                 <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span class="font-medium">Hadir</span>
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 </div>
                 <div class="text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums"><?= $totHadir ?></div>
-                <span class="text-[11px] text-emerald-700 font-semibold">Tepat Waktu</span>
+                <span class="text-[11px] text-emerald-700 font-semibold">
+                    <?= $totTelat > 0 ? "{$totHadirTepat} Tepat Waktu &bull; {$totTelat} Terlambat" : "Tepat Waktu" ?>
+                </span>
             </div>
 
-            <!-- Metrik 2: Terlambat -->
-            <div class="p-3.5 sm:p-4">
-                <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
-                    <span class="font-medium">Terlambat</span>
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                </div>
-                <div class="text-xl font-bold font-mono text-slate-900 dark:text-white tabular-nums"><?= $totTelat ?></div>
-                <span class="text-[11px] text-amber-700 font-semibold">Masuk Dispensasi</span>
-            </div>
-
-            <!-- Metrik 3: Izin -->
+            <!-- Metrik 2: Izin -->
             <div class="p-3.5 sm:p-4">
                 <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span class="font-medium">Izin</span>
@@ -219,7 +212,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 <span class="text-[11px] text-blue-700 font-semibold">Disetujui</span>
             </div>
 
-            <!-- Metrik 4: Sakit -->
+            <!-- Metrik 3: Sakit -->
             <div class="p-3.5 sm:p-4">
                 <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span class="font-medium">Sakit</span>
@@ -229,7 +222,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 <span class="text-[11px] text-purple-700 font-semibold">Keterangan Medis</span>
             </div>
 
-            <!-- Metrik 5: Alfa -->
+            <!-- Metrik 4: Alfa -->
             <div class="p-3.5 sm:p-4">
                 <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span class="font-medium">Alfa</span>
@@ -239,8 +232,8 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 <span class="text-[11px] <?= $totAlfa > 0 ? 'text-rose-600 font-bold' : 'text-slate-500 font-medium' ?>">Tanpa Keterangan</span>
             </div>
 
-            <!-- Metrik 6: Rata-Rata Kehadiran / PKL -->
-            <div class="p-3.5 sm:p-4 bg-slate-50/60 dark:bg-slate-800/40">
+            <!-- Metrik 5: Rata-Rata Kehadiran / PKL -->
+            <div class="p-3.5 sm:p-4 bg-slate-50/60 dark:bg-slate-800/40 col-span-2 sm:col-span-1">
                 <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                     <span class="font-medium"><?= ($tipe === 'siswa' && $kategori === 'pkl') ? 'Hadir PKL' : 'Persentase' ?></span>
                     <i class="fa-solid fa-chart-pie text-slate-400 text-xs" aria-hidden="true"></i>
@@ -297,11 +290,10 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 <!-- Filter Status (Mode Detail) -->
                 <?php if ($viewMode === 'detail'): ?>
                 <div class="<?= ($tipe === 'siswa' && $role === 'admin') ? 'lg:col-span-2' : 'lg:col-span-3' ?>">
-                    <label for="filter_status" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Status Kehadiran</label>
+                    <label for="filter_status" class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Keterangan Absen</label>
                     <select id="filter_status" name="status" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg text-xs font-medium text-slate-800 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-900 focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 transition-all outline-none">
-                        <option value="">Semua Status</option>
+                        <option value="">Semua Keterangan</option>
                         <option value="hadir"     <?= ($filters['status'] === 'hadir')     ? 'selected' : '' ?>>Hadir (H)</option>
-                        <option value="terlambat" <?= ($filters['status'] === 'terlambat') ? 'selected' : '' ?>>Terlambat (T)</option>
                         <option value="izin"      <?= ($filters['status'] === 'izin')      ? 'selected' : '' ?>>Izin (I)</option>
                         <option value="sakit"     <?= ($filters['status'] === 'sakit')     ? 'selected' : '' ?>>Sakit (S)</option>
                         <option value="alfa"      <?= ($filters['status'] === 'alfa')      ? 'selected' : '' ?>>Alfa (A)</option>
@@ -376,9 +368,8 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
         </div>
 
         <div class="flex items-center gap-2 text-[11px] text-slate-600 flex-wrap">
-            <span class="font-bold text-slate-700">Kode:</span>
+            <span class="font-bold text-slate-700">Keterangan:</span>
             <span class="text-emerald-800 font-semibold">H = Hadir</span> &bull;
-            <span class="text-amber-800 font-semibold">T = Telat</span> &bull;
             <span class="text-blue-800 font-semibold">I = Izin</span> &bull;
             <span class="text-purple-800 font-semibold">S = Sakit</span> &bull;
             <span class="text-rose-800 font-semibold">A = Alfa</span>
@@ -476,8 +467,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                             <th scope="col" class="px-3.5 py-3">Nama Siswa</th>
                             <th scope="col" class="px-3.5 py-3">Kelas</th>
                         <?php endif; ?>
-                        <th scope="col" class="px-3 py-3 text-center text-emerald-800" title="Hadir Tepat Waktu">H</th>
-                        <th scope="col" class="px-3 py-3 text-center text-amber-800" title="Terlambat">T</th>
+                        <th scope="col" class="px-3 py-3 text-center text-emerald-800" title="Hadir (Tepat Waktu &amp; Terlambat)">H</th>
                         <th scope="col" class="px-3 py-3 text-center text-blue-800" title="Izin">I</th>
                         <th scope="col" class="px-3 py-3 text-center text-purple-800" title="Sakit">S</th>
                         <th scope="col" class="px-3 py-3 text-center text-rose-800" title="Alfa">A</th>
@@ -492,7 +482,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 dark:divide-slate-800">
                     <?php if (empty($data['dataAbsensi'])): ?>
                     <tr>
-                        <td colspan="13" class="px-4 py-12 text-center text-slate-500">
+                        <td colspan="12" class="px-4 py-12 text-center text-slate-500">
                             <i class="fa-solid fa-user-xmark text-3xl mb-2 text-slate-300 block" aria-hidden="true"></i>
                             <p class="font-semibold text-slate-700">Tidak ada data yang sesuai dengan filter pencarian</p>
                         </td>
@@ -503,12 +493,13 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                         foreach ($data['dataAbsensi'] as $row):
                             $h = (int)($row->hadir ?? 0);
                             $t = (int)($row->terlambat ?? 0);
+                            $hAll = $h + $t;
                             $i = (int)($row->izin ?? 0);
                             $s = (int)($row->sakit ?? 0);
                             $a = (int)($row->alfa ?? 0);
                             $pkl = (int)($row->pkl ?? 0);
 
-                            $totalMasuk = $h + $t + $pkl;
+                            $totalMasuk = $hAll + $pkl;
                             $totalHari  = $totalMasuk + $i + $s + $a;
                             $pct = $totalHari > 0 ? round(($totalMasuk / $totalHari) * 100, 1) : 0;
 
@@ -541,10 +532,8 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                                 </td>
                             <?php endif; ?>
 
-                            <!-- Hadir -->
-                            <td class="px-3 py-3 text-center font-mono font-bold text-emerald-800 tabular-nums"><?= $h ?></td>
-                            <!-- Terlambat -->
-                            <td class="px-3 py-3 text-center font-mono tabular-nums <?= $t > 0 ? 'text-amber-700 font-bold' : 'text-slate-400' ?>"><?= $t ?></td>
+                            <!-- Hadir (Hadir Tepat + Terlambat) -->
+                            <td class="px-3 py-3 text-center font-mono font-bold text-emerald-800 tabular-nums" title="Tepat Waktu: <?= $h ?> | Terlambat: <?= $t ?>"><?= $hAll ?></td>
                             <!-- Izin -->
                             <td class="px-3 py-3 text-center font-mono tabular-nums <?= $i > 0 ? 'text-blue-700 font-bold' : 'text-slate-400' ?>"><?= $i ?></td>
                             <!-- Sakit -->
@@ -671,15 +660,16 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                         <?php endif; ?>
                         <th scope="col" class="px-3 py-3 text-center">Datang</th>
                         <th scope="col" class="px-3 py-3 text-center">Pulang</th>
-                        <th scope="col" class="px-3 py-3 text-center">Status</th>
-                        <th scope="col" class="px-3.5 py-3">Keterangan</th>
-                        <th scope="col" class="px-3.5 py-3 text-center whitespace-nowrap">Akumulasi (H/T/I/S/A)</th>
+                        <th scope="col" class="px-3 py-3 text-center">Keterangan</th>
+                        <th scope="col" class="px-3 py-3 text-center">Status Waktu</th>
+                        <th scope="col" class="px-3.5 py-3">Catatan</th>
+                        <th scope="col" class="px-3.5 py-3 text-center whitespace-nowrap">Akumulasi (H/I/S/A)</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 dark:divide-slate-800 dark:divide-slate-800">
                     <?php if (empty($data['dataAbsensi'])): ?>
                     <tr>
-                        <td colspan="10" class="px-4 py-12 text-center text-slate-500">
+                        <td colspan="11" class="px-4 py-12 text-center text-slate-500">
                             <i class="fa-solid fa-clipboard-question text-3xl mb-2 text-slate-300 block" aria-hidden="true"></i>
                             <p class="font-semibold text-slate-700">Tidak ada log absensi yang sesuai filter</p>
                         </td>
@@ -689,10 +679,11 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                         $no = $data['filters']['offset'] + 1;
                         foreach ($data['dataAbsensi'] as $row):
                             $stKey = strtolower($row->status ?? 'alfa');
-                            $st    = $statusMap[$stKey] ?? ['singkat' => strtoupper($stKey), 'label' => ucfirst($stKey), 'badge' => 'bg-slate-100 text-slate-700 border-slate-200'];
+                            $st    = $statusMap[$stKey] ?? ['singkat' => strtoupper($stKey), 'label' => ucfirst($stKey), 'ket' => ucfirst($stKey), 'waktu' => '-', 'waktu_badge' => '', 'badge' => 'bg-slate-100 text-slate-700 border-slate-200'];
 
                             $personId = ($tipe === 'guru') ? ($row->guru_id ?? null) : ($row->siswa_id ?? null);
                             $ak = $akumulasiMap[$personId] ?? ['hadir' => 0, 'terlambat' => 0, 'izin' => 0, 'sakit' => 0, 'alfa' => 0, 'pkl' => 0];
+                            $akHadir = (int)$ak['hadir'] + (int)$ak['terlambat'];
                         ?>
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                             <td class="px-3.5 py-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
@@ -723,14 +714,25 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                                 <?= !empty($row->jam_pulang) ? substr($row->jam_pulang, 0, 5) : '<span class="text-slate-300">&mdash;</span>' ?>
                             </td>
 
-                            <!-- Status Badge -->
+                            <!-- Keterangan Absen Badge (Hadir / Izin / Sakit / Alfa / PKL) -->
                             <td class="px-3 py-3 text-center whitespace-nowrap">
                                 <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold border <?= $st['badge'] ?>">
-                                    <?= $st['label'] ?>
+                                    <?= $st['ket'] ?>
                                 </span>
                             </td>
 
-                            <!-- Keterangan -->
+                            <!-- Status Waktu Badge (Tepat Waktu / Terlambat / -) -->
+                            <td class="px-3 py-3 text-center whitespace-nowrap">
+                                <?php if ($st['waktu'] !== '-'): ?>
+                                <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-bold border <?= $st['waktu_badge'] ?>">
+                                    <?= $st['waktu'] ?>
+                                </span>
+                                <?php else: ?>
+                                <span class="text-slate-300">&mdash;</span>
+                                <?php endif; ?>
+                            </td>
+
+                            <!-- Catatan -->
                             <td class="px-3.5 py-3 text-slate-600 max-w-[180px] truncate" title="<?= htmlspecialchars($row->keterangan ?? '') ?>">
                                 <?= !empty($row->keterangan) ? htmlspecialchars($row->keterangan) : '<span class="text-slate-300">&mdash;</span>' ?>
                             </td>
@@ -738,7 +740,7 @@ $persenRata = $totalAkumulasi > 0 ? round(($totalKehadiran / $totalAkumulasi) * 
                             <!-- Akumulasi -->
                             <td class="px-3.5 py-3 whitespace-nowrap text-center">
                                 <span class="font-mono text-[11px] font-semibold text-slate-600">
-                                    <?= $ak['hadir'] ?>H / <?= $ak['terlambat'] ?>T / <?= $ak['izin'] ?>I / <?= $ak['sakit'] ?>S / <?= $ak['alfa'] ?>A
+                                    <?= $akHadir ?>H / <?= $ak['izin'] ?>I / <?= $ak['sakit'] ?>S / <?= $ak['alfa'] ?>A
                                 </span>
                             </td>
                         </tr>
