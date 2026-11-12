@@ -13,14 +13,14 @@
 
 | Atribut | Keterangan |
 | :--- | :--- |
-| **Nama** | **Nihlah Auliya** |
-| **NIM** | **41257146** |
-| **Kelompok** | **Sunyaragi Nexus** |
-| **Tema Topik Kelompok** | **Absensi Digital Siswa SMK** |
-| **Institusi Mitra / Studi Kasus** | SMK NU Wargabinangun Cirebon |
-| **Repositori Publik Pribadi** | `Nihlah19/proyek-rpl-absensi-digital` |
-| **Desain UI/UX (Figma)** | [Buka Desain UI/UX Absensi Digital di Figma](https://www.figma.com/design/8u9jDgeLnZYtYpfKmOWqhU/ui-ux-absensi-digital?node-id=0-1&t=9AOYUDDeMCdWBhJl-1) |
-| **Berkas Dokumen Lengkap (PDF)** | [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf) |
+| *Nama* | *Nihlah Auliya* |
+| *NIM* | *41257146* |
+| *Kelompok* | *Sunyaragi Nexus* |
+| *Tema Topik Kelompok* | *Absensi Digital Siswa SMK* |
+| *Institusi Mitra / Studi Kasus* | SMK NU Wargabinangun |
+| *Repositori Publik Pribadi* | https://github.com/Nihlah19/proyek-rpl-absensi-digital.git |
+| *Desain UI/UX (Figma)* | [Buka Desain Wise Design System di Figma](https://www.figma.com/design/8u9jDgeLnZYtYpfKmOWqhU/ui-ux-absensi-digital?node-id=0-1&t=9AOYUDDeMCdWBhJl-1) |
+| *Berkas Dokumen Lengkap (PDF)* | [docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf) |
 
 ---
 
@@ -51,16 +51,17 @@
 
 ## Tautan Video Presentasi & Dokumentasi
 
-| Tahap Video | Fokus Bahasan | Tautan Video | Status |
-| :--- | :--- | :--- | :--- |
-| **Video Progres 1** | Penjelasan Dokumen PRD / SRS & Konsep Aplikasi | `[Lengkapi Link Video Progres 1 di Sini]` | Menunggu Tautan Upload |
-| **Video Progres 2** | Pemodelan UML (Use Case, ERD, Class, Sequence) & UI/UX Figma | `[Lengkapi Link Video Progres 2 di Sini]` | Menunggu Tautan Upload |
-| **Video Final Demo** | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | `[Lengkapi Link Video Final Demo di Sini]` | Menunggu Tautan Upload |
+| Tahap Video | Fokus Bahasan | Tautan Video | 
+| :--- | :--- | :--- |
+| *Video Progres 1* | Penjelasan Dokumen PRD & Konsep Aplikasi | [Lengkapi Link Video Progres 1 di Sini] |
+| *Video Progres 2* | Pemodelan UML (Use Case, ERD, Activity, Sequence) & UI/UX Figma | [Lengkapi Link Video Progres 2 di Sini] |
+| *Video Final Demo* | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | [Lengkapi Link Video Final Demo di Sini] |
+| *Video Final Youtube* | Vidio Full Dari PRD Sampai Demo Website | [Lengkapi Link Video Final Demo di Sini] |
 
-> **Berkas Referensi Terkait di Repositori:**
-> - Dokumen PRD Terpilih: [`docs/PRD_ABSENSISMKNU.docx`](docs/PRD_ABSENSISMKNU.docx)
-> - Dokumen Lengkap Terjilid (PRD/SRS + SDD UML & Figma + Laporan Pengujian/CI-CD): [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf)
-> - Dokumentasi Endpoint IoT API: [`docs/api.md`](docs/api.md)
+> *Berkas Referensi Terkait di Repositori:*
+> - Dokumen PRD Terpilih: [docs/PRD_ABSENSISMKNU.docx](docs/PRD_ABSENSISMKNU.docx)
+> - Dokumen Lengkap Terjilid (PRD/SRS + SDD UML & Figma + Laporan Pengujian/CI-CD): [docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf)
+> - Dokumentasi Endpoint IoT API: [docs/api.md](docs/api.md)
 
 ---
 
