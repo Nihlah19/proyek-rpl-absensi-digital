@@ -44,7 +44,7 @@
 
     <!-- Body Copy in Warm Charcoal -->
     <text x="0" y="245" fill="#454745" font-family="Inter, sans-serif" font-size="17">Menghubungkan gerbang sekolah, guru kelas, dan orang tua murid secara</text>
-    <text x="0" y="272" fill="#454745" font-family="Inter, sans-serif" font-size="17">transparan. Tap kartu instan RFID, kode QR pelajar cadangan, presensi</text>
+    <text x="0" y="272" fill="#454745" font-family="Inter, sans-serif" font-size="17">transparan. Tap kartu RFID siswa, scan QR Barcode guru, presensi</text>
     <text x="0" y="299" fill="#454745" font-family="Inter, sans-serif" font-size="17">mandiri magang PKL anti-fraud, serta pemberitahuan otomatis ke orang tua.</text>
 
     <!-- Action Group: Filled Lime CTA + Text Link Button -->

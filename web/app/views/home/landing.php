@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Sistem Presensi Sekolah Terpadu SMK NU Wargabinangun berbasis IoT RFID RC522, QR Code Siswa, Multi-Channel WhatsApp & Telegram, dan Asisten AI Google Gemini.">
+    <meta name="description" content="Sistem Presensi Sekolah Terpadu SMK NU Wargabinangun berbasis IoT RFID RC522 Siswa, QR Barcode Guru, Multi-Channel WhatsApp & Telegram, dan Asisten AI Google Gemini.">
     <meta name="base-url" content="<?= BASEURL; ?>">
-    <title><?= $data['judul'] ?? 'Sistem Presensi RFID & QR Code — SMK NU Wargabinangun' ?></title>
+    <title><?= $data['judul'] ?? 'Sistem Presensi RFID Siswa & QR Guru — SMK NU Wargabinangun' ?></title>
 
     <!-- PWA Settings & Favicons -->
     <link rel="manifest" href="<?= BASEURL; ?>/manifest.json">
@@ -330,7 +330,7 @@
 
                 <!-- Body Copy in Warm Charcoal (18px) -->
                 <p class="text-charcoal text-base sm:text-lg lg:text-[19px] leading-relaxed max-w-xl font-normal">
-                    Menghubungkan gerbang sekolah, guru kelas, dan orang tua murid secara transparan. Tap kartu instan, kode QR pelajar cadangan, serta pemberitahuan otomatis ke orang tua tanpa antrean.
+                    Menghubungkan gerbang sekolah, guru kelas, dan orang tua murid secara transparan. Tap kartu RFID instan untuk siswa, scan QR Barcode untuk guru, serta pemberitahuan otomatis ke orang tua tanpa antrean.
                 </p>
 
                 <!-- Action Group: Filled Lime CTA + Text Link Button -->
@@ -348,7 +348,7 @@
                 <!-- Clean Benefits Checklist -->
                 <div class="pt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-semibold text-slate border-t border-fog">
                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-forest font-bold"></i> Notifikasi Otomatis Orang Tua</span>
-                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-forest font-bold"></i> Kartu Fisik &amp; QR Siswa</span>
+                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-forest font-bold"></i> Kartu RFID Siswa &amp; QR Guru</span>
                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-forest font-bold"></i> Rekap Kehadiran Real-time</span>
                     <span class="flex items-center gap-1.5"><i class="fa-solid fa-check text-forest font-bold"></i> Bebas Antrean di Gerbang</span>
                 </div>
@@ -370,17 +370,17 @@
                     <!-- Interactive Mode Tabs -->
                     <div class="grid grid-cols-2 gap-2 bg-paper p-1 rounded-full border border-pebble/30">
                         <button id="simTabRfid" onclick="setSimMode('rfid')" class="py-1.5 px-3 rounded-full text-xs font-bold transition-all bg-lime text-forest">
-                            <i class="fa-solid fa-id-card mr-1"></i> Kartu Siswa
+                            <i class="fa-solid fa-id-card mr-1"></i> RFID Siswa
                         </button>
                         <button id="simTabQr" onclick="setSimMode('qr')" class="py-1.5 px-3 rounded-full text-xs font-bold transition-all text-charcoal hover:text-forest">
-                            <i class="fa-solid fa-qrcode mr-1"></i> QR Digital
+                            <i class="fa-solid fa-qrcode mr-1"></i> QR Guru
                         </button>
                     </div>
 
                     <!-- Inset White Card: Reader Input & Result -->
                     <div id="simDisplayBox" class="bg-paper rounded-[10px] p-5 border border-pebble/30 space-y-3 transition-all duration-300">
                         <div class="flex items-center justify-between text-xs text-pebble">
-                            <span id="simReaderLabel">Metode: Kartu Siswa</span>
+                            <span id="simReaderLabel">Metode: Kartu RFID Siswa</span>
                             <span id="simTagType" class="text-forest font-semibold">RFID SISWA</span>
                         </div>
 
@@ -388,16 +388,16 @@
                         <div class="flex items-center justify-between bg-fog px-3.5 py-2.5 rounded-[10px] border border-pebble/20">
                             <div class="flex items-center gap-2">
                                 <i id="simIcon" class="fa-solid fa-id-card text-forest text-sm"></i>
-                                <span id="simTokenCode" class="font-bold text-obsidian text-sm">Kartu Siswa Aktif</span>
+                                <span id="simTokenCode" class="font-bold text-obsidian text-sm">Kartu RFID Siswa Aktif</span>
                             </div>
                             <span class="px-2 py-0.5 rounded-full bg-linen text-forest font-bold text-[10px] tracking-wide uppercase">Terverifikasi</span>
                         </div>
 
-                        <!-- Student Tap Result -->
+                        <!-- Tap Result -->
                         <div class="pt-2 border-t border-fog flex items-center justify-between">
                             <div>
-                                <h4 class="text-sm font-bold text-obsidian">NIhlah Auliya</h4>
-                                <p class="text-xs text-slate">NIS: 202410012 &bull; Kelas: 11 TKJ</p>
+                                <h4 id="simPersonName" class="text-sm font-bold text-obsidian">NIhlah Auliya</h4>
+                                <p id="simPersonMeta" class="text-xs text-slate">NIS: 202410012 &bull; Kelas: 11 TKJ</p>
                             </div>
                             <div class="text-right">
                                 <span class="inline-block px-2.5 py-1 rounded-full bg-lime text-forest text-xs font-extrabold">HADIR</span>
@@ -500,19 +500,19 @@
                 </div>
             </div>
 
-            <!-- 2. Kartu Digital Siswa -->
+            <!-- 2. Scan QR Barcode Guru -->
             <div class="group wise-card-hover bg-paper rounded-[10px] p-6 border border-pebble/30 flex flex-col justify-between space-y-4 reveal-on-scroll delay-200">
                 <div class="space-y-3">
                     <div class="icon-bubble w-12 h-12 rounded-full bg-linen text-forest flex items-center justify-center text-xl">
                         <i class="fa-solid fa-qrcode"></i>
                     </div>
-                    <h3 class="text-lg font-bold text-obsidian group-hover:text-forest transition-colors">Kartu Pelajar Digital</h3>
+                    <h3 class="text-lg font-bold text-obsidian group-hover:text-forest transition-colors">Scan QR Barcode Guru</h3>
                     <p class="text-sm text-charcoal leading-relaxed">
-                        Solusi alternatif jika kartu fisik tertinggal. Setiap siswa memiliki kode QR kartu pelajar digital yang dapat ditunjukkan langsung melalui smartphone.
+                        Presensi harian khusus dewan guru menggunakan pemindaian QR Barcode di mesin gerbang maupun portal guru secara cepat dan akurat.
                     </p>
                 </div>
                 <div class="pt-3 border-t border-fog flex items-center gap-2 text-xs font-semibold text-spruce">
-                    <i class="fa-solid fa-check"></i> Solusi Cadangan Nyaman
+                    <i class="fa-solid fa-check"></i> Presensi QR Khusus Guru
                 </div>
             </div>
 
@@ -606,9 +606,9 @@
             <div class="group wise-card-hover-dark bg-spruce/60 border border-lime/20 rounded-[10px] p-6 space-y-4 flex flex-col justify-between reveal-on-scroll delay-100">
                 <div class="space-y-3">
                     <span class="font-mono text-2xl font-black text-lime transition-transform duration-300 group-hover:scale-110 inline-block">01</span>
-                    <h4 class="text-base font-bold text-paper">Siswa Tiba di Sekolah</h4>
+                    <h4 class="text-base font-bold text-paper">Tap RFID Siswa &amp; QR Guru</h4>
                     <p class="text-xs text-fog leading-relaxed">
-                        Siswa menempelkan kartu siswa atau menunjukkan QR digital di gerbang dengan mudah dan tertib.
+                        Siswa menempelkan kartu RFID di mesin gerbang, sementara guru melakukan scan QR Barcode dengan cepat dan tertib.
                     </p>
                 </div>
                 <span class="text-[11px] font-semibold text-lime">&bull; Deteksi Otomatis</span>
@@ -709,8 +709,8 @@
                 </div>
                 <h3 class="text-lg font-bold text-obsidian group-hover:text-forest transition-colors">Siswa</h3>
                 <ul class="text-xs text-charcoal space-y-2 font-medium">
-                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Tap kartu siswa di gerbang</li>
-                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Tunjukkan QR digital jika kartu tertinggal</li>
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Tap kartu RFID siswa di gerbang</li>
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Presensi mandiri PKL via kamera &amp; GPS</li>
                     <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Riwayat kehadiran mandiri</li>
                 </ul>
             </div>
@@ -722,7 +722,7 @@
                 </div>
                 <h3 class="text-lg font-bold text-obsidian group-hover:text-forest transition-colors">Guru &amp; Piket</h3>
                 <ul class="text-xs text-charcoal space-y-2 font-medium">
-                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Bantuan pemindaian kode QR siswa</li>
+                    <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Scan QR Barcode untuk presensi guru</li>
                     <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Verifikasi izin dan keterlambatan</li>
                     <li class="flex items-start gap-2"><i class="fa-solid fa-check text-forest mt-0.5"></i> Catatan jadwal mengajar kelas</li>
                 </ul>
@@ -818,20 +818,27 @@ function setSimMode(mode) {
         displayBox.classList.add('sim-swap-anim');
     }
 
+    const simPersonName = document.getElementById('simPersonName');
+    const simPersonMeta = document.getElementById('simPersonMeta');
+
     if (mode === 'rfid') {
         tabRfid.className = 'py-1.5 px-3 rounded-full text-xs font-bold transition-all bg-lime text-forest';
         tabQr.className = 'py-1.5 px-3 rounded-full text-xs font-bold transition-all text-charcoal hover:text-forest';
-        if (readerLabel) readerLabel.textContent = 'Metode: Kartu Siswa';
+        if (readerLabel) readerLabel.textContent = 'Metode: Kartu RFID Siswa';
         if (tagType) tagType.textContent = 'RFID SISWA';
         if (icon) icon.className = 'fa-solid fa-id-card text-forest text-sm';
-        if (tokenCode) tokenCode.textContent = 'Kartu Siswa Aktif';
+        if (tokenCode) tokenCode.textContent = 'Kartu RFID Siswa Aktif';
+        if (simPersonName) simPersonName.textContent = 'NIhlah Auliya';
+        if (simPersonMeta) simPersonMeta.textContent = 'NIS: 202410012 • Kelas: 11 TKJ';
     } else {
         tabQr.className = 'py-1.5 px-3 rounded-full text-xs font-bold transition-all bg-lime text-forest';
         tabRfid.className = 'py-1.5 px-3 rounded-full text-xs font-bold transition-all text-charcoal hover:text-forest';
-        if (readerLabel) readerLabel.textContent = 'Metode: QR Siswa Digital';
-        if (tagType) tagType.textContent = 'QR PELAJAR';
+        if (readerLabel) readerLabel.textContent = 'Metode: Scan QR Barcode Guru';
+        if (tagType) tagType.textContent = 'QR BARCODE GURU';
         if (icon) icon.className = 'fa-solid fa-qrcode text-forest text-sm';
-        if (tokenCode) tokenCode.textContent = 'QR Code Terverifikasi';
+        if (tokenCode) tokenCode.textContent = 'QR Barcode Guru Terverifikasi';
+        if (simPersonName) simPersonName.textContent = 'Ronidah, S.Kom';
+        if (simPersonMeta) simPersonMeta.textContent = 'Guru Mapel • Wali Kelas 10 TKJ';
     }
 }
 

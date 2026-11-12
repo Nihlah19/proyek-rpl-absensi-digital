@@ -517,6 +517,14 @@ assertTest(
     file_exists($pdfPath) && $pdfHeader === '%PDF-' && filesize($pdfPath) >= 100000
 );
 
+$landingUpdatedSrc = file_get_contents(__DIR__ . '/../web/app/views/home/landing.php');
+assertTest(
+    "Landing page menegaskan presensi Siswa via Kartu RFID dan QR Barcode khusus Guru (tanpa QR pelajar)",
+    strpos($landingUpdatedSrc, 'kode QR pelajar') === false
+    && strpos($landingUpdatedSrc, 'Tap kartu RFID instan untuk siswa') !== false
+    && strpos($landingUpdatedSrc, 'Scan QR Barcode Guru') !== false
+);
+
 
 // -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN
