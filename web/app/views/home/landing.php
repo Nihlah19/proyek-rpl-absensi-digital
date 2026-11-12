@@ -53,8 +53,10 @@
         .rounded-card { border-radius: 10px; }
         .rounded-largeCard { border-radius: 28px; }
         
-        html {
+        html, body {
             scroll-behavior: smooth;
+            overflow-x: hidden;
+            max-width: 100%;
         }
 
         body {
@@ -63,11 +65,11 @@
             -moz-osx-font-smoothing: grayscale;
             background-color: #ffffff;
             color: #454745;
-            overflow-x: hidden;
         }
 
-        section {
+        section, main {
             scroll-margin-top: 5rem;
+            min-width: 0;
         }
 
         #fitur, #alur-kerja, #akses-peran, footer {
@@ -248,25 +250,25 @@
     </style>
 </head>
 
-<body class="bg-paper text-charcoal min-h-screen flex flex-col selection:bg-lime selection:text-forest">
+<body class="bg-paper text-charcoal min-h-screen flex flex-col overflow-x-hidden selection:bg-lime selection:text-forest">
 
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- TOP NAVIGATION BAR (Wise Style: Paper Background, 64px, Pill Switcher)      -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<header class="sticky top-0 z-50 h-16 bg-paper border-b border-fog transition-colors">
-    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
+<header class="sticky top-0 z-50 h-16 bg-paper border-b border-fog transition-colors w-full">
+    <div class="max-w-[1200px] mx-auto px-3 sm:px-6 h-full flex items-center justify-between gap-2 sm:gap-4 min-w-0">
         
         <!-- Brand / Identity -->
-        <a href="<?= BASEURL; ?>" class="flex items-center gap-3 group">
+        <a href="<?= BASEURL; ?>" class="flex items-center gap-2 sm:gap-3 group min-w-0">
             <picture class="shrink-0">
                 <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
-                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-10 w-10 object-contain shrink-0" fetchpriority="high" decoding="async">
+                <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="40" height="40" class="h-8 w-8 sm:h-10 sm:w-10 object-contain shrink-0" fetchpriority="high" decoding="async">
             </picture>
-            <span class="block text-sm font-extrabold tracking-tight text-obsidian uppercase font-sans leading-none">SMK NU WARGABINANGUN</span>
+            <span class="block text-xs sm:text-sm font-extrabold tracking-tight text-obsidian uppercase font-sans leading-tight truncate">SMK NU WARGABINANGUN</span>
         </a>
 
         <!-- Segmented Tab Nav Switcher (Wise Signature Pill Nav) -->
-        <nav id="topNavSwitcher" class="hidden lg:flex items-center bg-fog rounded-full p-1 border border-pebble/30">
+        <nav id="topNavSwitcher" class="hidden lg:flex items-center bg-fog rounded-full p-1 border border-pebble/30 shrink-0">
             <a href="#hero" class="nav-pill-item px-4 py-1.5 rounded-full text-xs font-semibold text-forest bg-lime transition-all">Beranda</a>
             <a href="#fitur" class="nav-pill-item px-4 py-1.5 rounded-full text-xs font-semibold text-charcoal hover:text-forest transition-colors">Fitur Presensi</a>
             <a href="#alur-kerja" class="nav-pill-item px-4 py-1.5 rounded-full text-xs font-semibold text-charcoal hover:text-forest transition-colors">Alur Sistem</a>
@@ -274,21 +276,23 @@
         </nav>
 
         <!-- Right Action: Outlined Pill Login Portal -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 shrink-0">
             <?php if (!empty($data['isLoggedIn'])): ?>
-            <a href="<?= BASEURL; ?>/dashboard" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-forest bg-forest text-lime hover:bg-spruce text-xs font-bold transition-all shadow-sm">
+            <a href="<?= BASEURL; ?>/dashboard" class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-forest text-lime hover:bg-spruce text-[11px] sm:text-xs font-bold transition-all shadow-sm whitespace-nowrap">
                 <i class="fa-solid fa-gauge text-xs"></i>
-                <span>Ke Dashboard (<?= htmlspecialchars(explode(' ', $data['userName'] ?? '')[0]) ?>)</span>
+                <span class="hidden sm:inline">Ke Dashboard (<?= htmlspecialchars(explode(' ', $data['userName'] ?? '')[0]) ?>)</span>
+                <span class="sm:hidden">Dashboard</span>
             </a>
             <?php else: ?>
-            <a href="<?= BASEURL; ?>/auth/login" class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-forest bg-paper hover:bg-forest hover:text-lime text-forest text-xs font-bold transition-all">
+            <a href="<?= BASEURL; ?>/auth/login" class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-paper hover:bg-forest hover:text-lime text-forest text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap">
                 <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
-                <span>Masuk Portal</span>
+                <span class="hidden sm:inline">Masuk Portal</span>
+                <span class="sm:hidden">Masuk</span>
             </a>
             <?php endif; ?>
 
             <!-- Mobile Hamburger Toggle -->
-            <button onclick="toggleMobileNav()" class="lg:hidden w-9 h-9 rounded-full bg-fog border border-pebble/40 text-forest flex items-center justify-center" aria-label="Toggle Navigation">
+            <button onclick="toggleMobileNav()" class="lg:hidden w-9 h-9 rounded-full bg-fog border border-pebble/40 text-forest flex items-center justify-center shrink-0" aria-label="Toggle Navigation">
                 <i id="mobileNavIcon" class="fa-solid fa-bars text-sm"></i>
             </button>
         </div>
@@ -315,16 +319,16 @@
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
 <!-- HERO SECTION (Wise Confident Loud Voice: Massive Block Display Type)        -->
 <!-- ═══════════════════════════════════════════════════════════════════════════ -->
-<section id="hero" class="pt-12 pb-16 sm:pt-20 sm:pb-24 border-b border-fog">
-    <div class="max-w-[1200px] mx-auto px-4 sm:px-6">
+<section id="hero" class="pt-10 pb-14 sm:pt-20 sm:pb-24 border-b border-fog">
+    <div class="max-w-[1200px] mx-auto px-4 sm:px-6 min-w-0">
         
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 lg:gap-8 items-center min-w-0">
             
             <!-- Left Hero Content (7 Cols) -->
-            <div class="lg:col-span-7 space-y-6 hero-entrance">
+            <div class="lg:col-span-7 min-w-0 space-y-6 hero-entrance">
                 
                 <!-- Massive Wise Display Headline -->
-                <h1 class="wise-headline text-4xl sm:text-5xl lg:text-6xl uppercase leading-none">
+                <h1 class="wise-headline text-[28px] sm:text-5xl lg:text-6xl uppercase leading-none break-words">
                     ABSENSI DIGITAL SMK NU WARGABINANGUN
                 </h1>
 
@@ -356,50 +360,50 @@
             </div>
 
             <!-- Right Hero Widget: Wise-Style Dual Surface Simulator (5 Cols) -->
-            <div class="lg:col-span-5">
-                <div class="bg-fog rounded-[28px] p-6 border border-pebble/30 wise-card-shadow space-y-4">
+            <div class="lg:col-span-5 min-w-0">
+                <div class="bg-fog rounded-[24px] sm:rounded-[28px] p-4 sm:p-6 border border-pebble/30 wise-card-shadow space-y-4 min-w-0">
                     
                     <!-- Segmented Selector inside Card (Pill Switcher) -->
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
                         <span class="text-xs font-bold text-obsidian tracking-wider uppercase">Simulasi Presensi</span>
-                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper border border-pebble/30 text-[11px] font-semibold text-forest">
+                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-paper border border-pebble/30 text-[11px] font-semibold text-forest shrink-0">
                             <span class="w-2 h-2 rounded-full bg-[#10b981] pulse-live"></span> Sistem Aktif
                         </div>
                     </div>
 
                     <!-- Interactive Mode Tabs -->
-                    <div class="grid grid-cols-2 gap-2 bg-paper p-1 rounded-full border border-pebble/30">
-                        <button id="simTabRfid" onclick="setSimMode('rfid')" class="py-1.5 px-3 rounded-full text-xs font-bold transition-all bg-lime text-forest">
+                    <div class="grid grid-cols-2 gap-1.5 sm:gap-2 bg-paper p-1 rounded-full border border-pebble/30">
+                        <button id="simTabRfid" onclick="setSimMode('rfid')" class="py-1.5 px-2 sm:px-3 rounded-full text-[11px] sm:text-xs font-bold transition-all bg-lime text-forest truncate">
                             <i class="fa-solid fa-id-card mr-1"></i> RFID Siswa
                         </button>
-                        <button id="simTabQr" onclick="setSimMode('qr')" class="py-1.5 px-3 rounded-full text-xs font-bold transition-all text-charcoal hover:text-forest">
+                        <button id="simTabQr" onclick="setSimMode('qr')" class="py-1.5 px-2 sm:px-3 rounded-full text-[11px] sm:text-xs font-bold transition-all text-charcoal hover:text-forest truncate">
                             <i class="fa-solid fa-qrcode mr-1"></i> QR Guru
                         </button>
                     </div>
 
                     <!-- Inset White Card: Reader Input & Result -->
-                    <div id="simDisplayBox" class="bg-paper rounded-[10px] p-5 border border-pebble/30 space-y-3 transition-all duration-300">
-                        <div class="flex items-center justify-between text-xs text-pebble">
-                            <span id="simReaderLabel">Metode: Kartu RFID Siswa</span>
-                            <span id="simTagType" class="text-forest font-semibold">RFID SISWA</span>
+                    <div id="simDisplayBox" class="bg-paper rounded-[10px] p-3.5 sm:p-5 border border-pebble/30 space-y-3 transition-all duration-300 min-w-0">
+                        <div class="flex items-center justify-between gap-2 text-xs text-pebble flex-wrap">
+                            <span id="simReaderLabel" class="min-w-0">Metode: Kartu RFID Siswa</span>
+                            <span id="simTagType" class="text-forest font-semibold shrink-0">RFID SISWA</span>
                         </div>
 
                         <!-- Scanned ID Pill -->
-                        <div class="flex items-center justify-between bg-fog px-3.5 py-2.5 rounded-[10px] border border-pebble/20">
-                            <div class="flex items-center gap-2">
-                                <i id="simIcon" class="fa-solid fa-id-card text-forest text-sm"></i>
-                                <span id="simTokenCode" class="font-bold text-obsidian text-sm">Kartu RFID Siswa Aktif</span>
+                        <div class="flex items-center justify-between gap-2 bg-fog px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-[10px] border border-pebble/20 flex-wrap">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i id="simIcon" class="fa-solid fa-id-card text-forest text-sm shrink-0"></i>
+                                <span id="simTokenCode" class="font-bold text-obsidian text-xs sm:text-sm truncate">Kartu RFID Siswa Aktif</span>
                             </div>
-                            <span class="px-2 py-0.5 rounded-full bg-linen text-forest font-bold text-[10px] tracking-wide uppercase">Terverifikasi</span>
+                            <span class="px-2 py-0.5 rounded-full bg-linen text-forest font-bold text-[10px] tracking-wide uppercase shrink-0">Terverifikasi</span>
                         </div>
 
                         <!-- Tap Result -->
-                        <div class="pt-2 border-t border-fog flex items-center justify-between">
-                            <div>
-                                <h4 id="simPersonName" class="text-sm font-bold text-obsidian">NIhlah Auliya</h4>
+                        <div class="pt-2 border-t border-fog flex items-center justify-between gap-2">
+                            <div class="min-w-0">
+                                <h4 id="simPersonName" class="text-sm font-bold text-obsidian truncate">NIhlah Auliya</h4>
                                 <p id="simPersonMeta" class="text-xs text-slate">NIS: 202410012 &bull; Kelas: 11 TKJ</p>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right shrink-0">
                                 <span class="inline-block px-2.5 py-1 rounded-full bg-lime text-forest text-xs font-extrabold">HADIR</span>
                                 <span class="block text-[11px] font-mono text-pebble">06:48 WIB</span>
                             </div>
@@ -407,14 +411,14 @@
                     </div>
 
                     <!-- Instant Dispatch Status -->
-                    <div class="bg-paper rounded-[10px] p-4 border border-pebble/30 space-y-2 text-xs">
-                        <div class="flex items-center justify-between text-charcoal">
+                    <div class="bg-paper rounded-[10px] p-3.5 sm:p-4 border border-pebble/30 space-y-2 text-xs min-w-0">
+                        <div class="flex items-center justify-between gap-2 text-charcoal flex-wrap">
                             <span class="flex items-center gap-2 font-medium">
                                 <i class="fa-brands fa-whatsapp text-forest font-bold"></i> Notifikasi Orang Tua:
                             </span>
                             <span class="font-semibold text-spruce">Terkirim Langsung</span>
                         </div>
-                        <div class="flex items-center justify-between text-charcoal">
+                        <div class="flex items-center justify-between gap-2 text-charcoal flex-wrap">
                             <span class="flex items-center gap-2 font-medium">
                                 <i class="fa-brands fa-telegram text-[#0b4c72] font-bold"></i> Laporan Wali Kelas:
                             </span>
@@ -650,32 +654,32 @@
         </div>
 
         <!-- Inset White Card inside Dark Section (Wise Signature Pattern) -->
-        <div class="wise-card-hover bg-paper rounded-[10px] p-6 sm:p-8 text-charcoal border border-fog space-y-6 reveal-on-scroll delay-200">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
+        <div class="wise-card-hover bg-paper rounded-[10px] p-4 sm:p-8 text-charcoal border border-fog space-y-6 reveal-on-scroll delay-200 min-w-0">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-w-0">
+                <div class="min-w-0">
                     <span class="text-xs font-bold text-spruce uppercase tracking-wider">Transparansi Informasi</span>
-                    <h3 class="text-xl font-bold text-obsidian">Pemberitahuan Terpercaya untuk Orang Tua</h3>
+                    <h3 class="text-lg sm:text-xl font-bold text-obsidian break-words">Pemberitahuan Terpercaya untuk Orang Tua</h3>
                 </div>
-                <a href="<?= BASEURL; ?>/auth/login" class="btn-pill-lime text-sm py-2.5 px-6 font-bold shrink-0">
+                <a href="<?= BASEURL; ?>/auth/login" class="btn-pill-lime text-xs sm:text-sm py-2.5 px-5 sm:px-6 font-bold shrink-0">
                     Buka Portal Presensi &rarr;
                 </a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-fog p-4 rounded-[10px] border border-pebble/30 space-y-2">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 min-w-0">
+                <div class="bg-fog p-3.5 sm:p-4 rounded-[10px] border border-pebble/30 space-y-2 min-w-0">
                     <div class="flex items-center gap-2 text-xs font-bold text-forest">
-                        <i class="fa-brands fa-whatsapp text-sm"></i> Contoh Pesan Orang Tua:
+                        <i class="fa-brands fa-whatsapp text-sm shrink-0"></i> Contoh Pesan Orang Tua:
                     </div>
-                    <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed">
+                    <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed break-words">
                         "Yth. Bpk/Ibu Wali Murid, ananda <strong>NIhlah Auliya (11 TKJ)</strong> telah hadir di SMK NU Wargabinangun pada pukul <strong>06:48 WIB</strong>. Terima kasih."
                     </div>
                 </div>
 
-                <div class="bg-fog p-4 rounded-[10px] border border-pebble/30 space-y-2">
+                <div class="bg-fog p-3.5 sm:p-4 rounded-[10px] border border-pebble/30 space-y-2 min-w-0">
                     <div class="flex items-center gap-2 text-xs font-bold text-[#0b4c72]">
-                        <i class="fa-regular fa-clipboard text-sm"></i> Contoh Laporan Kelas:
+                        <i class="fa-regular fa-clipboard text-sm shrink-0"></i> Contoh Laporan Kelas:
                     </div>
-                    <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed">
+                    <div class="bg-paper p-3 rounded-[8px] text-xs font-sans text-charcoal border border-pebble/20 leading-relaxed break-words">
                         "[REKAP KELAS 11 TKJ] Siswa NIhlah Auliya terverifikasi hadir di sekolah. Total siswa hadir: 31 Siswa, Izin/Sakit: 1 Siswa."
                     </div>
                 </div>
@@ -765,22 +769,22 @@
 <footer class="bg-paper py-12 border-t border-fog text-charcoal">
     <div class="max-w-[1200px] mx-auto px-4 sm:px-6 space-y-8">
         
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 pb-6 border-b border-fog">
-            <div class="flex items-center">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 pb-6 border-b border-fog">
+            <div class="flex items-start sm:items-center gap-3 min-w-0">
+                <picture class="shrink-0">
+                    <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
+                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="44" height="44" class="h-10 w-10 sm:h-11 sm:w-11 object-contain shrink-0" loading="lazy" decoding="async">
+                </picture>
+                <div class="min-w-0">
+                    <h4 class="text-sm font-extrabold text-obsidian uppercase leading-snug font-sans">SMK NU WARGABINANGUN</h4>
+                    <p class="text-xs text-slate mt-1 max-w-md leading-relaxed break-words">Jl. Raya Wargabinangun No. 107, Desa Wargabinangun, Kecamatan Kaliwedi, Kabupaten Cirebon, Jawa Barat 45165</p>
+                </div>
+            </div>
+            <div class="flex items-center sm:justify-end shrink-0 self-start sm:self-center">
                 <picture>
                     <source srcset="<?= BASEURL; ?>/assets/img/smk-bisa-hebat.webp?v=1" type="image/webp">
-                    <img src="<?= BASEURL; ?>/assets/img/smk-bisa-hebat.png?v=1" alt="Logo SMK Bisa Hebat" width="190" height="56" class="h-12 sm:h-14 w-auto object-contain shrink-0" loading="lazy" decoding="async">
+                    <img src="<?= BASEURL; ?>/assets/img/smk-bisa-hebat.png?v=1" alt="Logo SMK Bisa Hebat" width="175" height="52" class="h-8 sm:h-11 w-auto max-w-[125px] sm:max-w-[175px] object-contain shrink-0" loading="lazy" decoding="async">
                 </picture>
-            </div>
-            <div class="flex items-center gap-3 sm:flex-row-reverse sm:text-right">
-                <picture>
-                    <source srcset="<?= BASEURL; ?>/assets/img/logo.webp?v=4" type="image/webp">
-                    <img src="<?= BASEURL; ?>/assets/img/logo.png?v=4" alt="Logo SMK NU Wargabinangun" width="44" height="44" class="h-11 w-11 object-contain shrink-0" loading="lazy" decoding="async">
-                </picture>
-                <div>
-                    <h4 class="text-sm font-extrabold text-obsidian uppercase leading-none font-sans">SMK NU WARGABINANGUN</h4>
-                    <p class="text-xs text-slate mt-1 max-w-md">Jl. Raya Wargabinangun No. 107, Desa Wargabinangun, Kecamatan Kaliwedi, Kabupaten Cirebon, Jawa Barat 45165</p>
-                </div>
             </div>
         </div>
 

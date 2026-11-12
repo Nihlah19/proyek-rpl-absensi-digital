@@ -182,7 +182,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4 relative font-sans antialiased selection:bg-lime selection:text-forest">
+<body class="min-h-screen flex flex-col items-center justify-center p-4 relative font-sans antialiased overflow-x-hidden selection:bg-lime selection:text-forest">
 
     <!-- Login Card Container -->
     <div class="login-card-box login-card-anim space-y-6">

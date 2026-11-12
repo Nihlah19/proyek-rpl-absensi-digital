@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
 </head>
-<body class="bg-[#f8faf7] text-[#0e0f0c] min-h-screen flex flex-col font-['Plus_Jakarta_Sans',sans-serif] antialiased">
+<body class="bg-[#f8faf7] text-[#0e0f0c] min-h-screen flex flex-col overflow-x-hidden font-['Plus_Jakarta_Sans',sans-serif] antialiased">
     <!-- Header Minimalis -->
     <header class="w-full bg-white border-b border-[#e8ebe6] py-3.5 px-6">
         <div class="max-w-6xl mx-auto flex items-center justify-between">

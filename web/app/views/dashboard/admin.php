@@ -423,7 +423,7 @@ if (!empty($data['statsPerKelas'])) {
 </div>
 
 <!-- ── TOAST NOTIFIKASI CONTAINER ── -->
-<div id="toastContainer" class="fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none" style="max-width:360px;"></div>
+<div id="toastContainer" class="fixed top-6 inset-x-3 sm:inset-x-auto sm:right-6 z-50 flex flex-col gap-3 pointer-events-none max-w-[calc(100vw-1.5rem)] sm:max-w-[360px]"></div>
 
 <!-- ── SCRIPTS INITIALIZE CHARTS & STATISTIK ── -->
 <script>

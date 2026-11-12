@@ -487,7 +487,8 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         html.dark ::-webkit-scrollbar-thumb { background: #334155; }
         html.dark ::-webkit-scrollbar-thumb:hover { background: #3b4e6b; }
-        html { scroll-behavior: smooth; }
+        html, body { scroll-behavior: smooth; overflow-x: hidden; max-width: 100%; }
+        main, #mainContent, section { min-width: 0; }
 
         /* Sidebar Responsive & Transitions */
         #sidebarMenu {
@@ -1301,8 +1302,8 @@ function downloadHeaderQr() {
 </aside>
 
 <!-- Wrapper Utama Konten -->
-<div id="mainContent" class="flex-1 w-full pt-16 flex flex-col items-center bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-150">
-    <main class="w-full max-w-7xl px-3 sm:px-6 py-6 text-slate-800 dark:text-slate-100">
+<div id="mainContent" class="flex-1 min-w-0 max-w-full w-full pt-16 flex flex-col items-center overflow-x-hidden bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-150">
+    <main class="w-full min-w-0 max-w-7xl px-3 sm:px-6 py-6 text-slate-800 dark:text-slate-100">
         <?php Flasher::flash(); ?>
         <?php if (SessionHelper::get('role') === 'admin') $this->view('templates/ai_modal'); ?>
 

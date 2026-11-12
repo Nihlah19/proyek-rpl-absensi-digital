@@ -21,7 +21,7 @@
         body { font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans antialiased min-h-screen flex flex-col text-slate-800">
+<body class="bg-slate-50 font-sans antialiased min-h-screen flex flex-col overflow-x-hidden text-slate-800">
 
     <!-- Header -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-50 shadow-2xs">
