@@ -132,6 +132,22 @@
             border: 1px solid #cbd0c8;
             background-color: #ffffff;
             padding: 12px 16px;
+        }
+        .wise-input.pl-11,
+        .wise-input.wise-input-icon-left {
+            padding-left: 2.85rem;
+        }
+        .wise-input.pr-11,
+        .wise-input.wise-input-icon-right {
+            padding-right: 3rem;
+        }
+        @media (max-width: 640px) {
+            .wise-input {
+                font-size: 15px;
+                padding-top: 11px;
+                padding-bottom: 11px;
+            }
+        }
             font-size: 14px;
             font-weight: 500;
             color: #0e0f0c;
@@ -181,7 +197,7 @@
                          alt="Logo SMK NU Wargabinangun" 
                          width="64" 
                          height="64" 
-                         class="h-16 w-16 object-contain mx-auto mb-2 logo-smooth" 
+                         class="h-14 w-14 sm:h-16 sm:w-16 object-contain mx-auto mb-2 logo-smooth" 
                          fetchpriority="high"
                          decoding="async">
                 </picture>
@@ -202,7 +218,10 @@
             <!-- Username Field -->
             <div>
                 <label for="username" class="block text-xs font-bold text-obsidian uppercase tracking-wider mb-2">Username</label>
-                <div class="relative">
+                <div class="relative flex items-center">
+                    <div class="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none text-pebble">
+                        <i class="fa-solid fa-user text-sm sm:text-[15px] leading-none"></i>
+                    </div>
                     <input type="text"
                            id="username"
                            name="username"
@@ -210,32 +229,29 @@
                            autocomplete="username"
                            required
                            autofocus
-                           class="wise-input pl-11">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-pebble">
-                        <i class="fa-solid fa-user text-sm"></i>
-                    </div>
+                           class="wise-input wise-input-icon-left pl-11">
                 </div>
             </div>
 
             <!-- Password Field -->
             <div>
                 <label for="password" class="block text-xs font-bold text-obsidian uppercase tracking-wider mb-2">Password</label>
-                <div class="relative">
+                <div class="relative flex items-center">
+                    <div class="absolute inset-y-0 left-0 w-11 flex items-center justify-center pointer-events-none text-pebble">
+                        <i class="fa-solid fa-lock text-sm sm:text-[15px] leading-none"></i>
+                    </div>
                     <input type="password"
                            id="password"
                            name="password"
                            placeholder="Masukkan password Anda"
                            autocomplete="current-password"
                            required
-                           class="wise-input pl-11 pr-11">
-                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-pebble">
-                        <i class="fa-solid fa-lock text-sm"></i>
-                    </div>
+                           class="wise-input wise-input-icon-left wise-input-icon-right pl-11 pr-11">
                     <button type="button"
                             onclick="togglePassword()"
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-pebble hover:text-forest transition-colors"
+                            class="absolute inset-y-0 right-0 w-11 flex items-center justify-center text-pebble hover:text-forest transition-colors rounded-r-[10px]"
                             aria-label="Tampilkan password">
-                        <i id="eye-icon" class="fa-solid fa-eye text-sm"></i>
+                        <i id="eye-icon" class="fa-solid fa-eye text-sm sm:text-[15px] leading-none"></i>
                     </button>
                 </div>
             </div>

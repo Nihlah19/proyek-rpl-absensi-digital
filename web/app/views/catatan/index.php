@@ -47,6 +47,9 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
             </p>
         </div>
         <div class="flex gap-2.5 flex-wrap items-center">
+            <a href="<?= BASEURL; ?>/catatan/daftar" class="vh-btn-primary text-xs sm:text-sm inline-flex items-center gap-2">
+                <i class="fa-solid fa-list-ul"></i> Daftar Catatan
+            </a>
             <a href="<?= BASEURL; ?>/dashboard" class="vh-btn-secondary text-xs sm:text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left text-slate-400"></i> Kembali ke Dashboard
             </a>
@@ -340,11 +343,12 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                         </div>
                     <?php endif; ?>
 
-                    <div class="p-6">
+                    <div class="p-4 sm:p-6">
                         <!-- Panel 1: Catatan Terkirim (Wali Kelas ke Siswa atau Kepsek ke Guru) -->
                         <div id="panelCatatanTerkirim" class="space-y-4">
                             <?php 
-                            $listToDisplay = $isWaliKelas ? $catatanTerkirim : $catatanList;
+                            $listToDisplay = $catatanTerkirim;
+                            $editTargetRole = $isKepsek ? 'guru' : 'siswa';
                             if (!empty($listToDisplay)): 
                             ?>
                                 <?php foreach ($listToDisplay as $c): ?>
@@ -354,23 +358,39 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                                          data-content="<?= htmlspecialchars(strtolower($c->content ?? '')) ?>">
                                         
                                         <div class="flex items-start justify-between gap-3 flex-wrap">
-                                            <div class="flex items-center gap-2.5">
+                                            <div class="flex items-center gap-2.5 min-w-0">
                                                 <span class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs shrink-0">
-                                                    <i class="fa-solid fa-user-graduate"></i>
+                                                    <i class="fa-solid <?= $isKepsek ? 'fa-chalkboard-user' : 'fa-user-graduate' ?>"></i>
                                                 </span>
-                                                <div>
-                                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+                                                <div class="min-w-0">
+                                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate">
                                                         <?= htmlspecialchars($c->target_name ?? '-') ?>
                                                     </h3>
                                                     <?php if (!empty($c->nis)): ?>
                                                         <p class="text-[11px] text-slate-400 font-mono">NIS: <?= htmlspecialchars($c->nis) ?></p>
+                                                    <?php elseif (!empty($c->target_username)): ?>
+                                                        <p class="text-[11px] text-slate-400 font-mono">@<?= htmlspecialchars($c->target_username) ?></p>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
-                                                <i class="fa-regular fa-clock text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
-                                                <?= !empty($c->created_at) ? date('d M Y, H:i', strtotime($c->created_at)) : '-' ?>
-                                            </span>
+                                            <div class="flex items-center gap-1.5 flex-wrap">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80">
+                                                    <i class="fa-regular fa-clock text-emerald-600 dark:text-emerald-400 text-[10px]"></i>
+                                                    <?= !empty($c->created_at) ? date('d M Y, H:i', strtotime($c->created_at)) : '-' ?>
+                                                </span>
+                                                <button type="button"
+                                                        onclick='openEditCatatanModal(<?= (int)$c->id ?>, <?= json_encode($editTargetRole) ?>, <?= json_encode($c->target_name ?? "-") ?>, <?= json_encode($c->title ?? "Catatan") ?>, <?= json_encode($c->content ?? "") ?>)'
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
+                                                        title="Edit Catatan">
+                                                    <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                                                </button>
+                                                <button type="button"
+                                                        onclick='openDeleteCatatanModal(<?= (int)$c->id ?>, <?= json_encode($editTargetRole) ?>, <?= json_encode($c->target_name ?? "-") ?>, <?= json_encode($c->title ?? "Catatan") ?>)'
+                                                        class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                                        title="Hapus Catatan">
+                                                    <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div class="p-3.5 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
@@ -378,7 +398,7 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                                                 <i class="fa-solid fa-tag text-[10px] text-emerald-600 dark:text-emerald-400"></i>
                                                 <?= htmlspecialchars($c->title ?? 'Catatan') ?>
                                             </p>
-                                            <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+                                            <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed break-words">
                                                 <?= nl2br(htmlspecialchars($c->content ?? '')) ?>
                                             </p>
                                         </div>
@@ -638,6 +658,98 @@ function filterCatatanWriter() {
         el.style.display = match ? '' : 'none';
     });
 }
+
+function openEditCatatanModal(id, targetRole, targetName, title, content) {
+    document.getElementById('editCatatanId').value = id;
+    document.getElementById('editCatatanRole').value = targetRole;
+    document.getElementById('editCatatanTargetLabel').textContent = targetName || '-';
+    document.getElementById('editCatatanTitle').value = title || '';
+    document.getElementById('editCatatanContent').value = content || '';
+    document.getElementById('modalEditCatatan').classList.remove('hidden');
+}
+
+function closeEditCatatanModal() {
+    document.getElementById('modalEditCatatan').classList.add('hidden');
+}
+
+function openDeleteCatatanModal(id, targetRole, targetName, title) {
+    document.getElementById('deleteCatatanId').value = id;
+    document.getElementById('deleteCatatanRole').value = targetRole;
+    document.getElementById('deleteCatatanSummary').textContent = (title || 'Catatan') + ' (' + (targetName || '-') + ')';
+    document.getElementById('modalDeleteCatatan').classList.remove('hidden');
+}
+
+function closeDeleteCatatanModal() {
+    document.getElementById('modalDeleteCatatan').classList.add('hidden');
+}
 </script>
+
+<!-- Modal Edit Catatan -->
+<div id="modalEditCatatan" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-lg overflow-hidden">
+        <form action="<?= BASEURL; ?>/catatan/update" method="POST">
+            <?= CsrfHelper::input() ?>
+            <input type="hidden" name="id" id="editCatatanId" value="">
+            <input type="hidden" name="target_role" id="editCatatanRole" value="">
+            <input type="hidden" name="redirect" value="/catatan">
+
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Edit Catatan</h3>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400">Penerima: <strong id="editCatatanTargetLabel" class="text-emerald-700 dark:text-emerald-400">-</strong></p>
+                </div>
+                <button type="button" onclick="closeEditCatatanModal()" class="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-5 space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Judul / Perihal Catatan</label>
+                    <input type="text" name="title" id="editCatatanTitle" required maxlength="150"
+                           class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Isi Catatan <span class="text-rose-500">*</span></label>
+                    <textarea name="content" id="editCatatanContent" rows="5" required
+                              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                </div>
+            </div>
+
+            <div class="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <button type="button" onclick="closeEditCatatanModal()" class="vh-btn-secondary justify-center text-xs">Batal</button>
+                <button type="submit" class="vh-btn-primary justify-center text-xs px-5">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus Catatan -->
+<div id="modalDeleteCatatan" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-md p-6 text-center space-y-4">
+        <form action="<?= BASEURL; ?>/catatan/delete" method="POST">
+            <?= CsrfHelper::input() ?>
+            <input type="hidden" name="id" id="deleteCatatanId" value="">
+            <input type="hidden" name="target_role" id="deleteCatatanRole" value="">
+            <input type="hidden" name="redirect" value="/catatan">
+
+            <div class="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center text-xl mx-auto">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Hapus Catatan Ini?</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">
+                Catatan <strong id="deleteCatatanSummary" class="text-slate-800 dark:text-slate-200"></strong> akan dihapus permanen.
+            </p>
+            <div class="flex flex-col-reverse sm:flex-row items-center justify-center gap-2 pt-2">
+                <button type="button" onclick="closeDeleteCatatanModal()" class="vh-btn-secondary w-full sm:w-auto justify-center text-xs">Batal</button>
+                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition-colors shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-trash-can"></i> Ya, Hapus
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <?php $this->view('templates/footer'); ?>

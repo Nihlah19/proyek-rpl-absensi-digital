@@ -1279,9 +1279,16 @@ function downloadHeaderQr() {
                     <!-- CATATAN (Siswa, Guru, Wali Kelas, Kepsek) -->
                     <li>
                         <a href="<?= BASEURL; ?>/catatan"
-                           class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-colors <?= $isCatatanActive ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border-l-4 border-emerald-600 dark:border-emerald-500' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-medium' ?>">
-                            <i class="fa-solid fa-clipboard-list w-5 text-center text-sm <?= $isCatatanActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
+                           class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-colors <?= ($isCatatanActive && strpos($reqUri, '/catatan/daftar') === false) ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border-l-4 border-emerald-600 dark:border-emerald-500' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-medium' ?>">
+                            <i class="fa-solid fa-clipboard-list w-5 text-center text-sm <?= ($isCatatanActive && strpos($reqUri, '/catatan/daftar') === false) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
                             <span class="truncate">Catatan</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="<?= BASEURL; ?>/catatan/daftar"
+                           class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-colors <?= (strpos($reqUri, '/catatan/daftar') !== false) ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border-l-4 border-emerald-600 dark:border-emerald-500' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-medium' ?>">
+                            <i class="fa-solid fa-list-ul w-5 text-center text-sm <?= (strpos($reqUri, '/catatan/daftar') !== false) ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300' ?>"></i>
+                            <span class="truncate">Daftar Catatan</span>
                         </a>
                     </li>
                     <?php endif; ?>

@@ -159,4 +159,119 @@ class Catatan extends Model
         $this->db->bind(':id', $id);
         return $this->db->single();
     }
+
+    /**
+     * Ambil catatan spesifik beserta verifikasi kepemilikan penulis (untuk edit/hapus)
+     */
+    public function getByIdForAuthor($id, $targetRole, $authorId)
+    {
+        $id = (int)$id;
+        $authorId = (int)$authorId;
+        if ($id <= 0 || $authorId <= 0) {
+            return null;
+        }
+
+        if ($targetRole === 'siswa') {
+            $this->db->query(
+                "SELECT cs.id, cs.siswa_id AS target_id, cs.wali_kelas_id AS author_id, cs.catatan, cs.created_at,
+                        u.name AS target_name, 'siswa' AS target_role
+                 FROM catatan_siswa cs
+                 JOIN users u ON u.id = cs.siswa_id
+                 WHERE cs.id = :id AND cs.wali_kelas_id = :author_id
+                 LIMIT 1"
+            );
+        } elseif ($targetRole === 'guru') {
+            $this->db->query(
+                "SELECT cg.id, cg.guru_id AS target_id, cg.kepsek_id AS author_id, cg.catatan, cg.created_at,
+                        u.name AS target_name, 'guru' AS target_role
+                 FROM catatan_guru cg
+                 JOIN users u ON u.id = cg.guru_id
+                 WHERE cg.id = :id AND cg.kepsek_id = :author_id
+                 LIMIT 1"
+            );
+        } else {
+            return null;
+        }
+
+        $this->db->bind(':id', $id);
+        $this->db->bind(':author_id', $authorId);
+        $row = $this->db->single();
+        if (!$row) {
+            return null;
+        }
+        $parsed = $this->parseCatatanList([$row]);
+        return $parsed[0] ?? $row;
+    }
+
+    /**
+     * Ambil seluruh catatan yang dikirim oleh Kepsek ke guru
+     */
+    public function getSentByKepsek($kepsekId)
+    {
+        $this->db->query(
+            "SELECT cg.id, cg.guru_id AS target_id, cg.catatan, cg.created_at,
+                    u.name AS target_name, u.username AS target_username, 'guru' AS target_role
+             FROM catatan_guru cg
+             JOIN users u ON u.id = cg.guru_id
+             WHERE cg.kepsek_id = :kid
+             ORDER BY cg.created_at DESC"
+        );
+        $this->db->bind(':kid', $kepsekId);
+        return $this->parseCatatanList($this->db->resultSet());
+    }
+
+    /**
+     * Perbarui judul dan isi catatan berdasarkan kepemilikan penulis
+     */
+    public function updateByAuthor($id, $targetRole, $authorId, $title, $content)
+    {
+        $existing = $this->getByIdForAuthor($id, $targetRole, $authorId);
+        if (!$existing) {
+            return false;
+        }
+
+        $title = trim((string)$title);
+        $content = trim((string)$content);
+        if ($content === '') {
+            return false;
+        }
+
+        $formattedNote = ($title !== '') ? ("[" . $title . "]\n" . $content) : $content;
+
+        if ($targetRole === 'siswa') {
+            $this->db->query("UPDATE catatan_siswa SET catatan = :catatan WHERE id = :id AND wali_kelas_id = :author_id");
+        } elseif ($targetRole === 'guru') {
+            $this->db->query("UPDATE catatan_guru SET catatan = :catatan WHERE id = :id AND kepsek_id = :author_id");
+        } else {
+            return false;
+        }
+
+        $this->db->bind(':catatan', $formattedNote);
+        $this->db->bind(':id', (int)$id);
+        $this->db->bind(':author_id', (int)$authorId);
+        return (bool)$this->db->execute();
+    }
+
+    /**
+     * Hapus catatan berdasarkan kepemilikan penulis
+     */
+    public function deleteByAuthor($id, $targetRole, $authorId)
+    {
+        $existing = $this->getByIdForAuthor($id, $targetRole, $authorId);
+        if (!$existing) {
+            return false;
+        }
+
+        if ($targetRole === 'siswa') {
+            $this->db->query("DELETE FROM catatan_siswa WHERE id = :id AND wali_kelas_id = :author_id");
+        } elseif ($targetRole === 'guru') {
+            $this->db->query("DELETE FROM catatan_guru WHERE id = :id AND kepsek_id = :author_id");
+        } else {
+            return false;
+        }
+
+        $this->db->bind(':id', (int)$id);
+        $this->db->bind(':author_id', (int)$authorId);
+        return (bool)$this->db->execute();
+    }
 }

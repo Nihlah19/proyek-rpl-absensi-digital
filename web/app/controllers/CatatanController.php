@@ -25,6 +25,7 @@ class CatatanController extends Controller
                 $db->bind(':uid', $userId);
                 $siswas = $db->resultSet();
             } else {
+                $catatanTerkirim = $catatanModel->getSentByKepsek($userId);
                 $db->query("SELECT g.id, u.name, u.username, g.nip FROM users u
                             JOIN guru g ON g.user_id = u.id
                             ORDER BY u.name");
@@ -140,5 +141,145 @@ class CatatanController extends Controller
 
         header('Location: ' . BASEURL . '/catatan');
         exit;
+    }
+
+    /**
+     * Halaman khusus List / Daftar Catatan lengkap (pencarian, filter, edit, hapus)
+     */
+    public function daftar()
+    {
+        AuthHelper::check();
+        $userId = (int)SessionHelper::get('user_id');
+        $role   = SessionHelper::get('role');
+
+        $catatanModel    = $this->model('Catatan');
+        $catatanList     = $catatanModel->getByUser($userId, $role);
+        $catatanTerkirim = [];
+
+        if (in_array($role, ['wali_kelas', 'walikelas'])) {
+            $catatanTerkirim = $catatanModel->getSentByWaliKelas($userId);
+        } elseif ($role === 'kepsek') {
+            $catatanTerkirim = $catatanModel->getSentByKepsek($userId);
+        }
+
+        $data = [
+            'judul'           => 'Daftar Catatan',
+            'catatanList'     => $catatanList,
+            'catatanTerkirim' => $catatanTerkirim,
+            'isWriter'        => in_array($role, ['wali_kelas', 'walikelas', 'kepsek']),
+            'role'            => $role,
+        ];
+
+        $this->view('templates/header', $data);
+        $this->view('catatan/daftar', $data);
+        $this->view('templates/footer');
+    }
+
+    public function list()
+    {
+        $this->daftar();
+    }
+
+    /**
+     * Edit / perbarui isi dan judul catatan yang telah dibuat penulis
+     */
+    public function update()
+    {
+        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'kepsek']);
+        $redirect = $this->resolveSafeRedirect($_POST['redirect'] ?? '/catatan');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        if (!CsrfHelper::check($_POST['csrf_token'] ?? '')) {
+            Flasher::setFlash('gagal', 'Token CSRF tidak valid.', 'danger');
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        $id         = (int)($_POST['id'] ?? 0);
+        $targetRole = trim($_POST['target_role'] ?? '');
+        $title      = trim($_POST['title'] ?? '');
+        $content    = trim($_POST['content'] ?? '');
+        $authorId   = (int)SessionHelper::get('user_id');
+        $role       = SessionHelper::get('role');
+
+        $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
+        if ($targetRole === '') {
+            $targetRole = $allowedTarget;
+        }
+
+        if ($id <= 0 || $targetRole !== $allowedTarget || $content === '') {
+            Flasher::setFlash('gagal', 'Data pembaruan catatan tidak valid atau isi kosong.', 'danger');
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        $catatanModel = $this->model('Catatan');
+        $updated = $catatanModel->updateByAuthor($id, $targetRole, $authorId, $title, $content);
+
+        if ($updated) {
+            Flasher::setFlash('berhasil', 'Catatan berhasil diperbarui.', 'success');
+        } else {
+            Flasher::setFlash('gagal', 'Gagal memperbarui catatan atau catatan tidak ditemukan.', 'danger');
+        }
+
+        header('Location: ' . BASEURL . $redirect);
+        exit;
+    }
+
+    /**
+     * Hapus catatan milik penulis secara permanen
+     */
+    public function delete()
+    {
+        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'kepsek']);
+        $redirect = $this->resolveSafeRedirect($_POST['redirect'] ?? '/catatan');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        if (!CsrfHelper::check($_POST['csrf_token'] ?? '')) {
+            Flasher::setFlash('gagal', 'Token CSRF tidak valid.', 'danger');
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        $id         = (int)($_POST['id'] ?? 0);
+        $targetRole = trim($_POST['target_role'] ?? '');
+        $authorId   = (int)SessionHelper::get('user_id');
+        $role       = SessionHelper::get('role');
+
+        $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
+        if ($targetRole === '') {
+            $targetRole = $allowedTarget;
+        }
+
+        if ($id <= 0 || $targetRole !== $allowedTarget) {
+            Flasher::setFlash('gagal', 'Catatan tidak valid untuk dihapus.', 'danger');
+            header('Location: ' . BASEURL . $redirect);
+            exit;
+        }
+
+        $catatanModel = $this->model('Catatan');
+        $deleted = $catatanModel->deleteByAuthor($id, $targetRole, $authorId);
+
+        if ($deleted) {
+            Flasher::setFlash('berhasil', 'Catatan berhasil dihapus.', 'success');
+        } else {
+            Flasher::setFlash('gagal', 'Gagal menghapus catatan atau Anda tidak memiliki akses.', 'danger');
+        }
+
+        header('Location: ' . BASEURL . $redirect);
+        exit;
+    }
+
+    private function resolveSafeRedirect($path)
+    {
+        return ($path === '/catatan/daftar') ? '/catatan/daftar' : '/catatan';
     }
 }

@@ -32,33 +32,35 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
             </p>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap self-start sm:self-center">
+        <div class="w-full sm:w-auto flex flex-wrap items-center gap-2 self-stretch sm:self-center">
             <!-- Selector Kelas untuk Admin & Guru Pembimbing (jika memiliki > 1 kelas) -->
             <?php if (($userRole === 'admin' || count($allKelasPkl) > 1) && !empty($allKelasPkl)): ?>
-            <div class="relative inline-block text-left" id="dropdownKelasAdmin">
-                <button type="button" onclick="toggleDropdownKelas()" class="btn-secondary text-xs flex items-center gap-2">
-                    <i class="fa-solid fa-chalkboard text-slate-400"></i>
-                    <span>Kelas: <strong><?= $activeKelas ? htmlspecialchars($activeKelas->nama_kelas) : 'Pilih Kelas' ?></strong></span>
-                    <i class="fa-solid fa-chevron-down text-[10px] ml-1 opacity-60"></i>
+            <div class="relative inline-block text-left flex-1 sm:flex-initial min-w-[140px]" id="dropdownKelasAdmin">
+                <button type="button" onclick="toggleDropdownKelas()" class="btn-secondary w-full sm:w-auto justify-between sm:justify-center text-xs flex items-center gap-2">
+                    <span class="inline-flex items-center gap-1.5 truncate">
+                        <i class="fa-solid fa-chalkboard text-slate-400 shrink-0"></i>
+                        <span class="truncate">Kelas: <strong><?= $activeKelas ? htmlspecialchars($activeKelas->nama_kelas) : 'Pilih Kelas' ?></strong></span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-[10px] ml-1 opacity-60 shrink-0"></i>
                 </button>
-                <div id="menuKelasAdmin" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 z-50 py-1.5">
+                <div id="menuKelasAdmin" class="hidden absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 z-50 py-1.5">
                     <div class="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">Pilih Kelas PKL</div>
                     <?php foreach ($allKelasPkl as $kp): ?>
-                        <a href="<?= BASEURL; ?>/pkl/kelompok?kelas_id=<?= $kp->id; ?>" class="flex items-center justify-between px-3.5 py-1.5 text-xs <?= ($activeKid === (int)$kp->id) ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50' ?>">
-                            <span><?= htmlspecialchars($kp->nama_kelas); ?></span>
-                            <span class="font-mono text-[10px] text-slate-400"><?= (int)$kp->total_siswa ?> Siswa</span>
+                        <a href="<?= BASEURL; ?>/pkl/kelompok?kelas_id=<?= $kp->id; ?>" class="flex items-center justify-between px-3.5 py-2 text-xs <?= ($activeKid === (int)$kp->id) ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50' ?>">
+                            <span class="truncate"><?= htmlspecialchars($kp->nama_kelas); ?></span>
+                            <span class="font-mono text-[10px] text-slate-400 shrink-0 ml-2"><?= (int)$kp->total_siswa ?> Siswa</span>
                         </a>
                     <?php endforeach; ?>
                 </div>
             </div>
             <?php endif; ?>
 
-            <a href="<?= BASEURL; ?>/pkl/monitoring<?= $activeKid ? '?kelas_id=' . $activeKid : '' ?>" class="btn-secondary text-xs">
+            <a href="<?= BASEURL; ?>/pkl/monitoring<?= $activeKid ? '?kelas_id=' . $activeKid : '' ?>" class="btn-secondary flex-1 sm:flex-initial justify-center text-xs whitespace-nowrap">
                 <i class="fa-solid fa-chart-line text-slate-400"></i> Monitoring Presensi
             </a>
 
             <?php if ($activeKelas): ?>
-            <button type="button" class="btn-primary text-xs cursor-pointer" onclick="openAddKelompokModal()">
+            <button type="button" class="btn-primary w-full sm:w-auto justify-center text-xs cursor-pointer whitespace-nowrap" onclick="openAddKelompokModal()">
                 <i class="fa-solid fa-plus"></i> Tambah Kelompok
             </button>
             <?php endif; ?>
@@ -209,52 +211,52 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                         <?php else: ?>
                             <div class="space-y-3.5">
                                 <?php foreach ($kelompokList as $kel): ?>
-                                    <div class="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 space-y-3">
+                                    <div class="p-3.5 sm:p-4 rounded-xl bg-slate-50/70 dark:bg-slate-900/50 border border-slate-200/80 dark:border-slate-800 space-y-3 min-w-0 overflow-hidden">
                                         
                                         <!-- Top Row: Nama Kelompok & Aksi -->
                                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 pb-3 border-b border-slate-200/70 dark:border-slate-800">
-                                            <div>
+                                            <div class="min-w-0">
                                                 <div class="flex items-center gap-2 flex-wrap">
-                                                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                                                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white break-words">
                                                         <?= htmlspecialchars($kel->nama_kelompok) ?>
                                                     </h3>
-                                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
+                                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40 shrink-0">
                                                         <?= count($kel->anggota) ?> Siswa
                                                     </span>
-                                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                                    <span class="px-2 py-0.5 rounded-md text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
                                                         Radius: <?= (int)$kel->radius_meter ?>m
                                                     </span>
                                                 </div>
-                                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                                                    <i class="fa-solid fa-building text-emerald-600 dark:text-emerald-400"></i>
-                                                    <strong class="text-slate-800 dark:text-slate-200 font-medium"><?= htmlspecialchars($kel->nama_tempat) ?></strong>
+                                                <p class="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-start gap-1.5 min-w-0">
+                                                    <i class="fa-solid fa-building text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0"></i>
+                                                    <strong class="text-slate-800 dark:text-slate-200 font-medium break-words"><?= htmlspecialchars($kel->nama_tempat) ?></strong>
                                                 </p>
                                             </div>
 
-                                            <div class="flex items-center gap-1.5 self-start sm:self-auto">
-                                                <button type="button" class="btn-secondary text-xs px-2.5 py-1" onclick="openEditKelompokModal(<?= $kel->id ?>)" title="Edit Kelompok">
+                                            <div class="grid grid-cols-2 sm:flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+                                                <button type="button" class="btn-secondary text-xs px-3 py-1.5 sm:px-2.5 sm:py-1 justify-center" onclick="openEditKelompokModal(<?= $kel->id ?>)" title="Edit Kelompok">
                                                     <i class="fa-solid fa-pen-to-square text-slate-400"></i> Edit
                                                 </button>
-                                                <button type="button" class="btn-secondary text-xs px-2.5 py-1 text-rose-600 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800" onclick="confirmDeleteKelompok(<?= $kel->id ?>, '<?= htmlspecialchars(addslashes($kel->nama_kelompok)) ?>')" title="Hapus Kelompok">
-                                                    <i class="fa-solid fa-trash-can"></i>
+                                                <button type="button" class="btn-secondary text-xs px-3 py-1.5 sm:px-2.5 sm:py-1 text-rose-600 dark:text-rose-400 hover:border-rose-300 dark:hover:border-rose-800 justify-center" onclick="confirmDeleteKelompok(<?= $kel->id ?>, '<?= htmlspecialchars(addslashes($kel->nama_kelompok)) ?>')" title="Hapus Kelompok">
+                                                    <i class="fa-solid fa-trash-can"></i> <span class="sm:hidden">Hapus</span>
                                                 </button>
                                             </div>
                                         </div>
 
                                         <!-- Middle Row: Alamat & Koordinat -->
                                         <div class="grid grid-cols-1 md:grid-cols-12 gap-3 text-xs">
-                                            <div class="md:col-span-7 flex items-start gap-2 text-slate-600 dark:text-slate-400 leading-relaxed">
+                                            <div class="md:col-span-7 flex items-start gap-2 text-slate-600 dark:text-slate-400 leading-relaxed min-w-0">
                                                 <i class="fa-solid fa-location-dot text-rose-500 mt-0.5 shrink-0"></i>
-                                                <div>
-                                                    <div><?= htmlspecialchars($kel->alamat ?: 'Alamat belum diisi') ?></div>
+                                                <div class="min-w-0 break-words">
+                                                    <div class="break-words"><?= htmlspecialchars($kel->alamat ?: 'Alamat belum diisi') ?></div>
                                                     <?php if (!empty($kel->link_lokasi)): ?>
-                                                        <a href="<?= htmlspecialchars($kel->link_lokasi) ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold hover:underline mt-0.5">
-                                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Google Maps
+                                                        <a href="<?= htmlspecialchars($kel->link_lokasi) ?>" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-400 font-semibold hover:underline mt-1 break-all">
+                                                            <i class="fa-solid fa-arrow-up-right-from-square text-[10px] shrink-0"></i> Buka Google Maps
                                                         </a>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
-                                            <div class="md:col-span-5 font-mono text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 bg-slate-100/70 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800">
+                                            <div class="md:col-span-5 font-mono text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5 bg-slate-100/70 dark:bg-slate-900/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-800 min-w-0 break-words">
                                                 <div>Lat: <span class="font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($kel->latitude) ?></span></div>
                                                 <div>Lng: <span class="font-semibold text-slate-800 dark:text-slate-200"><?= htmlspecialchars($kel->longitude) ?></span></div>
                                                 <?php if (!empty($kel->pembimbing_guru_nama)): ?>
@@ -366,23 +368,23 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
 <!-- ═════════════════════════════════════════════════════════════════════════ -->
 <!-- MODAL: TAMBAH / EDIT KELOMPOK PKL                                           -->
 <!-- ═════════════════════════════════════════════════════════════════════════ -->
-<div id="modalKelompok" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
+<div id="modalKelompok" class="fixed inset-0 z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div class="bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-fade-in">
         <form action="<?= BASEURL; ?>/pkl/save_kelompok" method="POST" id="formKelompok" class="flex flex-col flex-1 overflow-hidden">
             <input type="hidden" name="id" id="kelompok_id" value="">
             <input type="hidden" name="kelas_id" value="<?= $activeKid ?>">
 
-            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
-                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white" id="modalTitle">Tambah Kelompok PKL</h3>
+            <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600 shrink-0"></span>
+                    <h3 class="text-sm font-semibold text-slate-900 dark:text-white truncate" id="modalTitle">Tambah Kelompok PKL</h3>
                 </div>
-                <button type="button" onclick="closeModalKelompok()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1.5 rounded-lg">
+                <button type="button" onclick="closeModalKelompok()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2 rounded-lg shrink-0">
                     <i class="fa-solid fa-xmark text-base"></i>
                 </button>
             </div>
 
-            <div class="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
+            <div class="p-4 sm:p-5 space-y-4 overflow-y-auto flex-1 text-xs">
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -433,19 +435,20 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
 
                 <!-- Pengaturan Fleksibilitas Jadwal Industri -->
                 <div class="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-800/60 space-y-3">
-                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <label class="font-semibold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
-                            <i class="fa-solid fa-industry text-emerald-600"></i> Hari Kerja &amp; Jam Fleksibel Industri (DU/DI)
+                            <i class="fa-solid fa-industry text-emerald-600 shrink-0"></i>
+                            <span>Hari Kerja &amp; Jam Fleksibel Industri (DU/DI)</span>
                         </label>
-                        <div class="flex items-center gap-2 text-[11px]">
-                            <button type="button" onclick="setPklHariPreset(5)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">5 Hari (Sen-Jum)</button>
-                            <button type="button" onclick="setPklHariPreset(6)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">6 Hari (Sen-Sab)</button>
-                            <button type="button" onclick="setPklHariPreset(7)" class="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">Semua Hari (Shift)</button>
+                        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                            <button type="button" onclick="setPklHariPreset(5)" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">5 Hari (Sen-Jum)</button>
+                            <button type="button" onclick="setPklHariPreset(6)" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">6 Hari (Sen-Sab)</button>
+                            <button type="button" onclick="setPklHariPreset(7)" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-emerald-200 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 font-medium hover:bg-emerald-50">Semua Hari (Shift)</button>
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
                         <?php foreach (['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'] as $hk): ?>
-                            <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-200">
+                            <label class="inline-flex items-center gap-2 px-2.5 py-1.5 sm:py-1 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer text-[11px] font-medium text-slate-700 dark:text-slate-200">
                                 <input type="checkbox" name="hari_kerja[]" value="<?= $hk ?>" class="chk-hari-pkl rounded text-emerald-600 focus:ring-emerald-500" <?= in_array($hk, ['Senin','Selasa','Rabu','Kamis','Jumat']) ? 'checked' : '' ?>>
                                 <span><?= $hk ?></span>
                             </label>
@@ -544,9 +547,9 @@ $activeKid    = $activeKelas ? (int)$activeKelas->id : 0;
                 </div>
             </div>
 
-            <div class="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2 bg-slate-50/50 dark:bg-slate-900/50">
-                <button type="button" onclick="closeModalKelompok()" class="btn-secondary text-xs">Batal</button>
-                <button type="submit" class="btn-primary text-xs px-5">Simpan Kelompok</button>
+            <div class="p-3.5 sm:p-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 bg-slate-50/50 dark:bg-slate-900/50 shrink-0">
+                <button type="button" onclick="closeModalKelompok()" class="btn-secondary w-full sm:w-auto justify-center text-xs">Batal</button>
+                <button type="submit" class="btn-primary w-full sm:w-auto justify-center text-xs px-5">Simpan Kelompok</button>
             </div>
         </form>
     </div>

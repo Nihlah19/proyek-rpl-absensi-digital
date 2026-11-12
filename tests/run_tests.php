@@ -430,6 +430,93 @@ try {
     $dbTest->execute();
 }
 
+// -----------------------------------------------------------
+// 11. PENGUJIAN FITUR CATATAN CRUD, LOGIN ICON CSS, PKL ANDROID & DOKUMEN RPL
+// -----------------------------------------------------------
+echo "\n--- Bagian 11: Pengujian Catatan Edit/Hapus, Responsif Android, & Dokumen RPL ---\n";
+
+require_once __DIR__ . '/../web/app/models/Catatan.php';
+$catatanModel = new Catatan();
+
+$dbTest->query("SELECT w.id AS wk_id, s.id AS siswa_id FROM users w JOIN kelas k ON k.wali_kelas_id = w.id JOIN siswa s ON s.kelas_id = k.id LIMIT 1");
+$catSample = $dbTest->single();
+if ($catSample) {
+    $createdCat = $catatanModel->create([
+        'target_role' => 'siswa',
+        'target_id'   => (int)$catSample->siswa_id,
+        'author_id'   => (int)$catSample->wk_id,
+        'title'       => 'Uji Catatan Awal',
+        'content'     => 'Isi catatan percobaan unit test',
+    ]);
+    $lastCatId = (int)$dbTest->lastInsertId();
+    assertTest("Catatan::create berhasil menyisipkan catatan uji", $createdCat > 0 && $lastCatId > 0);
+
+    try {
+        $updOk = $catatanModel->updateByAuthor($lastCatId, 'siswa', (int)$catSample->wk_id, 'Uji Catatan Diedit', 'Isi catatan setelah diperbarui');
+        $fetchedAfterUpd = $catatanModel->getByIdForAuthor($lastCatId, 'siswa', (int)$catSample->wk_id);
+        assertTest(
+            "Catatan::updateByAuthor memperbarui judul & isi catatan sesuai penulis",
+            $updOk && $fetchedAfterUpd && $fetchedAfterUpd->title === 'Uji Catatan Diedit' && strpos($fetchedAfterUpd->content, 'diperbarui') !== false
+        );
+
+        $wrongAuthorUpd = $catatanModel->updateByAuthor($lastCatId, 'siswa', 999999999, 'Hijack', 'Illegal');
+        assertTest("Catatan::updateByAuthor menolak modifikasi oleh user selain penulis", $wrongAuthorUpd === false);
+
+        $delOk = $catatanModel->deleteByAuthor($lastCatId, 'siswa', (int)$catSample->wk_id);
+        $fetchedAfterDel = $catatanModel->getByIdForAuthor($lastCatId, 'siswa', (int)$catSample->wk_id);
+        assertTest("Catatan::deleteByAuthor menghapus catatan secara permanen", $delOk && !$fetchedAfterDel);
+    } finally {
+        if ($lastCatId > 0) {
+            $dbTest->query("DELETE FROM catatan_siswa WHERE id = :cid");
+            $dbTest->bind(':cid', $lastCatId);
+            $dbTest->execute();
+        }
+    }
+} else {
+    assertTest("Sample wali_kelas & siswa tersedia untuk uji CRUD Catatan", false);
+}
+
+$catCtrlSrc = file_get_contents(__DIR__ . '/../web/app/controllers/CatatanController.php');
+assertTest(
+    "CatatanController memiliki endpoint daftar(), update(), dan delete()",
+    strpos($catCtrlSrc, 'function daftar') !== false && strpos($catCtrlSrc, 'function update') !== false && strpos($catCtrlSrc, 'function delete') !== false
+);
+
+assertTest("View khusus halaman Daftar Catatan (catatan/daftar.php) tersedia", file_exists(__DIR__ . '/../web/app/views/catatan/daftar.php'));
+
+$loginSrc = file_get_contents(__DIR__ . '/../web/app/views/auth/login.php');
+assertTest(
+    "Login UI memperbaiki override CSS padding ikon (.wise-input.pl-11 & .wise-input-icon-left)",
+    strpos($loginSrc, '.wise-input.pl-11') !== false && strpos($loginSrc, 'wise-input-icon-right') !== false
+);
+
+$pklKelSrc = file_get_contents(__DIR__ . '/../web/app/views/pkl/kelompok.php');
+$pklMonSrc = file_get_contents(__DIR__ . '/../web/app/views/pkl/monitoring.php');
+assertTest(
+    "Pengaturan PKL (kelompok & monitoring) menerapkan layout responsif Android (left-0 sm:left-auto sm:right-0, min-w-0, break-words)",
+    strpos($pklKelSrc, 'left-0 sm:left-auto sm:right-0') !== false && strpos($pklKelSrc, 'break-words') !== false && strpos($pklMonSrc, 'left-0 sm:left-auto sm:right-0') !== false
+);
+
+$readmeSrc = file_get_contents(__DIR__ . '/../README.md');
+assertTest(
+    "README.md memuat identitas wajib (Nihlah Auliya, 41257146, Sunyaragi Nexus, Absensi Digital Siswa SMK, Video Links & Setup)",
+    strpos($readmeSrc, 'Nihlah Auliya') !== false
+    && strpos($readmeSrc, '41257146') !== false
+    && strpos($readmeSrc, 'Sunyaragi Nexus') !== false
+    && strpos($readmeSrc, 'Absensi Digital Siswa SMK') !== false
+    && strpos($readmeSrc, 'Video Progres 1') !== false
+    && strpos($readmeSrc, 'Video Progres 2') !== false
+    && strpos($readmeSrc, 'Video Final Demo') !== false
+    && strpos($readmeSrc, 'Petunjuk Instalasi') !== false
+);
+
+$pdfPath = __DIR__ . '/../docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf';
+$pdfHeader = file_exists($pdfPath) ? file_get_contents($pdfPath, false, null, 0, 5) : '';
+assertTest(
+    "Berkas PDF Dokumen Lengkap Resmi tersedia dan valid (%PDF, >= 100KB)",
+    file_exists($pdfPath) && $pdfHeader === '%PDF-' && filesize($pdfPath) >= 100000
+);
+
 
 // -----------------------------------------------------------
 // RINGKASAN HASIL PENGUJIAN

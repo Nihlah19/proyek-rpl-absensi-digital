@@ -35,25 +35,27 @@ $activeKid   = $activeKelas ? (int)$activeKelas->id : 0;
             </p>
         </div>
 
-        <div class="flex items-center gap-2 flex-wrap">
-            <a href="<?= BASEURL; ?>/pkl/kelompok<?= $activeKid ? '?kelas_id=' . $activeKid : '' ?>" class="btn-secondary text-xs inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+        <div class="w-full sm:w-auto flex items-center gap-2 flex-wrap">
+            <a href="<?= BASEURL; ?>/pkl/kelompok<?= $activeKid ? '?kelas_id=' . $activeKid : '' ?>" class="btn-secondary flex-1 sm:flex-initial justify-center text-xs inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 whitespace-nowrap">
                 <i class="fa-solid fa-sliders text-emerald-600"></i> Kelola Kelompok PKL
             </a>
 
             <!-- Selector Kelas untuk Admin / Pembimbing -->
             <?php if (($userRole === 'admin' || count($allKelasPkl) > 1) && !empty($allKelasPkl)): ?>
-            <div class="relative inline-block text-left" id="dropdownKelasAdminMon">
-                <button type="button" onclick="toggleDropdownKelasMon()" class="btn-secondary text-xs flex items-center gap-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
-                    <i class="fa-solid fa-chalkboard text-slate-400"></i>
-                    <span>Kelas: <strong><?= $activeKelas ? htmlspecialchars($activeKelas->nama_kelas) : 'Pilih Kelas' ?></strong></span>
-                    <i class="fa-solid fa-chevron-down text-[10px] ml-1 opacity-60"></i>
+            <div class="relative inline-block text-left flex-1 sm:flex-initial min-w-[140px]" id="dropdownKelasAdminMon">
+                <button type="button" onclick="toggleDropdownKelasMon()" class="btn-secondary w-full sm:w-auto justify-between sm:justify-center text-xs flex items-center gap-2 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
+                    <span class="inline-flex items-center gap-1.5 truncate">
+                        <i class="fa-solid fa-chalkboard text-slate-400 shrink-0"></i>
+                        <span class="truncate">Kelas: <strong><?= $activeKelas ? htmlspecialchars($activeKelas->nama_kelas) : 'Pilih Kelas' ?></strong></span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-[10px] ml-1 opacity-60 shrink-0"></i>
                 </button>
-                <div id="menuKelasAdminMon" class="hidden absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 z-50 py-1 text-xs">
+                <div id="menuKelasAdminMon" class="hidden absolute left-0 sm:left-auto sm:right-0 mt-2 w-56 max-w-[calc(100vw-2rem)] rounded-xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 z-50 py-1 text-xs">
                     <div class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Pilih Kelas PKL</div>
                     <?php foreach ($allKelasPkl as $kp): ?>
                         <a href="<?= BASEURL; ?>/pkl/monitoring?kelas_id=<?= $kp->id; ?>&tanggal=<?= $tanggal ?>" class="flex items-center justify-between px-3.5 py-2 <?= ($activeKid === (int)$kp->id) ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50' ?>">
-                            <span><?= htmlspecialchars($kp->nama_kelas); ?></span>
-                            <span class="text-[10px] text-slate-400 font-mono"><?= (int)($kp->total_siswa ?? 0) ?> Siswa</span>
+                            <span class="truncate"><?= htmlspecialchars($kp->nama_kelas); ?></span>
+                            <span class="text-[10px] text-slate-400 font-mono shrink-0 ml-2"><?= (int)($kp->total_siswa ?? 0) ?> Siswa</span>
                         </a>
                     <?php endforeach; ?>
                 </div>

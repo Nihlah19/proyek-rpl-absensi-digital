@@ -1,118 +1,134 @@
-# 🏫 Sistem Absensi Digital SMK NU Wargabinangun
-**Berbasis RFID, QR Scanner & AI Assistant (Terintegrasi Telegram)**
+# Sistem Informasi Presensi Digital Siswa SMK Berbasis IoT RFID, Geofencing PKL & AI Chatbot
 
-![Version](https://img.shields.io/badge/Version-2.0-blue.svg)
-![Status](https://img.shields.io/badge/Status-Active-success.svg)
+![Version](https://img.shields.io/badge/Version-2.5-emerald.svg)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-success.svg)
 ![PHP](https://img.shields.io/badge/PHP-8.x-777BB4.svg?logo=php)
-![Tailwind](https://img.shields.io/badge/TailwindCSS-3.x-38B2AC.svg?logo=tailwind-css)
-![Arduino](https://img.shields.io/badge/IoT-ESP8266-00979D.svg?logo=arduino)
-
-Sistem Absensi Digital Sekolah yang dirancang khusus untuk memonitor kehadiran Siswa dan Guru secara *real-time*. Mengkombinasikan teknologi Internet of Things (IoT) melalui pemindaian kartu RFID, QR Scanner presensi mobile, manajemen izin elektronik (E-Leave), dan notifikasi cerdas melalui Telegram Bot dan AI Assistant.
-
----
-
-## 🌟 Fitur Unggulan
-
-- 💳 **RFID Tap (2-Scan System):** Pencatatan otomatis "Jam Datang" dan "Jam Pulang" menggunakan kartu RFID (MFRC522 & ESP8266).
-- 📱 **QR Code Scanner:** Alternatif presensi cepat bagi Guru menggunakan kamera perangkat seluler/laptop.
-- 💬 **Notifikasi Telegram Real-Time:** Pesan otomatis masuk ke grup kelas atau personal bot kurang dari 2 detik setelah scan.
-- 🤖 **AI Assistant (Gemini):** Chatbot cerdas yang siap membantu 24/7 terkait kendala atau informasi sekolah.
-- 📊 **Dashboard Berlapis (Multi-Role):** Hak akses spesifik untuk Admin, Kepala Sekolah, Wali Kelas, Guru, dan Siswa.
-- 📝 **E-Leave (Pengajuan Izin Elektronik):** Alur persetujuan izin/sakit paperless dengan unggah bukti valid.
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Offline%20Compiled-38B2AC.svg?logo=tailwind-css)
+![IoT](https://img.shields.io/badge/IoT-ESP8266%20%2F%20ESP32-00979D.svg?logo=arduino)
+![CI](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF.svg?logo=github-actions)
 
 ---
 
-## 🛠️ Teknologi yang Digunakan
+## Identitas Mahasiswa & Proyek RPL
 
-**Web Application (Software):**
-- **Backend:** PHP (Native/MVC Pattern)
-- **Database:** MySQL
-- **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript
-- **API Integration:** Telegram Bot API, Google Gemini API
-
-**Internet of Things (Hardware):**
-- **Microcontroller:** NodeMCU V3 (ESP8266)
-- **Sensor:** MFRC522 RFID Reader
-- **Display:** LCD I2C 16x2
-- **Audio/Alert:** Active Buzzer (Buzzer Beep)
-
----
-
-## 👥 Hak Akses & Role Pengguna
-
-Sistem memiliki 5 level otorisasi:
-
-1. **👑 Admin:** Kendali penuh data master (User, Kelas, Perangkat IoT, Jadwal) dan export laporan keseluruhan.
-2. **👨‍🏫 Kepala Sekolah:** Mengawasi kinerja guru, memonitor grafik keterlambatan, memberikan peringatan/catatan, dan menyetujui (Approve/Reject) cuti Guru.
-3. **👨‍💼 Wali Kelas:** Memonitor absensi kelas asuhannya, memberi catatan ke siswa, dan memvalidasi izin siswa.
-4. **👩‍🏫 Guru:** Melihat rekap absensi pribadi, mengajukan izin, dan menerima catatan dari Kepsek.
-5. **🎓 Siswa:** Melihat histori pindaian kartu RFID pribadi, mengajukan izin ke Wali Kelas, dan membaca catatan.
+| Atribut | Keterangan |
+| :--- | :--- |
+| **Nama** | **Nihlah Auliya** |
+| **NIM** | **41257146** |
+| **Kelompok** | **Sunyaragi Nexus** |
+| **Tema Topik Kelompok** | **Absensi Digital Siswa SMK** |
+| **Institusi Mitra / Studi Kasus** | SMK NU Wargabinangun Cirebon |
+| **Repositori Publik Pribadi** | `Nihlah19/proyek-rpl-absensi-digital` |
+| **Desain UI/UX (Figma)** | [Buka Desain Wise Design System di Figma](https://www.figma.com/design/OyGaCBcYHkG2aUvQzFnM9m) |
+| **Berkas Dokumen Lengkap (PDF)** | [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf) |
 
 ---
 
-## ⚙️ Panduan Instalasi (Web Server)
+## Deskripsi Aplikasi & Fitur AI Chatbot
 
-1. **Clone Repository:**
+**Sistem Informasi Presensi Digital Siswa SMK NU Wargabinangun** adalah aplikasi web terintegrasi berbasis **PHP 8 MVC** yang memadukan perangkat keras **IoT RFID & QR Scanner**, modul khusus **Presensi Mandiri PKL berbasis Geofencing & WebRTC Live Selfie**, serta **Asisten AI Chatbot** untuk kebutuhan sekolah kejuruan.
+
+### Fitur Utama Aplikasi
+1. **Presensi Gerbang IoT (RFID Siswa & QR Code Guru)**
+   - Pemindaian kartu RFID MFRC522 pada node ESP8266/ESP32 melalui endpoint REST JSON (`POST /api/iot/attendance/student`, `POST /api/iot/attendance/teacher`, dan `POST /api/iot/heartbeat`) menggunakan autentikasi header `X-Api-Key`.
+   - Status keterangan absensi terstandar hanya **Hadir, Izin, Sakit, Alfa** (keterlambatan dicatat terpisah pada metadata ketepatan waktu, bukan membuang status Hadir), serta aturan **Auto-Alfa** otomatis bagi siswa/guru reguler yang tidak memiliki presensi/izin pada hari aktif.
+2. **Modul Khusus PKL (Geofencing Haversine & Jadwal Industri Fleksibel)**
+   - **Siswa PKL** melakukan check-in & check-out via smartphone menggunakan **kamera depan live WebRTC** (anti-unggah foto galeri) dan **validasi GPS Haversine Formula** sesuai titik koordinat & radius DUDI.
+   - **Wali Kelas / Pembimbing PKL** dapat mengatur jadwal hari kerja kelompok PKL (5 hari, 6 hari, shift 7 hari), membebaskan jam masuk/pulang sesuai shift industri, memantau log selfie harian, dan mengelola anggota kelompok secara responsif di desktop maupun Android.
+3. **Manajemen Izin/Sakit, Catatan Bimbingan & Daftar Catatan**
+   - Pengajuan Izin/Sakit mendukung unggah lampiran bukti (gambar & dokumen PDF/DOCX) dengan approval berjenjang.
+   - **Fitur Catatan Fleksibel (`catatan_siswa` & `catatan_guru`):** Wali Kelas dan Kepala Sekolah dapat menulis, **mengedit**, dan **menghapus** catatan bimbingan dengan proteksi kepemilikan penulis & CSRF, serta melihat seluruh arsip di halaman khusus **Daftar Catatan** (`/catatan/daftar`).
+4. **Kontrol Akses Berbasis Peran (RBAC) & Keamanan**
+   - Pembatasan tegas 6 peran: `admin`, `kepsek` (monitoring eksekutif guru/sekolah tanpa akses rekap & monitoring siswa), `wali_kelas`, `guru`, `pembimbing_pkl`, dan `siswa`.
+   - Proteksi CSRF token, Prepared Statements PDO (kompatibel MySQL lokal & TiDB Serverless SSL), session cookie hardening, serta Tailwind CSS terkompilasi lokal (*offline-ready*) untuk pemuatan cepat di jaringan lambat.
+5. **Fitur Asisten AI Chatbot (Multi-Role Grounded Assistant & Telegram Bot)**
+   - Terintegrasi dengan LLM API (**Google Gemini / Groq**) dan didukung pengambilan konteks basis data real-time (**RAG ringan**).
+   - **Smart Prompt & Privacy Boundary Guard:** Jawaban chatbot difokuskan langsung hanya pada pertanyaan pengguna (misalnya ketika siswa Kelas 10 TKJ menanyakan siapa wali kelasnya, AI hanya menjawab tepat wali kelas 10 TKJ terkait tanpa membocorkan daftar kelas lain atau komentar tidak relevan).
+   - **Keamanan Kredensial UI:** Input API Key dikonfigurasi aman tanpa memicu pop-up simpan password browser agar kunci Gemini/API tidak terekspos.
+   - **Integrasi Notifikasi Telegram & Web Push:** Laporan kehadiran dan catatan sekolah dapat diteruskan melalui bot Telegram dan notifikasi sistem.
+
+---
+
+## Tautan Video Presentasi & Dokumentasi
+
+| Tahap Video | Fokus Bahasan | Tautan Video | Status |
+| :--- | :--- | :--- | :--- |
+| **Video Progres 1** | Penjelasan Dokumen PRD / SRS & Konsep Aplikasi | `[Lengkapi Link Video Progres 1 di Sini]` | Menunggu Tautan Upload |
+| **Video Progres 2** | Pemodelan UML (Use Case, ERD, Activity, Sequence) & UI/UX Figma | `[Lengkapi Link Video Progres 2 di Sini]` | Menunggu Tautan Upload |
+| **Video Final Demo** | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | `[Lengkapi Link Video Final Demo di Sini]` | Menunggu Tautan Upload |
+
+> **Berkas Referensi Terkait di Repositori:**
+> - Naskah Skrip Video Presentasi Lengkap: [`docs/NASKAH_VIDEO_PRESENTASI_LENGKAP.md`](docs/NASKAH_VIDEO_PRESENTASI_LENGKAP.md)
+> - Dokumen Lengkap Terjilid (PRD/SRS + SDD UML & Figma + Laporan Pengujian/CI-CD): [`docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf`](docs/Dokumen_Lengkap_RPL_Nihlah_Auliya_41257146.pdf)
+> - Dokumentasi Endpoint IoT API: [`docs/api.md`](docs/api.md)
+
+---
+
+## Petunjuk Instalasi Aplikasi (Setup Instruction)
+
+### 1. Prasyarat Sistem
+- **Web Server & PHP:** PHP `>= 8.1` (ekstensi `pdo`, `pdo_mysql`, `mbstring`, `curl`, `gd`, `fileinfo` aktif) — misalnya XAMPP / Laragon / Docker.
+- **Basis Data:** MySQL `8.0+` / MariaDB `10.4+` / TiDB Cloud Serverless.
+- **Node.js (Opsional untuk rebuild Tailwind CSS):** Node.js `>= 18.x` & npm.
+- **Perangkat IoT (Opsional):** ESP8266 / ESP32 + RFID MFRC522 / Scanner QR Code.
+
+### 2. Langkah Instalasi Lokal (XAMPP / Apache)
+1. **Clone repositori:**
    ```bash
-   git clone https://github.com/yourusername/AbsensiRFID.git
+   git clone https://github.com/Nihlah19/proyek-rpl-absensi-digital.git AbsensiRFID
    cd AbsensiRFID
    ```
-2. **Konfigurasi Database:**
-   - Buat database baru di MySQL (contoh: `db_absensirfid`).
-   - Import file SQL yang tersedia di folder `database/` ke dalam database tersebut.
-3. **Setup Environment:**
-   - Masuk ke direktori web dan ubah `.env.example` menjadi `.env`.
-   - Sesuaikan konfigurasi koneksi database, URL utama (BASEURL), Token Telegram, dan API Key AI.
-4. **Install Dependencies (Frontend):**
+2. **Konfigurasi Environment (`.env`):**
+   Salin file contoh `.env.example` menjadi `.env` di root proyek dan sesuaikan kredensial database serta API Key:
+   ```env
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_NAME=absensi_smk
+   DB_USER=root
+   DB_PASS=
+   GEMINI_API_KEY=isi_api_key_gemini_anda
+   TELEGRAM_BOT_TOKEN=opsional_token_bot_telegram
+   ```
+3. **Import Basis Data:**
+   Buat database `absensi_smk` pada MySQL/phpMyAdmin atau TiDB, lalu impor berkas skema SQL yang tersedia di folder `database/`.
+4. **Build Aset CSS Offline (Opsional — CSS hasil kompilasi sudah tersedia di repo):**
    ```bash
    npm install
-   npm run build
+   npx tailwindcss -i ./src/input.css -o ./web/public/assets/css/tailwind.css --minify
    ```
-   *(Opsional jika Anda ingin mengembangkan CSS menggunakan Tailwind watcher: `npm run dev`)*
-5. **Jalankan Server:**
-   Akses melalui Localhost (contoh: `http://localhost/AbsensiRFID/web/public/`) atau konfigurasi Virtual Host.
+5. **Jalankan Aplikasi:**
+   Pastikan modul Apache & MySQL berjalan, lalu akses melalui browser:
+   - Lokal: `http://localhost/AbsensiRFID/web/public/`
+   - Atau via PHP Built-in Server dari direktori `web/public/`:
+     ```bash
+     php -S localhost:8080 -t web/public
+     ```
+
+### 3. Menjalankan Pengujian Otomatis & Linting (CI Check Mandiri)
+Jalankan seluruh unit test dan validasi database dengan perintah:
+```bash
+php tests/run_tests.php
+```
+Untuk memeriksa sintaks PHP pada seluruh controller dan model:
+```bash
+php -l web/app/controllers/CatatanController.php
+php -l web/app/models/Catatan.php
+```
 
 ---
 
-## 🔧 Panduan Instalasi IoT (Perangkat Keras)
-
-Kode program Arduino (`.ino`) terdapat di dalam direktori `iot/`.
-
-1. **Rangkaian Kabel (ESP8266 ke MFRC522 & Buzzer):**
-   - `SDA/SS` ➔ `D4`
-   - `SCK` ➔ `D5`
-   - `MOSI` ➔ `D7`
-   - `MISO` ➔ `D6`
-   - `RST` ➔ `D3`
-   - `Buzzer (Positif)` ➔ `D0`
-   - `Buzzer (Negatif)` ➔ `GND`
-2. Buka `iot/scan_absensi/scan_absensi.ino` menggunakan **Arduino IDE**.
-3. Sesuaikan variabel kredensial:
-   - `WIFI_SSID` & `WIFI_PASS`
-   - `API_HOST` (IP Server komputer/server Anda)
-   - `API_KEY` (Sesuaikan dengan file `.env` di sisi web)
-4. Compile & Upload ke board NodeMCU ESP8266.
-
----
-
-## 📝 Alur Modul Pengajuan Izin (E-Leave)
-
-Sistem *Approval* berjenjang untuk menjaga validitas izin:
-- **Siswa** ➔ Mengajukan izin ➔ Divalidasi oleh **Wali Kelas**.
-- **Guru / Wali Kelas** ➔ Mengajukan izin ➔ Divalidasi oleh **Kepala Sekolah**.
-
-**Langkah:**
-1. Pengguna masuk ke menu **Pengajuan Izin**, isi durasi tanggal dan lampirkan bukti PDF/Gambar.
-2. Pihak penyetuju masuk ke **Persetujuan Izin**, klik *Cek File*, lalu pilih **Setujui** atau **Tolak**.
-3. Jika *Disetujui*, absensi rentang tanggal tersebut akan otomatis di-bypass menjadi Izin/Sakit tanpa perlu melakukan *tap* RFID.
-
----
-
-## 🔒 Keamanan & Sinkronisasi
-- Semua kata sandi dalam sistem dienkripsi secara ireversibel menggunakan algoritma hashing **Bcrypt**.
-- Proteksi komunikasi API IoT menggunakan mekanisme `X-Api-Key` Headers.
-- Data status Wali Kelas telah direplikasi dan dienkapsulasi dengan data Guru untuk kemudahan penyusunan laporan Kepala Sekolah.
-- *Default password* untuk semua akun uji coba pada tahap awal adalah: `password`.
-
----
-*Dikembangkan sebagai Proyek Sistem Manajemen Sekolah Terpadu SMK NU Wargabinangun v2.0.*
+## Struktur Direktori Utama
+```text
+.
+├── .github/workflows/ci.yml       # Pipeline CI/CD GitHub Actions (PHP Lint & Unit Tests)
+├── database/                      # Skema SQL & migrasi tabel MySQL/TiDB
+├── docs/                          # PRD, API Docs, Diagram Activity, & PDF Lengkap Terjilid
+├── iot/                           # Firmware ESP8266/ESP32 untuk mesin tap RFID & QR
+├── presentasi/figma/              # Aset SVG layar Figma & panduan desain
+├── src/input.css                  # Sumber CSS Tailwind (dikompilasi ke web/public/assets/css/tailwind.css)
+├── tests/run_tests.php            # Suite pengujian otomatis end-to-end
+└── web/
+    ├── api/                       # Entry point Vercel Serverless PHP
+    ├── app/                       # Inti MVC (Controllers, Models, Views, Helpers)
+    └── public/                    # Document root, PWA manifest, assets JS/CSS offline
+```
