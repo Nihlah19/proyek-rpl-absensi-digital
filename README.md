@@ -53,10 +53,11 @@
 
 | Tahap Video | Fokus Bahasan | Tautan Video | 
 | :--- | :--- | :--- |
-| *Video Progres 1* | Penjelasan Dokumen PRD & Konsep Aplikasi | [Lengkapi Link Video Progres 1 di Sini] |
-| *Video Progres 2* | Pemodelan UML (Use Case, ERD, Activity, Sequence) & UI/UX Figma | [Lengkapi Link Video Progres 2 di Sini] |
-| *Video Final Demo* | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | [Lengkapi Link Video Final Demo di Sini] |
-| *Video Final Youtube* | Vidio Full Dari PRD Sampai Demo Website | [Lengkapi Link Video Final Demo di Sini] |
+| *Video Progres 1* | Penjelasan Dokumen PRD & Konsep Aplikasi | [Link Video Progres 1 (https://drive.google.com/file/d/1t4sgarKW0ysnsM1cFPyfAmIA9JgS4kCS/view?usp=drivesdk)] |
+| *Video Progres 2* | Pemodelan UML (Use Case, ERD, Activity, Sequence) & UI/UX Figma | [Link Video Progres 2( https://drive.google.com/file/d/1kUxihPTVF08A_vORSql-qtrM3tZ5MHnD/view?usp=drivesdk)] |
+| *Video Final Demo* | Live Demo Sistem Utuh, IoT, PKL Geofencing, AI Chatbot & CI/CD | [Link Video Final Demo 
+(di Sini https://drive.google.com/file/d/1kUxihPTVF08A_vORSql-qtrM3tZ5MHnD/view?usp=drivesdk)](https://drive.google.com/file/d/1kKbsjo8MVNCe3_7ZAmXv-skAznLZkiFR/view?usp=drivesdk)] |
+| *Video Final Youtube* | Vidio Full Dari PRD Sampai Demo Website | [Link Vidio YT(https://youtu.be/cIJETr3XTMA?si=uZU6xyuBWJJXzvb3)] |
 
 > *Berkas Referensi Terkait di Repositori:*
 > - Dokumen PRD Terpilih: [docs/PRD_ABSENSISMKNU.docx](docs/PRD_ABSENSISMKNU.docx)
