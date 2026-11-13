@@ -43,16 +43,33 @@ class AuthController extends Controller {
                 SessionHelper::set('name', $user->name);
                 SessionHelper::set('role', $user->role);
                 SessionHelper::set('avatar', $user->avatar ?? null);
+                SessionHelper::set('avatar_synced_at', time());
                 
+                $db = new Database();
                 $classCode = null;
                 if ($user->role === 'wali_kelas' || $user->role === 'walikelas') {
-                    $db = new Database();
-                    $db->query("SELECT class_code FROM kelas WHERE wali_kelas_id = :user_id");
+                    $db->query("SELECT class_code FROM kelas WHERE wali_kelas_id = :user_id LIMIT 1");
                     $db->bind(':user_id', $user->id);
                     $kelas = $db->single();
                     if ($kelas) {
                         $classCode = $kelas->class_code;
                         SessionHelper::set('class_code', $kelas->class_code);
+                    }
+                } elseif ($user->role === 'siswa') {
+                    $db->query("SELECT k.status as status_kelas FROM siswa s JOIN kelas k ON s.kelas_id = k.id WHERE s.user_id = :uid LIMIT 1");
+                    $db->bind(':uid', $user->id);
+                    $rowS = $db->single();
+                    SessionHelper::set('is_student_pkl', ($rowS && ($rowS->status_kelas ?? '') === 'pkl'));
+                }
+
+                if (in_array($user->role, ['guru', 'wali_kelas', 'walikelas', 'kepsek'])) {
+                    $db->query("SELECT id, barcode_id, is_pembimbing_pkl FROM guru WHERE user_id = :uid LIMIT 1");
+                    $db->bind(':uid', $user->id);
+                    $rowG = $db->single();
+                    if ($rowG) {
+                        $bc = !empty($rowG->barcode_id) ? $rowG->barcode_id : sprintf('QR-GURU-%03d', $rowG->id);
+                        SessionHelper::set('header_barcode_id', $bc);
+                        SessionHelper::set('is_pembimbing_pkl', !empty($rowG->is_pembimbing_pkl));
                     }
                 }
 

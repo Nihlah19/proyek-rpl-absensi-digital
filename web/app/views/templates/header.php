@@ -561,30 +561,33 @@
                 $avatarUploadDir = __DIR__ . '/../../../public/uploads/avatars/';
                 $isDataUriAvatar = (!empty($currentAvatar) && strpos($currentAvatar, 'data:image/') === 0);
                 
-                // Sinkronkan avatar dari DB jika session belum terisi atau file fisik tidak ada
-                if ($activeUid && (empty($currentAvatar) || (!$isDataUriAvatar && !file_exists($avatarUploadDir . $currentAvatar)))) {
-                    try {
-                        $dbSyncAvatar = new Database();
-                        $dbSyncAvatar->query("SELECT avatar FROM users WHERE id = :id");
-                        $dbSyncAvatar->bind(':id', $activeUid);
-                        $userRowSync = $dbSyncAvatar->single();
-                        if ($userRowSync && !empty($userRowSync->avatar)) {
-                            $currentAvatar = $userRowSync->avatar;
-                            $isDataUriAvatar = (strpos($currentAvatar, 'data:image/') === 0);
-                            SessionHelper::set('avatar', $currentAvatar);
-                        }
-                    } catch (Exception $e) {}
+                // Sinkronkan avatar dari DB secara ringan jika belum pernah diperiksa pada sesi aktif
+                if ($activeUid && !SessionHelper::get('avatar_synced_at')) {
+                    if (empty($currentAvatar) || (!$isDataUriAvatar && !file_exists($avatarUploadDir . $currentAvatar))) {
+                        try {
+                            $dbSyncAvatar = new Database();
+                            $dbSyncAvatar->query("SELECT avatar FROM users WHERE id = :id LIMIT 1");
+                            $dbSyncAvatar->bind(':id', $activeUid);
+                            $userRowSync = $dbSyncAvatar->single();
+                            if ($userRowSync && !empty($userRowSync->avatar)) {
+                                $currentAvatar = $userRowSync->avatar;
+                                $isDataUriAvatar = (strpos($currentAvatar, 'data:image/') === 0);
+                                SessionHelper::set('avatar', $currentAvatar);
+                            }
+                        } catch (Exception $e) {}
+                    }
+                    SessionHelper::set('avatar_synced_at', time());
                 }
                 $hasDiskAvatar  = (!empty($currentAvatar) && !$isDataUriAvatar && file_exists($avatarUploadDir . $currentAvatar));
                 $hasValidAvatar = ($isDataUriAvatar || $hasDiskAvatar);
 
-                // Cek Barcode ID untuk Guru / Wali / Kepsek
-                $headerBarcodeId = null;
-                if (in_array(SessionHelper::get('role'), ['guru', 'wali_kelas', 'walikelas', 'kepsek'])) {
+                // Cek Barcode ID untuk Guru / Wali / Kepsek (gunakan cache sesi untuk menghindari query DB berulang)
+                $headerBarcodeId = SessionHelper::get('header_barcode_id');
+                if ($headerBarcodeId === null && in_array(SessionHelper::get('role'), ['guru', 'wali_kelas', 'walikelas', 'kepsek']) && $activeUid) {
                     try {
                         $dbHeader = new Database();
-                        $dbHeader->query("SELECT id, barcode_id FROM guru WHERE user_id = :uid");
-                        $dbHeader->bind(':uid', SessionHelper::get('user_id'));
+                        $dbHeader->query("SELECT id, barcode_id FROM guru WHERE user_id = :uid LIMIT 1");
+                        $dbHeader->bind(':uid', $activeUid);
                         $guruHeaderData = $dbHeader->single();
                         if ($guruHeaderData) {
                             $headerBarcodeId = $guruHeaderData->barcode_id;
@@ -597,6 +600,7 @@
                             }
                         }
                     } catch (Exception $e) {}
+                    SessionHelper::set('header_barcode_id', $headerBarcodeId ?? '');
                 }
                 ?>
 
@@ -871,34 +875,50 @@ function downloadHeaderQr() {
                         $isPengajuanIzin = (strpos($reqUri, '/izin/riwayat') !== false || strpos($reqUri, '/izin/ajukan') !== false);
                         $isPklActive = (strpos($reqUri, '/absensi/pkl') !== false || strpos($reqUri, '/pkl') !== false);
 
-                        // Cek apakah siswa saat ini berada di kelas berstatus PKL
-                        $isStudentPkl = false;
-                        if ($userRole === 'siswa') {
-                            $headerUid = (int)SessionHelper::get('user_id');
-                            if ($headerUid) {
-                                $headerDb = new Database();
-                                $headerDb->query("
-                                    SELECT k.status as status_kelas 
-                                    FROM siswa s 
-                                    JOIN kelas k ON s.kelas_id = k.id 
-                                    WHERE s.user_id = :uid 
-                                    LIMIT 1
-                                ");
-                                $headerDb->bind(':uid', $headerUid);
-                                $hRes = $headerDb->single();
-                                $isStudentPkl = ($hRes && ($hRes->status_kelas ?? '') === 'pkl');
+                        // Cek apakah siswa saat ini berada di kelas berstatus PKL (cache sesi ringan)
+                        $isStudentPkl = SessionHelper::get('is_student_pkl');
+                        if ($isStudentPkl === null) {
+                            $isStudentPkl = false;
+                            if ($userRole === 'siswa') {
+                                $headerUid = (int)SessionHelper::get('user_id');
+                                if ($headerUid) {
+                                    try {
+                                        $headerDb = new Database();
+                                        $headerDb->query("
+                                            SELECT k.status as status_kelas 
+                                            FROM siswa s 
+                                            JOIN kelas k ON s.kelas_id = k.id 
+                                            WHERE s.user_id = :uid 
+                                            LIMIT 1
+                                        ");
+                                        $headerDb->bind(':uid', $headerUid);
+                                        $hRes = $headerDb->single();
+                                        $isStudentPkl = ($hRes && ($hRes->status_kelas ?? '') === 'pkl');
+                                    } catch (Exception $e) {}
+                                }
                             }
+                            SessionHelper::set('is_student_pkl', (bool)$isStudentPkl);
+                        } else {
+                            $isStudentPkl = (bool)$isStudentPkl;
                         }
 
-                        // Cek apakah user adalah Pembimbing PKL
-                        $isUserPembimbingPkl = false;
-                        if (in_array($userRole, ['guru', 'wali_kelas', 'walikelas'])) {
-                            $headerUid = (int)SessionHelper::get('user_id');
-                            if ($headerUid) {
-                                require_once __DIR__ . '/../../models/Pkl.php';
-                                $pklCheckModel = new Pkl();
-                                $isUserPembimbingPkl = $pklCheckModel->isUserPembimbingPkl($headerUid);
+                        // Cek apakah user adalah Pembimbing PKL (cache sesi ringan)
+                        $isUserPembimbingPkl = SessionHelper::get('is_pembimbing_pkl');
+                        if ($isUserPembimbingPkl === null) {
+                            $isUserPembimbingPkl = false;
+                            if (in_array($userRole, ['guru', 'wali_kelas', 'walikelas'])) {
+                                $headerUid = (int)SessionHelper::get('user_id');
+                                if ($headerUid) {
+                                    try {
+                                        require_once __DIR__ . '/../../models/Pkl.php';
+                                        $pklCheckModel = new Pkl();
+                                        $isUserPembimbingPkl = $pklCheckModel->isUserPembimbingPkl($headerUid);
+                                    } catch (Exception $e) {}
+                                }
                             }
+                            SessionHelper::set('is_pembimbing_pkl', (bool)$isUserPembimbingPkl);
+                        } else {
+                            $isUserPembimbingPkl = (bool)$isUserPembimbingPkl;
                         }
 
                         $isSiswaPresensiGroupActive = ($isSiswaAbsensi || $isPengajuanIzin || $isPklActive);

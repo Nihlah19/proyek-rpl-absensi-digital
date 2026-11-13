@@ -3,6 +3,7 @@ class App {
     protected $controller = 'HomeController';
     protected $method = 'index';
     protected $params = [];
+    private static $controllersCache = null;
 
     public function __construct() {
         $url = $this->parseURL();
@@ -15,11 +16,13 @@ class App {
                 $this->controller = $controllerName;
                 unset($url[0]);
             } else {
-                // Fallback pencarian case-insensitive & tanpa tanda minus/garis bawah untuk Linux/Vercel
+                // Fallback pencarian case-insensitive & tanpa tanda minus/garis bawah untuk Linux/Vercel (dengan static cache)
                 $found = false;
                 $targetClean = strtolower(str_replace(['-', '_'], '', $url[0])) . 'controller.php';
-                $files = scandir(__DIR__ . '/../controllers/');
-                foreach ($files as $f) {
+                if (self::$controllersCache === null) {
+                    self::$controllersCache = scandir(__DIR__ . '/../controllers/') ?: [];
+                }
+                foreach (self::$controllersCache as $f) {
                     if ($f === '.' || $f === '..') continue;
                     if (strtolower(str_replace(['-', '_'], '', $f)) === $targetClean) {
                         $this->controller = pathinfo($f, PATHINFO_FILENAME);

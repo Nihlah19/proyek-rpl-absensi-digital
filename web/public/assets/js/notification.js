@@ -731,10 +731,18 @@
         fetchNotifications(true);
         updatePermissionStatusUI();
 
-        // Polling setiap 12 detik
+        // Polling efisien: hanya berjalan saat tab browser aktif (menghemat baterai & bandwidth)
         pollTimer = setInterval(function() {
-            fetchNotifications(false);
-        }, 12000);
+            if (!document.hidden) {
+                fetchNotifications(false);
+            }
+        }, 15000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                fetchNotifications(false);
+            }
+        });
     });
 
 })();

@@ -1,6 +1,5 @@
-const CACHE_NAME = 'absensi-smk-v3.0';
+const CACHE_NAME = 'absensi-smk-v4.0';
 const STATIC_ASSETS = [
-    './',
     './offline.html',
     './manifest.json',
     './assets/css/tailwind.css',
@@ -36,7 +35,7 @@ self.addEventListener('install', (event) => {
     );
 });
 
-// 2. Activate Event: Clean old caches
+// 2. Activate Event: Clean all old caches immediately
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((keys) => {
@@ -52,8 +51,8 @@ self.addEventListener('activate', (event) => {
 });
 
 // 3. Fetch Event Strategy:
-// - Navigation requests (pages): Network-First, fallback to offline.html
-// - Static assets (images/css/js): Stale-While-Revalidate
+// - Navigation requests (pages): Fresh Network-First (Ringan & real-time, no stale storage bloat)
+// - Static assets (images/css/js): Stale-While-Revalidate (Instant load from cache)
 // - API calls: Network-Only
 self.addEventListener('fetch', (event) => {
     const request = event.request;
@@ -69,32 +68,18 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Strategy A: HTML navigation requests (pages)
+    // Strategy A: HTML navigation requests (pages) — Selalu fresh, fallback ke offline jika jaringan terputus
     if (request.mode === 'navigate') {
         event.respondWith(
-            fetch(request)
-                .then((networkResponse) => {
-                    // Update cache with fresh copy if valid
-                    if (networkResponse && networkResponse.status === 200) {
-                        const responseClone = networkResponse.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-                    }
-                    return networkResponse;
-                })
-                .catch(async () => {
-                    // Offline fallback: try exact/search-ignored cache, or fallback to offline.html
-                    const cachedResponse = await caches.match(request) || await caches.match(request, { ignoreSearch: true });
-                    if (cachedResponse) {
-                        return cachedResponse;
-                    }
-                    const offlineFallback = await caches.match('./offline.html') || await caches.match('offline.html');
-                    if (offlineFallback) {
-                        return offlineFallback;
-                    }
-                    return new Response('<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Offline</title></head><body style="font-family:sans-serif;text-align:center;padding:40px;"><h2>Aplikasi Sedang Offline</h2><p>Pastikan HP terhubung ke internet.</p><button onclick="location.reload()">Muat Ulang</button></body></html>', {
-                        headers: { 'Content-Type': 'text/html; charset=utf-8' }
-                    });
-                })
+            fetch(request).catch(async () => {
+                const offlineFallback = await caches.match('./offline.html') || await caches.match('offline.html');
+                if (offlineFallback) {
+                    return offlineFallback;
+                }
+                return new Response('<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><title>Offline</title></head><body style="font-family:sans-serif;text-align:center;padding:40px;"><h2>Aplikasi Sedang Offline</h2><p>Pastikan HP terhubung ke internet.</p><button onclick="location.reload()">Muat Ulang</button></body></html>', {
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' }
+                });
+            })
         );
         return;
     }

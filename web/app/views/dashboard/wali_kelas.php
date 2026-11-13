@@ -697,7 +697,9 @@ async function wkPollPulangCepat() {
 }
 
 wkPollPulangCepat();
-setInterval(wkPollPulangCepat, 10000);
+setInterval(function() {
+    if (!document.hidden) wkPollPulangCepat();
+}, 15000);
 
 const wkStyle = document.createElement('style');
 wkStyle.textContent = '@keyframes fadeInToast{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}';

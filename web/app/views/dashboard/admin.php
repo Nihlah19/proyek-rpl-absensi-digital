@@ -795,7 +795,9 @@ async function pollPulangCepat() {
 }
 
 pollPulangCepat();
-setInterval(pollPulangCepat, 10000);
+setInterval(function() {
+    if (!document.hidden) pollPulangCepat();
+}, 15000);
 
 // Auto-redirect jika ada navigasi hash langsung ke modul terkait
 document.addEventListener('DOMContentLoaded', function() {
