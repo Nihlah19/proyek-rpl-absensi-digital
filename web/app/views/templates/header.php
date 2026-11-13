@@ -1297,8 +1297,8 @@ function downloadHeaderQr() {
                     </li>
                     <?php endif; ?>
 
-                    <?php if (in_array($userRole, ['admin', 'siswa', 'guru', 'wali_kelas', 'walikelas', 'kepsek'])): ?>
-                    <!-- CATATAN (Admin, Siswa, Guru, Wali Kelas, Kepsek) -->
+                    <?php if (in_array($userRole, ['siswa', 'guru', 'wali_kelas', 'walikelas', 'kepsek'])): ?>
+                    <!-- CATATAN (Siswa, Guru, Wali Kelas, Kepsek) -->
                     <li>
                         <a href="<?= BASEURL; ?>/catatan"
                            class="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs transition-colors <?= $isCatatanActive ? 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 font-semibold border-l-4 border-emerald-600 dark:border-emerald-500' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 font-medium' ?>">

@@ -215,6 +215,7 @@ $name = SessionHelper::get('name') ?? 'Pengguna';
                 </a>
                 <?php endif; ?>
 
+                <?php if (SessionHelper::get('role') !== 'admin'): ?>
                 <a href="<?= BASEURL; ?>/catatan" class="vh-card p-4 flex items-center gap-3.5 hover:border-emerald-500/50 hover:shadow-md transition-all group">
                     <i class="fa-solid fa-clipboard-list text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 text-lg transition-colors shrink-0"></i>
                     <div>
@@ -225,6 +226,7 @@ $name = SessionHelper::get('name') ?? 'Pengguna';
                         <i class="fa-solid fa-chevron-right text-xs"></i>
                     </div>
                 </a>
+                <?php endif; ?>
             </div>
         </div>
         
