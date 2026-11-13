@@ -79,12 +79,6 @@ class Pkl extends Model {
         $userId = (int)$userId;
         if ($userId <= 0) return false;
 
-        // 1. Cek apakah pengguna adalah wali kelas dari kelas berstatus PKL
-        $this->db->query("SELECT id FROM kelas WHERE wali_kelas_id = :uid AND LOWER(TRIM(COALESCE(status, ''))) = 'pkl' LIMIT 1");
-        $this->db->bind(':uid', $userId);
-        if ($this->db->single()) return true;
-
-        // 2. Cek apakah guru ditugaskan sebagai pembimbing PKL
         $this->db->query("
             SELECT g.id, g.is_pembimbing_pkl,
                    (SELECT COUNT(*) FROM pkl_pembimbing_kelas ppk WHERE ppk.guru_id = g.id) as cnt_kelas,
@@ -136,12 +130,10 @@ class Pkl extends Model {
                 JOIN guru g2 ON pk2.pembimbing_guru_id = g2.id
                 WHERE g2.user_id = :uid2
             )
-            OR (k.wali_kelas_id = :uid3 AND LOWER(TRIM(COALESCE(k.status, ''))) = 'pkl')
             ORDER BY k.nama_kelas ASC
         ");
         $this->db->bind(':uid1', $userId);
         $this->db->bind(':uid2', $userId);
-        $this->db->bind(':uid3', $userId);
         $res = $this->db->resultSet();
 
         // Fallback jika guru tercatat sebagai pembimbing PKL aktif tapi belum diassign kelas spesifik

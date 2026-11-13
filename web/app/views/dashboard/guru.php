@@ -31,7 +31,7 @@ $totalIzinSakit  = (int)($statsBulan->izin_sakit ?? 0);
             <button type="button" onclick="openScanModal()" class="btn-primary text-xs cursor-pointer">
                 <i class="fa-solid fa-qrcode"></i> Scan Absensi
             </button>
-            <a href="<?= BASEURL; ?>/riwayat/guru" class="btn-secondary text-xs">
+            <a href="<?= BASEURL; ?>/rekapabsensi/guru" class="btn-secondary text-xs">
                 <i class="fa-solid fa-clock-rotate-left text-slate-400"></i> Riwayat Lengkap
             </a>
         </div>
