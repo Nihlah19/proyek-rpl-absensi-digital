@@ -7,10 +7,11 @@
     <meta name="description" content="Sistem Presensi RFID dan QR Code Terpadu SMK NU Wargabinangun.">
     <title><?= $data['judul'] ?? 'ABSENSI SMK NU WARGABINANGUN' ?></title>
     
-    <!-- Theme Flash Prevention (FOUC) Script -->
+    <!-- Theme Flash Prevention (FOUC) & Tab Session Script -->
     <script>
         (function() {
             try {
+                sessionStorage.setItem('smk_logged_in', '1');
                 const savedTheme = localStorage.getItem('theme') || localStorage.getItem('smk_theme');
                 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
                 if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {

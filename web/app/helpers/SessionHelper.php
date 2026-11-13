@@ -35,9 +35,9 @@ class SessionHelper {
     }
 
     /**
-     * Terbitkan token autentikasi persisten yang ditandatangani HMAC
-     * agar sesi login tidak hilang di lingkungan serverless multi-instance (Vercel)
-     * maupun navigasi fitur dashboard.
+     * Terbitkan token autentikasi sesi murni (session cookie) yang ditandatangani HMAC.
+     * Menggunakan expires => 0 agar otomatis terhapus saat peramban/tab ditutup,
+     * serta mendukung lingkungan serverless multi-instance tanpa mempertahankan login permanen.
      */
     public static function issueAuthCookie($userId, $username, $role, $name, $classCode = null, $avatar = null) {
         // JANGAN pernah simpan data URI base64 atau string gambar ke cookie (limit browser max 4KB)
@@ -53,7 +53,7 @@ class SessionHelper {
             'n'   => (string)$name,
             'c'   => $classCode,
             'av'  => $cleanAvatar,
-            'exp' => time() + (86400 * 7), // Berlaku 7 hari
+            'exp' => 0, // 0 = Sesi murni (tidak bertahan saat web ditutup)
         ];
         $json = json_encode($payload);
         $encoded = rtrim(strtr(base64_encode($json), '+/', '-_'), '=');
@@ -66,30 +66,57 @@ class SessionHelper {
                    || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
 
         $cookieOptions = [
-            'expires'  => time() + (86400 * 7),
+            'expires'  => 0, // Murni session cookie (dihapus browser saat browser/tab ditutup)
             'path'     => '/',
             'secure'   => $isHttps,
             'httponly' => true,
             'samesite' => 'Lax'
         ];
 
-        setcookie('smk_auth', $token, $cookieOptions);
-        $_COOKIE['smk_auth'] = $token;
+        setcookie('smk_session', $token, $cookieOptions);
+        $_COOKIE['smk_session'] = $token;
+
+        // Pastikan cookie lama 'smk_auth' (7 hari) yang tersimpan di browser klien dihapus
+        self::clearOldAuthCookie();
     }
 
     /**
-     * Sinkronisasikan session dari auth cookie jika $_SESSION kosong (cold start / beda instance di Vercel)
+     * Hapus residu cookie 'smk_auth' lama dari browser pengguna
+     */
+    public static function clearOldAuthCookie() {
+        $isHttps = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
+                   || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+                   || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on')
+                   || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+
+        setcookie('smk_auth', '', [
+            'expires'  => time() - 86400,
+            'path'     => '/',
+            'secure'   => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
+        unset($_COOKIE['smk_auth']);
+    }
+
+    /**
+     * Sinkronisasikan session dari auth session cookie jika $_SESSION kosong (cold start di Vercel)
      */
     public static function syncSessionFromCookie() {
+        // Bersihkan jika browser client masih membawa cookie 7 hari terdahulu
+        if (isset($_COOKIE['smk_auth'])) {
+            self::clearOldAuthCookie();
+        }
+
         if (!empty($_SESSION['user_id']) && !empty($_SESSION['role'])) {
             return;
         }
 
-        if (empty($_COOKIE['smk_auth'])) {
+        if (empty($_COOKIE['smk_session'])) {
             return;
         }
 
-        $parts = explode('.', $_COOKIE['smk_auth'], 2);
+        $parts = explode('.', $_COOKIE['smk_session'], 2);
         if (count($parts) !== 2) {
             return;
         }
@@ -106,7 +133,8 @@ class SessionHelper {
         $data = json_decode($decodedJson, true);
         if (!$data || !is_array($data)) return;
 
-        if (isset($data['exp']) && $data['exp'] < time()) {
+        // Jika token memiliki masa kedaluwarsa non-nol dan telah lewat
+        if (isset($data['exp']) && $data['exp'] > 0 && $data['exp'] < time()) {
             self::clearAuthCookie();
             return;
         }
@@ -159,8 +187,8 @@ class SessionHelper {
             }
         }
 
-        // Langkah 3: Jika user telah login di PHP session tapi cookie smk_auth belum ada, terbitkan cookie
-        if (!empty($_SESSION['user_id']) && !empty($_SESSION['role']) && empty($_COOKIE['smk_auth'])) {
+        // Langkah 3: Jika user telah login di PHP session tapi cookie smk_session belum ada, terbitkan cookie session
+        if (!empty($_SESSION['user_id']) && !empty($_SESSION['role']) && empty($_COOKIE['smk_session'])) {
             self::issueAuthCookie(
                 $_SESSION['user_id'],
                 $_SESSION['username'] ?? '',
@@ -181,13 +209,18 @@ class SessionHelper {
                    || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on')
                    || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
 
-        setcookie('smk_auth', '', [
+        $expiredOptions = [
             'expires'  => time() - 86400,
             'path'     => '/',
             'secure'   => $isHttps,
             'httponly' => true,
             'samesite' => 'Lax'
-        ]);
+        ];
+
+        setcookie('smk_session', '', $expiredOptions);
+        unset($_COOKIE['smk_session']);
+
+        setcookie('smk_auth', '', $expiredOptions);
         unset($_COOKIE['smk_auth']);
     }
 

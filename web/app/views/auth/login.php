@@ -212,7 +212,7 @@
         <?php Flasher::flash(); ?>
 
         <!-- Login Form -->
-        <form action="<?= BASEURL; ?>/auth/login" method="POST" class="space-y-4">
+        <form action="<?= BASEURL; ?>/auth/login" method="POST" class="space-y-4" onsubmit="try { sessionStorage.setItem('smk_logged_in', '1'); } catch(e){}">
             <?= CsrfHelper::input() ?>
 
             <!-- Username Field -->
@@ -294,6 +294,13 @@
                 eyeIcon.classList.add('fa-eye');
             }
         }
+    </script>
+    
+    <!-- Clear stale session storage -->
+    <script>
+        try {
+            sessionStorage.removeItem('smk_logged_in');
+        } catch (e) {}
     </script>
     
     <!-- PWA Service Worker script -->

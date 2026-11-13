@@ -100,6 +100,13 @@ class AuthController extends Controller {
         exit;
     }
 
+    public function ajax_logout() {
+        SessionHelper::destroy();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => 'Logged out successfully']);
+        exit;
+    }
+
     private function redirectBasedOnRole($role) {
         switch ($role) {
             case 'admin':

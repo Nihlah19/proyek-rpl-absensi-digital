@@ -28,8 +28,39 @@
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css?v=1">
     <link rel="stylesheet" href="<?= BASEURL; ?>/assets/vendor/fontawesome/css/all.min.css?v=6.5">
 
+    <!-- Tab-Session Verification to force login upon browser reopening -->
+    <script>
+        (function() {
+            var isLoggedIn = <?= !empty($data['isLoggedIn']) ? 'true' : 'false' ?>;
+            if (isLoggedIn) {
+                try {
+                    if (!sessionStorage.getItem('smk_logged_in')) {
+                        document.documentElement.classList.add('force-logged-out');
+                        fetch('<?= BASEURL; ?>/auth/ajax_logout', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        }).catch(function(){});
+                    }
+                } catch(e) {}
+            }
+        })();
+    </script>
+
     <style>
         *, *::before, *::after { box-sizing: border-box; }
+
+        /* Dynamic Auth Pill Toggle */
+        html.force-logged-out #navDashboardBtn,
+        html.force-logged-out #mobileDashboardBtn {
+            display: none !important;
+        }
+        html.force-logged-out #navLoginBtnFallback {
+            display: inline-flex !important;
+        }
+        html.force-logged-out #mobileLoginBtnFallback {
+            display: block !important;
+        }
 
         /* Wise Design System Core Tokens (Instant First-Paint Fallback) */
         .bg-forest { background-color: #163300; }
@@ -278,10 +309,15 @@
         <!-- Right Action: Outlined Pill Login Portal -->
         <div class="flex items-center gap-2 sm:gap-3 shrink-0">
             <?php if (!empty($data['isLoggedIn'])): ?>
-            <a href="<?= BASEURL; ?>/dashboard" class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-forest text-lime hover:bg-spruce text-[11px] sm:text-xs font-bold transition-all shadow-sm whitespace-nowrap">
+            <a id="navDashboardBtn" href="<?= BASEURL; ?>/dashboard" class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-forest text-lime hover:bg-spruce text-[11px] sm:text-xs font-bold transition-all shadow-sm whitespace-nowrap">
                 <i class="fa-solid fa-gauge text-xs"></i>
                 <span class="hidden sm:inline">Ke Dashboard (<?= htmlspecialchars(explode(' ', $data['userName'] ?? '')[0]) ?>)</span>
                 <span class="sm:hidden">Dashboard</span>
+            </a>
+            <a id="navLoginBtnFallback" href="<?= BASEURL; ?>/auth/login" class="hidden inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-paper hover:bg-forest hover:text-lime text-forest text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap">
+                <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+                <span class="hidden sm:inline">Masuk Portal</span>
+                <span class="sm:hidden">Masuk</span>
             </a>
             <?php else: ?>
             <a href="<?= BASEURL; ?>/auth/login" class="inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full border border-forest bg-paper hover:bg-forest hover:text-lime text-forest text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap">
@@ -306,8 +342,11 @@
     <a href="#alur-kerja" onclick="toggleMobileNav()" class="block py-2 text-sm font-bold text-forest border-b border-fog">Alur Sistem</a>
     <a href="#akses-peran" onclick="toggleMobileNav()" class="block py-2 text-sm font-bold text-forest border-b border-fog">Peran Pengguna</a>
     <?php if (!empty($data['isLoggedIn'])): ?>
-    <a href="<?= BASEURL; ?>/dashboard" class="block py-2 text-sm font-bold text-forest">
+    <a id="mobileDashboardBtn" href="<?= BASEURL; ?>/dashboard" class="block py-2 text-sm font-bold text-forest">
         <i class="fa-solid fa-gauge mr-2"></i> Buka Dashboard
+    </a>
+    <a id="mobileLoginBtnFallback" href="<?= BASEURL; ?>/auth/login" class="hidden block py-2 text-sm font-bold text-spruce">
+        <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i> Buka Portal Login
     </a>
     <?php else: ?>
     <a href="<?= BASEURL; ?>/auth/login" class="block py-2 text-sm font-bold text-spruce">

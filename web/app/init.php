@@ -33,7 +33,7 @@ if (!session_id()) {
                || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
 
     session_set_cookie_params([
-        'lifetime' => 86400 * 7,    // 7 hari agar sesi tetap bertahan
+        'lifetime' => 0,            // 0 = Sesi murni (session cookie), otomatis dibuang browser saat web/peramban ditutup
         'path'     => '/',
         'secure'   => $isHttps,     // Wajib true saat HTTPS
         'httponly' => true,
