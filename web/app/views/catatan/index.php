@@ -5,12 +5,19 @@
 
 <?php
 $role = SessionHelper::get('role');
+$isAdmin = ($role === 'admin');
 $isWriter = in_array($role, ['wali_kelas', 'walikelas', 'kepsek']);
 $isWaliKelas = in_array($role, ['wali_kelas', 'walikelas']);
 $isKepsek = ($role === 'kepsek');
 
 $catatanList = $data['catatanList'] ?? [];
 $catatanTerkirim = $data['catatanTerkirim'] ?? [];
+$catatanSiswaAdmin = $data['catatanSiswaAdmin'] ?? [];
+$catatanGuruAdmin  = $data['catatanGuruAdmin'] ?? [];
+
+$countSiswaAdmin = count($catatanSiswaAdmin);
+$countGuruAdmin  = count($catatanGuruAdmin);
+$countTotalAdmin = $countSiswaAdmin + $countGuruAdmin;
 
 // Hitung metrik bulanan
 $currentMonth = date('Y-m');
@@ -43,13 +50,10 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Catatan Bimbingan & Konseling</h1>
             <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1">
-                Daftar catatan pembinaan dan bimbingan konseling
+                <?= $isAdmin ? 'Kelola dan moderasi seluruh catatan pembinaan siswa & guru' : 'Daftar catatan pembinaan dan bimbingan konseling' ?>
             </p>
         </div>
         <div class="flex gap-2.5 flex-wrap items-center">
-            <a href="<?= BASEURL; ?>/catatan/daftar" class="vh-btn-primary text-xs sm:text-sm inline-flex items-center gap-2">
-                <i class="fa-solid fa-list-ul"></i> Daftar Catatan
-            </a>
             <a href="<?= BASEURL; ?>/dashboard" class="vh-btn-secondary text-xs sm:text-sm inline-flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left text-slate-400"></i> Kembali ke Dashboard
             </a>
@@ -60,7 +64,47 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
 
     <!-- ── 3 METRIC STAT CARDS ROW ── -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <?php if (!$isWriter): ?>
+        <?php if ($isAdmin): ?>
+            <!-- Administrator: Metrik Keseluruhan Catatan -->
+            <div class="vh-card p-4 sm:p-5 flex items-center justify-between">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Catatan Siswa</p>
+                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono tabular-nums">
+                        <?= $countSiswaAdmin ?> <span class="text-xs font-sans font-medium text-slate-400">Pesan</span>
+                    </p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500">Dari Wali Kelas ke Siswa</p>
+                </div>
+                <div class="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0 border border-emerald-100 dark:border-emerald-800/50">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+            </div>
+
+            <div class="vh-card p-4 sm:p-5 flex items-center justify-between">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Catatan Guru</p>
+                    <p class="text-2xl font-bold text-sky-600 dark:text-sky-400 font-mono tabular-nums">
+                        <?= $countGuruAdmin ?> <span class="text-xs font-sans font-medium text-slate-400">Pesan</span>
+                    </p>
+                    <p class="text-[11px] text-slate-400 dark:text-slate-500">Dari Kepala Sekolah ke Guru</p>
+                </div>
+                <div class="w-11 h-11 rounded-2xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center text-lg shrink-0 border border-sky-100 dark:border-sky-800/50">
+                    <i class="fa-solid fa-chalkboard-user"></i>
+                </div>
+            </div>
+
+            <div class="vh-card p-4 sm:p-5 flex items-center justify-between">
+                <div class="space-y-1">
+                    <p class="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Catatan</p>
+                    <p class="text-2xl font-bold text-teal-600 dark:text-teal-400 font-mono tabular-nums">
+                        <?= $countTotalAdmin ?> <span class="text-xs font-sans font-medium text-slate-400">Pesan</span>
+                    </p>
+                    <p class="text-[11px] text-teal-600 dark:text-teal-400 font-medium">Semua catatan di sistem</p>
+                </div>
+                <div class="w-11 h-11 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center text-lg shrink-0 border border-teal-100 dark:border-teal-800/50">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                </div>
+            </div>
+        <?php elseif (!$isWriter): ?>
             <!-- Siswa / Guru: Metrik Penerima -->
             <div class="vh-card p-4 sm:p-5 flex items-center justify-between">
                 <div class="space-y-1">
@@ -186,7 +230,188 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
     </div>
 
     <!-- ── MAIN CONTENT GRID ── -->
-    <?php if (!$isWriter): ?>
+    <?php if ($isAdmin): ?>
+        <!-- ── ADMINISTRATOR: MANAJEMEN CATATAN TERKIRIM DENGAN EDIT & HAPUS ── -->
+        <div class="vh-card overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 dark:border-slate-700/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                        <i class="fa-solid fa-list-check text-base"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Manajemen Catatan Terkirim</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola, moderasi, edit, atau hapus seluruh catatan yang telah dikirim oleh Wali Kelas dan Kepala Sekolah</p>
+                    </div>
+                </div>
+                <div class="w-full sm:w-64">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchCatatanAdmin" onkeyup="filterCatatanAdmin()"
+                               placeholder="Cari penerima, pengirim, judul..."
+                               class="vh-input w-full pl-9 pr-3 py-2 text-xs">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Switcher: Catatan Siswa (Wali Kelas) vs Catatan Guru (Kepsek) -->
+            <div class="px-6 pt-3 pb-0 border-b border-slate-100 dark:border-slate-700/60 flex gap-4 bg-slate-50/50 dark:bg-slate-900/30">
+                <button type="button" onclick="switchAdminCatatanTab('siswa')" id="tabBtnAdminSiswa"
+                        class="pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-graduation-cap text-[11px]"></i> Catatan Siswa (<?= $countSiswaAdmin ?>)
+                </button>
+                <button type="button" onclick="switchAdminCatatanTab('guru')" id="tabBtnAdminGuru"
+                        class="pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-chalkboard-user text-[11px]"></i> Catatan Guru (<?= $countGuruAdmin ?>)
+                </button>
+            </div>
+
+            <div class="p-4 sm:p-6">
+                <!-- Panel Admin 1: Catatan Siswa (Wali Kelas -> Siswa) -->
+                <div id="panelAdminSiswa" class="space-y-4">
+                    <?php if (!empty($catatanSiswaAdmin)): ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <?php foreach ($catatanSiswaAdmin as $cs): ?>
+                                <div class="catatan-admin-item p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3"
+                                     data-target="<?= htmlspecialchars(strtolower($cs->target_name ?? '')) ?>"
+                                     data-author="<?= htmlspecialchars(strtolower($cs->author_name ?? '')) ?>"
+                                     data-title="<?= htmlspecialchars(strtolower($cs->title ?? '')) ?>"
+                                     data-content="<?= htmlspecialchars(strtolower($cs->content ?? '')) ?>">
+                                    <div class="space-y-2.5">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <span class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xs shrink-0">
+                                                    <i class="fa-solid fa-user-graduate"></i>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                                        <?= htmlspecialchars($cs->target_name ?? '-') ?>
+                                                    </h3>
+                                                    <p class="text-[11px] text-slate-400 font-mono">
+                                                        NIS: <?= htmlspecialchars($cs->nis ?? '-') ?> &bull; <?= htmlspecialchars($cs->nama_kelas ?? 'Kelas') ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                                                <i class="fa-regular fa-clock text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= !empty($cs->created_at) ? date('d M Y, H:i', strtotime($cs->created_at)) : '-' ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-tag text-[10px] text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= htmlspecialchars($cs->title ?? 'Catatan') ?>
+                                            </p>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed break-words">
+                                                <?= nl2br(htmlspecialchars($cs->content ?? '')) ?>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                                            Pengirim: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($cs->author_name ?? 'Wali Kelas') ?></strong>
+                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <button type="button"
+                                                    onclick='openEditCatatanModal(<?= (int)$cs->id ?>, "siswa", <?= json_encode($cs->target_name ?? "-") ?>, <?= json_encode($cs->title ?? "Catatan") ?>, <?= json_encode($cs->content ?? "") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
+                                                    title="Edit Catatan">
+                                                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                                            </button>
+                                            <button type="button"
+                                                    onclick='openDeleteCatatanModal(<?= (int)$cs->id ?>, "siswa", <?= json_encode($cs->target_name ?? "-") ?>, <?= json_encode($cs->title ?? "Catatan") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                                    title="Hapus Catatan">
+                                                <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-10 px-4">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 dark:text-slate-600 block"></i>
+                            <p class="text-slate-400 text-xs">Belum ada catatan yang dikirim oleh Wali Kelas.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Panel Admin 2: Catatan Guru (Kepsek -> Guru) -->
+                <div id="panelAdminGuru" class="space-y-4 hidden">
+                    <?php if (!empty($catatanGuruAdmin)): ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <?php foreach ($catatanGuruAdmin as $cg): ?>
+                                <div class="catatan-admin-item p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3"
+                                     data-target="<?= htmlspecialchars(strtolower($cg->target_name ?? '')) ?>"
+                                     data-author="<?= htmlspecialchars(strtolower($cg->author_name ?? '')) ?>"
+                                     data-title="<?= htmlspecialchars(strtolower($cg->title ?? '')) ?>"
+                                     data-content="<?= htmlspecialchars(strtolower($cg->content ?? '')) ?>">
+                                    <div class="space-y-2.5">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <span class="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xs shrink-0">
+                                                    <i class="fa-solid fa-chalkboard-user"></i>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                                        <?= htmlspecialchars($cg->target_name ?? '-') ?>
+                                                    </h3>
+                                                    <p class="text-[11px] text-slate-400 font-mono">
+                                                        NIP: <?= htmlspecialchars($cg->nip ?? '-') ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                                                <i class="fa-regular fa-clock text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= !empty($cg->created_at) ? date('d M Y, H:i', strtotime($cg->created_at)) : '-' ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-tag text-[10px] text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= htmlspecialchars($cg->title ?? 'Catatan') ?>
+                                            </p>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed break-words">
+                                                <?= nl2br(htmlspecialchars($cg->content ?? '')) ?>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                                            Pengirim: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($cg->author_name ?? 'Kepala Sekolah') ?></strong>
+                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <button type="button"
+                                                    onclick='openEditCatatanModal(<?= (int)$cg->id ?>, "guru", <?= json_encode($cg->target_name ?? "-") ?>, <?= json_encode($cg->title ?? "Catatan") ?>, <?= json_encode($cg->content ?? "") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
+                                                    title="Edit Catatan">
+                                                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                                            </button>
+                                            <button type="button"
+                                                    onclick='openDeleteCatatanModal(<?= (int)$cg->id ?>, "guru", <?= json_encode($cg->target_name ?? "-") ?>, <?= json_encode($cg->title ?? "Catatan") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                                    title="Hapus Catatan">
+                                                <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-10 px-4">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 dark:text-slate-600 block"></i>
+                            <p class="text-slate-400 text-xs">Belum ada catatan yang dikirim oleh Kepala Sekolah.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php elseif (!$isWriter): ?>
         <!-- ── SISWA & GURU (READERS): 8 COLS LIST + 4 COLS INFO ── -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             <!-- Kolom Kiri (8 Kolom): Daftar Catatan Diterima -->
@@ -633,6 +858,38 @@ function switchWkCatatanTab(tab) {
         btnDiterima.className = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer';
         btnTerkirim.className = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer';
     }
+}
+
+function switchAdminCatatanTab(tab) {
+    const panelSiswa = document.getElementById('panelAdminSiswa');
+    const panelGuru  = document.getElementById('panelAdminGuru');
+    const btnSiswa   = document.getElementById('tabBtnAdminSiswa');
+    const btnGuru    = document.getElementById('tabBtnAdminGuru');
+
+    if (tab === 'siswa') {
+        panelSiswa?.classList.remove('hidden');
+        panelGuru?.classList.add('hidden');
+        if (btnSiswa) btnSiswa.className = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer';
+        if (btnGuru)  btnGuru.className  = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer';
+    } else {
+        panelSiswa?.classList.add('hidden');
+        panelGuru?.classList.remove('hidden');
+        if (btnGuru)  btnGuru.className  = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer';
+        if (btnSiswa) btnSiswa.className = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer';
+    }
+}
+
+function filterCatatanAdmin() {
+    const q = (document.getElementById('searchCatatanAdmin')?.value || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.catatan-admin-item');
+    items.forEach(el => {
+        const target  = el.getAttribute('data-target') || '';
+        const author  = el.getAttribute('data-author') || '';
+        const title   = el.getAttribute('data-title') || '';
+        const content = el.getAttribute('data-content') || '';
+        const match = !q || target.includes(q) || author.includes(q) || title.includes(q) || content.includes(q);
+        el.style.display = match ? '' : 'none';
+    });
 }
 
 function filterCatatanReader() {

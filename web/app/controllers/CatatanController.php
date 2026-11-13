@@ -7,14 +7,22 @@ class CatatanController extends Controller
         $userId  = (int)SessionHelper::get('user_id');
         $role    = SessionHelper::get('role');
 
-        $catatanModel = $this->model('Catatan');
-        $catatanList  = $catatanModel->getByUser($userId, $role);
-        $catatanTerkirim = [];
+        $catatanModel      = $this->model('Catatan');
+        $catatanList       = [];
+        $catatanTerkirim   = [];
+        $catatanSiswaAdmin = [];
+        $catatanGuruAdmin  = [];
 
         // Siapkan data untuk form (hanya wali_kelas/kepsek yang bisa menulis)
         $siswas = [];
         $gurus  = [];
-        if (in_array($role, ['wali_kelas', 'walikelas', 'kepsek'])) {
+
+        if ($role === 'admin') {
+            // Administrator mengelola seluruh catatan terkirim
+            $catatanSiswaAdmin = $catatanModel->getAllCatatanSiswa();
+            $catatanGuruAdmin  = $catatanModel->getAllCatatanGuru();
+        } elseif (in_array($role, ['wali_kelas', 'walikelas', 'kepsek'])) {
+            $catatanList = $catatanModel->getByUser($userId, $role);
             $db = new Database();
             if (in_array($role, ['wali_kelas', 'walikelas'])) {
                 $catatanTerkirim = $catatanModel->getSentByWaliKelas($userId);
@@ -31,14 +39,20 @@ class CatatanController extends Controller
                             ORDER BY u.name");
                 $gurus  = $db->resultSet();
             }
+        } else {
+            // Siswa atau Guru (Pembaca catatan)
+            $catatanList = $catatanModel->getByUser($userId, $role);
         }
 
         $data = [
-            'judul'           => 'Catatan',
-            'catatanList'     => $catatanList,
-            'catatanTerkirim' => $catatanTerkirim,
-            'siswas'          => $siswas,
-            'gurus'           => $gurus,
+            'judul'             => 'Catatan',
+            'catatanList'       => $catatanList,
+            'catatanTerkirim'   => $catatanTerkirim,
+            'catatanSiswaAdmin' => $catatanSiswaAdmin,
+            'catatanGuruAdmin'  => $catatanGuruAdmin,
+            'siswas'            => $siswas,
+            'gurus'             => $gurus,
+            'role'              => $role,
         ];
 
         $this->view('templates/header', $data);
@@ -144,49 +158,28 @@ class CatatanController extends Controller
     }
 
     /**
-     * Halaman khusus List / Daftar Catatan lengkap (pencarian, filter, edit, hapus)
+     * Redirect route /catatan/daftar ke /catatan utama
      */
     public function daftar()
     {
-        AuthHelper::check();
-        $userId = (int)SessionHelper::get('user_id');
-        $role   = SessionHelper::get('role');
-
-        $catatanModel    = $this->model('Catatan');
-        $catatanList     = $catatanModel->getByUser($userId, $role);
-        $catatanTerkirim = [];
-
-        if (in_array($role, ['wali_kelas', 'walikelas'])) {
-            $catatanTerkirim = $catatanModel->getSentByWaliKelas($userId);
-        } elseif ($role === 'kepsek') {
-            $catatanTerkirim = $catatanModel->getSentByKepsek($userId);
-        }
-
-        $data = [
-            'judul'           => 'Daftar Catatan',
-            'catatanList'     => $catatanList,
-            'catatanTerkirim' => $catatanTerkirim,
-            'isWriter'        => in_array($role, ['wali_kelas', 'walikelas', 'kepsek']),
-            'role'            => $role,
-        ];
-
-        $this->view('templates/header', $data);
-        $this->view('catatan/daftar', $data);
-        $this->view('templates/footer');
+        header('Location: ' . BASEURL . '/catatan');
+        exit;
     }
 
     public function list()
     {
-        $this->daftar();
+        header('Location: ' . BASEURL . '/catatan');
+        exit;
     }
 
     /**
-     * Edit / perbarui isi dan judul catatan yang telah dibuat penulis
+     * Edit / perbarui isi dan judul catatan yang telah dibuat
+     * Diizinkan untuk Admin (semua catatan) serta Penulis (Wali Kelas & Kepsek)
      */
     public function update()
     {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'kepsek']);
-        $redirect = $this->resolveSafeRedirect($_POST['redirect'] ?? '/catatan');
+        AuthHelper::checkRole(['admin', 'wali_kelas', 'walikelas', 'kepsek']);
+        $redirect = '/catatan';
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASEURL . $redirect);
@@ -206,19 +199,25 @@ class CatatanController extends Controller
         $authorId   = (int)SessionHelper::get('user_id');
         $role       = SessionHelper::get('role');
 
-        $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
-        if ($targetRole === '') {
-            $targetRole = $allowedTarget;
-        }
-
-        if ($id <= 0 || $targetRole !== $allowedTarget || $content === '') {
+        if ($id <= 0 || !in_array($targetRole, ['siswa', 'guru']) || $content === '') {
             Flasher::setFlash('gagal', 'Data pembaruan catatan tidak valid atau isi kosong.', 'danger');
             header('Location: ' . BASEURL . $redirect);
             exit;
         }
 
         $catatanModel = $this->model('Catatan');
-        $updated = $catatanModel->updateByAuthor($id, $targetRole, $authorId, $title, $content);
+
+        if ($role === 'admin') {
+            $updated = $catatanModel->updateByAdmin($id, $targetRole, $title, $content);
+        } else {
+            $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
+            if ($targetRole !== $allowedTarget) {
+                Flasher::setFlash('gagal', 'Akses target catatan tidak diizinkan.', 'danger');
+                header('Location: ' . BASEURL . $redirect);
+                exit;
+            }
+            $updated = $catatanModel->updateByAuthor($id, $targetRole, $authorId, $title, $content);
+        }
 
         if ($updated) {
             Flasher::setFlash('berhasil', 'Catatan berhasil diperbarui.', 'success');
@@ -231,12 +230,13 @@ class CatatanController extends Controller
     }
 
     /**
-     * Hapus catatan milik penulis secara permanen
+     * Hapus catatan secara permanen
+     * Diizinkan untuk Admin (semua catatan) serta Penulis (Wali Kelas & Kepsek)
      */
     public function delete()
     {
-        AuthHelper::checkRole(['wali_kelas', 'walikelas', 'kepsek']);
-        $redirect = $this->resolveSafeRedirect($_POST['redirect'] ?? '/catatan');
+        AuthHelper::checkRole(['admin', 'wali_kelas', 'walikelas', 'kepsek']);
+        $redirect = '/catatan';
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: ' . BASEURL . $redirect);
@@ -254,19 +254,25 @@ class CatatanController extends Controller
         $authorId   = (int)SessionHelper::get('user_id');
         $role       = SessionHelper::get('role');
 
-        $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
-        if ($targetRole === '') {
-            $targetRole = $allowedTarget;
-        }
-
-        if ($id <= 0 || $targetRole !== $allowedTarget) {
+        if ($id <= 0 || !in_array($targetRole, ['siswa', 'guru'])) {
             Flasher::setFlash('gagal', 'Catatan tidak valid untuk dihapus.', 'danger');
             header('Location: ' . BASEURL . $redirect);
             exit;
         }
 
         $catatanModel = $this->model('Catatan');
-        $deleted = $catatanModel->deleteByAuthor($id, $targetRole, $authorId);
+
+        if ($role === 'admin') {
+            $deleted = $catatanModel->deleteByAdmin($id, $targetRole);
+        } else {
+            $allowedTarget = ($role === 'kepsek') ? 'guru' : 'siswa';
+            if ($targetRole !== $allowedTarget) {
+                Flasher::setFlash('gagal', 'Akses hapus catatan tidak diizinkan.', 'danger');
+                header('Location: ' . BASEURL . $redirect);
+                exit;
+            }
+            $deleted = $catatanModel->deleteByAuthor($id, $targetRole, $authorId);
+        }
 
         if ($deleted) {
             Flasher::setFlash('berhasil', 'Catatan berhasil dihapus.', 'success');
@@ -276,10 +282,5 @@ class CatatanController extends Controller
 
         header('Location: ' . BASEURL . $redirect);
         exit;
-    }
-
-    private function resolveSafeRedirect($path)
-    {
-        return ($path === '/catatan/daftar') ? '/catatan/daftar' : '/catatan';
     }
 }

@@ -274,4 +274,90 @@ class Catatan extends Model
         $this->db->bind(':author_id', (int)$authorId);
         return (bool)$this->db->execute();
     }
+
+    /**
+     * Ambil seluruh catatan siswa yang dikirim oleh seluruh Wali Kelas (untuk Admin)
+     */
+    public function getAllCatatanSiswa()
+    {
+        $this->db->query(
+            "SELECT cs.id, cs.siswa_id, cs.wali_kelas_id, cs.catatan, cs.created_at,
+                    u.name AS target_name, u.username AS target_username, s.nis, k.nama_kelas,
+                    uwk.name AS author_name, 'siswa' AS target_role
+             FROM catatan_siswa cs
+             JOIN siswa s ON s.id = cs.siswa_id
+             JOIN users u ON u.id = s.user_id
+             LEFT JOIN kelas k ON k.id = s.kelas_id
+             JOIN users uwk ON uwk.id = cs.wali_kelas_id
+             ORDER BY cs.created_at DESC"
+        );
+        return $this->parseCatatanList($this->db->resultSet());
+    }
+
+    /**
+     * Ambil seluruh catatan guru yang dikirim oleh Kepala Sekolah (untuk Admin)
+     */
+    public function getAllCatatanGuru()
+    {
+        $this->db->query(
+            "SELECT cg.id, cg.guru_id, cg.kepsek_id, cg.catatan, cg.created_at,
+                    u.name AS target_name, u.username AS target_username, g.nip,
+                    uk.name AS author_name, 'guru' AS target_role
+             FROM catatan_guru cg
+             JOIN guru g ON g.id = cg.guru_id
+             JOIN users u ON u.id = g.user_id
+             JOIN users uk ON uk.id = cg.kepsek_id
+             ORDER BY cg.created_at DESC"
+        );
+        return $this->parseCatatanList($this->db->resultSet());
+    }
+
+    /**
+     * Perbarui judul dan isi catatan oleh Administrator (bisa edit catatan siswa maupun guru)
+     */
+    public function updateByAdmin($id, $targetRole, $title, $content)
+    {
+        $id = (int)$id;
+        $title = trim((string)$title);
+        $content = trim((string)$content);
+        if ($id <= 0 || $content === '') {
+            return false;
+        }
+
+        $formattedNote = ($title !== '') ? ("[" . $title . "]\n" . $content) : $content;
+
+        if ($targetRole === 'siswa') {
+            $this->db->query("UPDATE catatan_siswa SET catatan = :catatan WHERE id = :id");
+        } elseif ($targetRole === 'guru') {
+            $this->db->query("UPDATE catatan_guru SET catatan = :catatan WHERE id = :id");
+        } else {
+            return false;
+        }
+
+        $this->db->bind(':catatan', $formattedNote);
+        $this->db->bind(':id', $id);
+        return (bool)$this->db->execute();
+    }
+
+    /**
+     * Hapus catatan oleh Administrator (bisa hapus catatan siswa maupun guru)
+     */
+    public function deleteByAdmin($id, $targetRole)
+    {
+        $id = (int)$id;
+        if ($id <= 0) {
+            return false;
+        }
+
+        if ($targetRole === 'siswa') {
+            $this->db->query("DELETE FROM catatan_siswa WHERE id = :id");
+        } elseif ($targetRole === 'guru') {
+            $this->db->query("DELETE FROM catatan_guru WHERE id = :id");
+        } else {
+            return false;
+        }
+
+        $this->db->bind(':id', $id);
+        return (bool)$this->db->execute();
+    }
 }
