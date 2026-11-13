@@ -26,8 +26,31 @@ class DashboardController extends Controller {
             'walikelas'  => '/dashboard/wali_kelas',
             'siswa'      => '/dashboard/siswa',
         ];
-        $url = $map[$role] ?? '/auth/login';
-        header('Location: ' . BASEURL . $url);
+
+        if (isset($map[$role])) {
+            header('Location: ' . BASEURL . $map[$role]);
+            exit;
+        }
+
+        // Jika role belum terdeteksi dari sesi, pulihkan dari tabel users
+        $userId = (int)SessionHelper::get('user_id');
+        if ($userId > 0) {
+            try {
+                $db = new Database();
+                $db->query("SELECT role FROM users WHERE id = :id LIMIT 1");
+                $db->bind(':id', $userId);
+                $u = $db->single();
+                if ($u && isset($map[$u->role])) {
+                    SessionHelper::set('role', $u->role);
+                    header('Location: ' . BASEURL . $map[$u->role]);
+                    exit;
+                }
+            } catch (Throwable $e) {
+                error_log("[DashboardController::index] Role resolution error: " . $e->getMessage());
+            }
+        }
+
+        header('Location: ' . BASEURL . '/auth/login');
         exit;
     }
 

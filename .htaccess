@@ -1,7 +1,6 @@
 Options -Indexes
 RewriteEngine On
 
-# Arahkan semua request ke web/public kecuali file/folder yang sudah ada
-RewriteCond %{REQUEST_URI} !^/AbsensiRFID/web/public
-RewriteCond %{REQUEST_URI} !^/AbsensiRFID/iot
-RewriteRule ^(.*)$ /AbsensiRFID/web/public/$1 [L,QSA]
+# Arahkan semua request ke web/public secara dinamis & kompatibel di semua environment (localhost, subfolder, atau root)
+RewriteCond %{REQUEST_URI} !/web/public/
+RewriteRule ^(.*)$ web/public/$1 [L,QSA]

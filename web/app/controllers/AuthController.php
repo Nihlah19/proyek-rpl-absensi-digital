@@ -56,8 +56,13 @@ class AuthController extends Controller {
                     }
                 }
 
-                // Terbitkan auth cookie persisten untuk Vercel Serverless
-                SessionHelper::issueAuthCookie($user->id, $user->username, $user->role, $user->name, $classCode, $user->avatar ?? null);
+                // Terbitkan auth cookie persisten untuk Vercel Serverless & multi-environment
+                SessionHelper::issueAuthCookie($user->id, $user->username, $user->role, $user->name, $classCode, null);
+
+                // Pastikan seluruh data sesi tersimpan ke storage/disk sebelum redirect
+                if (session_status() === PHP_SESSION_ACTIVE) {
+                    session_write_close();
+                }
 
                 $this->redirectBasedOnRole($user->role);
             } else {
@@ -97,7 +102,7 @@ class AuthController extends Controller {
                 header('Location: ' . BASEURL . '/dashboard/siswa');
                 break;
             default:
-                header('Location: ' . BASEURL . '/auth/login');
+                header('Location: ' . BASEURL . '/dashboard');
                 break;
         }
         exit;

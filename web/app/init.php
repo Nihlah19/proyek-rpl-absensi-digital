@@ -27,13 +27,14 @@ if (!session_id()) {
         }
     }
 
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
-               || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    $isHttps = (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
+               || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) === 'https')
+               || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && strtolower($_SERVER['HTTP_X_FORWARDED_SSL']) === 'on')
+               || (!empty($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
 
     session_set_cookie_params([
         'lifetime' => 86400 * 7,    // 7 hari agar sesi tetap bertahan
         'path'     => '/',
-        'domain'   => '',           // Kosong = gunakan domain host aktif secara otomatis
         'secure'   => $isHttps,     // Wajib true saat HTTPS
         'httponly' => true,
         'samesite' => 'Lax',
@@ -62,8 +63,9 @@ require_once __DIR__ . '/helpers/ValidationHelper.php';
 require_once __DIR__ . '/helpers/Flasher.php';
 require_once __DIR__ . '/helpers/BadgeHelper.php';
 
-// Otomatis sinkronisasi sesi dari signed auth cookie (mempertahankan login di seluruh serverless lambda Vercel)
-SessionHelper::syncSessionFromCookie();
+// Otomatis verifikasi dan sinkronisasi sesi dari signed auth cookie / database
+// Memastikan sesi pengguna aktif tidak hilang saat berpindah antar fitur dashboard
+SessionHelper::ensureUserSession();
 
 // Default Error Handler
 set_exception_handler(function ($e) {

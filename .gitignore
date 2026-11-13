@@ -14,5 +14,26 @@ npm-debug.log*
 # Temporary files
 .DS_Store
 Thumbs.db
-
 scratch/
+
+# Database Dumps, Data Exports & Seeds (Perlindungan Privasi Data Siswa & Guru)
+# Aturan: Tidak mengunggah berkas database yang memuat data siswa & guru (hanya CREATE TABLE / DDL yang diizinkan)
+*.sql
+!database/schema.sql
+!database/migration_rfid.sql
+!database/migrations/*.sql
+*.sql.gz
+*.sql.bak
+*.dump
+*.db
+*.sqlite
+*dump*.sql
+*backup*.sql
+*export*.sql
+seed*.sql
+database/seed.sql
+database/absensi_tidb_clean_current.sql
+database/seeds/
+database/dumps/
+database/backups/
+database/exports/
