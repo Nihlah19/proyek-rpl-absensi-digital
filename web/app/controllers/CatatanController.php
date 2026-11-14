@@ -28,12 +28,13 @@ class CatatanController extends Controller
                 $catatanTerkirim = $catatanModel->getSentByWaliKelas($userId);
                 $db->query("SELECT s.id, u.name, u.username, s.nis FROM users u
                             JOIN siswa s ON s.user_id = u.id
-                            WHERE s.kelas_id = (SELECT id FROM kelas WHERE wali_kelas_id = :uid)
+                            WHERE s.kelas_id IN (SELECT id FROM kelas WHERE wali_kelas_id = :uid)
                             ORDER BY u.name");
                 $db->bind(':uid', $userId);
                 $siswas = $db->resultSet();
             } else {
                 $catatanTerkirim = $catatanModel->getSentByKepsek($userId);
+                $catatanList     = $catatanTerkirim;
                 $db->query("SELECT g.id, u.name, u.username, g.nip FROM users u
                             JOIN guru g ON g.user_id = u.id
                             ORDER BY u.name");

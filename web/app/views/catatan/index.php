@@ -239,8 +239,8 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                         <i class="fa-solid fa-list-check text-base"></i>
                     </div>
                     <div>
-                        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Manajemen Catatan Terkirim</h2>
-                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola, moderasi, edit, atau hapus seluruh catatan yang telah dikirim oleh Wali Kelas dan Kepala Sekolah</p>
+                        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Riwayat Catatan Bimbingan</h2>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Kelola, moderasi, edit, atau hapus seluruh riwayat catatan yang telah dikirim oleh Wali Kelas dan Kepala Sekolah</p>
                     </div>
                 </div>
                 <div class="w-full sm:w-64">
@@ -253,21 +253,116 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                 </div>
             </div>
 
-            <!-- Tab Switcher: Catatan Siswa (Wali Kelas) vs Catatan Guru (Kepsek) -->
-            <div class="px-6 pt-3 pb-0 border-b border-slate-100 dark:border-slate-700/60 flex gap-4 bg-slate-50/50 dark:bg-slate-900/30">
+            <!-- Tab Switcher: Semua vs Catatan Siswa vs Catatan Guru -->
+            <div class="px-6 pt-3 pb-0 border-b border-slate-100 dark:border-slate-700/60 flex gap-4 bg-slate-50/50 dark:bg-slate-900/30 overflow-x-auto">
+                <button type="button" onclick="switchAdminCatatanTab('semua')" id="tabBtnAdminSemua"
+                        class="pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-layer-group text-[11px]"></i> Semua Catatan (<?= $countTotalAdmin ?>)
+                </button>
                 <button type="button" onclick="switchAdminCatatanTab('siswa')" id="tabBtnAdminSiswa"
-                        class="pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        class="pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                     <i class="fa-solid fa-graduation-cap text-[11px]"></i> Catatan Siswa (<?= $countSiswaAdmin ?>)
                 </button>
                 <button type="button" onclick="switchAdminCatatanTab('guru')" id="tabBtnAdminGuru"
-                        class="pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer">
+                        class="pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
                     <i class="fa-solid fa-chalkboard-user text-[11px]"></i> Catatan Guru (<?= $countGuruAdmin ?>)
                 </button>
             </div>
 
             <div class="p-4 sm:p-6">
+                <!-- Panel Admin 0: Semua Catatan Gabungan (Siswa + Guru) -->
+                <?php
+                $allAdminNotes = array_merge($catatanSiswaAdmin, $catatanGuruAdmin);
+                usort($allAdminNotes, function($a, $b) {
+                    $ta = !empty($a->created_at) ? strtotime($a->created_at) : 0;
+                    $tb = !empty($b->created_at) ? strtotime($b->created_at) : 0;
+                    return $tb - $ta;
+                });
+                ?>
+                <div id="panelAdminSemua" class="space-y-4">
+                    <?php if (!empty($allAdminNotes)): ?>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <?php foreach ($allAdminNotes as $can): 
+                                $isSiswaItem = (($can->target_role ?? '') === 'siswa');
+                            ?>
+                                <div class="catatan-admin-item p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 hover:border-emerald-500/50 transition-all flex flex-col justify-between space-y-3"
+                                     data-target="<?= htmlspecialchars(strtolower($can->target_name ?? '')) ?>"
+                                     data-author="<?= htmlspecialchars(strtolower($can->author_name ?? '')) ?>"
+                                     data-title="<?= htmlspecialchars(strtolower($can->title ?? '')) ?>"
+                                     data-content="<?= htmlspecialchars(strtolower($can->content ?? '')) ?>">
+                                    <div class="space-y-2.5">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <div class="flex items-center gap-2.5 min-w-0">
+                                                <span class="w-8 h-8 rounded-lg <?= $isSiswaItem ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300' : 'bg-sky-100 dark:bg-sky-900/60 text-sky-700 dark:text-sky-300' ?> flex items-center justify-center text-xs shrink-0">
+                                                    <i class="fa-solid <?= $isSiswaItem ? 'fa-user-graduate' : 'fa-chalkboard-user' ?>"></i>
+                                                </span>
+                                                <div class="min-w-0">
+                                                    <div class="flex items-center gap-2">
+                                                        <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                                                            <?= htmlspecialchars($can->target_name ?? '-') ?>
+                                                        </h3>
+                                                        <span class="px-1.5 py-0.2 rounded text-[9px] font-semibold <?= $isSiswaItem ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40' : 'bg-sky-50 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300 border border-sky-200 dark:border-sky-800/40' ?>">
+                                                            <?= $isSiswaItem ? 'Siswa' : 'Guru' ?>
+                                                        </span>
+                                                    </div>
+                                                    <p class="text-[11px] text-slate-400 font-mono">
+                                                        <?php if ($isSiswaItem): ?>
+                                                            NIS: <?= htmlspecialchars($can->nis ?? '-') ?> &bull; <?= htmlspecialchars($can->nama_kelas ?? 'Kelas') ?>
+                                                        <?php else: ?>
+                                                            NIP: <?= htmlspecialchars($can->nip ?? '-') ?>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shrink-0">
+                                                <i class="fa-regular fa-clock text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= !empty($can->created_at) ? date('d M Y, H:i', strtotime($can->created_at)) : '-' ?>
+                                            </span>
+                                        </div>
+
+                                        <div class="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-tag text-[10px] text-emerald-600 dark:text-emerald-400"></i>
+                                                <?= htmlspecialchars($can->title ?? 'Catatan') ?>
+                                            </p>
+                                            <p class="text-xs text-slate-600 dark:text-slate-300 whitespace-pre-wrap leading-relaxed break-words">
+                                                <?= nl2br(htmlspecialchars($can->content ?? '')) ?>
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs">
+                                        <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                                            Pengirim: <strong class="text-slate-700 dark:text-slate-300"><?= htmlspecialchars($can->author_name ?? ($isSiswaItem ? 'Wali Kelas' : 'Kepala Sekolah')) ?></strong>
+                                        </span>
+                                        <div class="flex items-center gap-1.5">
+                                            <button type="button"
+                                                    onclick='openEditCatatanModal(<?= (int)$can->id ?>, "<?= $isSiswaItem ? 'siswa' : 'guru' ?>", <?= json_encode($can->target_name ?? "-") ?>, <?= json_encode($can->title ?? "Catatan") ?>, <?= json_encode($can->content ?? "") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:border-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition cursor-pointer"
+                                                    title="Edit Catatan">
+                                                <i class="fa-solid fa-pen-to-square text-[10px]"></i> Edit
+                                            </button>
+                                            <button type="button"
+                                                    onclick='openDeleteCatatanModal(<?= (int)$can->id ?>, "<?= $isSiswaItem ? 'siswa' : 'guru' ?>", <?= json_encode($can->target_name ?? "-") ?>, <?= json_encode($can->title ?? "Catatan") ?>)'
+                                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                                    title="Hapus Catatan">
+                                                <i class="fa-solid fa-trash-can text-[10px]"></i> Hapus
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php else: ?>
+                        <div class="text-center py-10 px-4">
+                            <i class="fa-solid fa-inbox text-3xl mb-2 text-slate-300 dark:text-slate-600 block"></i>
+                            <p class="text-slate-400 text-xs">Belum ada riwayat catatan bimbingan di sistem.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
                 <!-- Panel Admin 1: Catatan Siswa (Wali Kelas -> Siswa) -->
-                <div id="panelAdminSiswa" class="space-y-4">
+                <div id="panelAdminSiswa" class="space-y-4 hidden">
                     <?php if (!empty($catatanSiswaAdmin)): ?>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <?php foreach ($catatanSiswaAdmin as $cs): ?>
@@ -422,8 +517,8 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                             <i class="fa-solid fa-clipboard-list text-base"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Catatan & Arahan yang Diterima</h2>
-                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pesan pembinaan dan evaluasi dari pembimbing</p>
+                            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight">Riwayat Catatan Bimbingan</h2>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Pesan pembinaan dan evaluasi resmi dari pembimbing</p>
                         </div>
                     </div>
                     <div class="w-full sm:w-64">
@@ -593,6 +688,8 @@ $latestAuthor = !empty($catatanList[0]->author_name) ? $catatanList[0]->author_n
                                                     </h3>
                                                     <?php if (!empty($c->nis)): ?>
                                                         <p class="text-[11px] text-slate-400 font-mono">NIS: <?= htmlspecialchars($c->nis) ?></p>
+                                                    <?php elseif (!empty($c->nip)): ?>
+                                                        <p class="text-[11px] text-slate-400 font-mono">NIP: <?= htmlspecialchars($c->nip) ?></p>
                                                     <?php elseif (!empty($c->target_username)): ?>
                                                         <p class="text-[11px] text-slate-400 font-mono">@<?= htmlspecialchars($c->target_username) ?></p>
                                                     <?php endif; ?>
@@ -861,21 +958,37 @@ function switchWkCatatanTab(tab) {
 }
 
 function switchAdminCatatanTab(tab) {
+    const panelSemua = document.getElementById('panelAdminSemua');
     const panelSiswa = document.getElementById('panelAdminSiswa');
     const panelGuru  = document.getElementById('panelAdminGuru');
+    const btnSemua   = document.getElementById('tabBtnAdminSemua');
     const btnSiswa   = document.getElementById('tabBtnAdminSiswa');
     const btnGuru    = document.getElementById('tabBtnAdminGuru');
 
-    if (tab === 'siswa') {
+    const activeClass = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap';
+    const inactiveClass = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer whitespace-nowrap';
+
+    if (tab === 'semua') {
+        panelSemua?.classList.remove('hidden');
+        panelSiswa?.classList.add('hidden');
+        panelGuru?.classList.add('hidden');
+        if (btnSemua) btnSemua.className = activeClass;
+        if (btnSiswa) btnSiswa.className = inactiveClass;
+        if (btnGuru)  btnGuru.className  = inactiveClass;
+    } else if (tab === 'siswa') {
+        panelSemua?.classList.add('hidden');
         panelSiswa?.classList.remove('hidden');
         panelGuru?.classList.add('hidden');
-        if (btnSiswa) btnSiswa.className = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer';
-        if (btnGuru)  btnGuru.className  = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer';
+        if (btnSemua) btnSemua.className = inactiveClass;
+        if (btnSiswa) btnSiswa.className = activeClass;
+        if (btnGuru)  btnGuru.className  = inactiveClass;
     } else {
+        panelSemua?.classList.add('hidden');
         panelSiswa?.classList.add('hidden');
         panelGuru?.classList.remove('hidden');
-        if (btnGuru)  btnGuru.className  = 'pb-3 text-xs font-bold border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer';
-        if (btnSiswa) btnSiswa.className = 'pb-3 text-xs font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer';
+        if (btnSemua) btnSemua.className = inactiveClass;
+        if (btnSiswa) btnSiswa.className = inactiveClass;
+        if (btnGuru)  btnGuru.className  = activeClass;
     }
 }
 
