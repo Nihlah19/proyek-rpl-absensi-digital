@@ -410,6 +410,16 @@ class ChatbotController extends Controller {
             return "Ada **{$totIot} perangkat IoT scanner RFID** terdaftar di database SMK NU Wargabinangun.";
         }
 
+        // 6. Jumlah Catatan
+        if (preg_match('/(jumlah\s+catatan|total\s+catatan|ada\s+berapa\s+(jumlah\s+|total\s+)?catatan|berapa\s+catatan)/i', $clean)) {
+            $db->query("SELECT (SELECT COUNT(*) FROM catatan_siswa) as cs, (SELECT COUNT(*) FROM catatan_guru) as cg");
+            $cCounts = $db->single();
+            $totCs = (int)($cCounts->cs ?? 0);
+            $totCg = (int)($cCounts->cg ?? 0);
+            $totAll = $totCs + $totCg;
+            return "Tercatat total **{$totAll} catatan** di database sistem ({$totCs} catatan bimbingan siswa dan {$totCg} catatan dinas guru).";
+        }
+
         return false;
     }
 
@@ -652,7 +662,332 @@ class ChatbotController extends Controller {
             }
         }
 
+        // ── 7. CATATAN SAYA (CATATAN BIMBINGAN / DINAS PRIBADI) ──────────────
+        $isMyNotes = preg_match('/\b(catatan\s+saya|catatan\s+untuk\s+saya|apakah\s+ada\s+catatan|catatan\s+bimbingan\s+saya|catatan\s+dinas\s+saya|ada\s+catatan\s+apa\s+untuk\s+saya)\b/i', $lower) ||
+                     (preg_match('/\b(catatan|bimbingan|evaluasi)\b/i', $lower) && preg_match('/\b(saya|ku|untuk\s+saya)\b/i', $lower));
+
+        if ($isMyNotes) {
+            if ($userRole === 'siswa') {
+                $db->query("SELECT cs.catatan, cs.created_at, u_w.name as nama_wali, k.nama_kelas
+                            FROM catatan_siswa cs
+                            JOIN siswa s ON s.id = cs.siswa_id
+                            LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id
+                            LEFT JOIN kelas k ON k.id = s.kelas_id
+                            WHERE s.user_id = :uid
+                            ORDER BY cs.id DESC LIMIT 10");
+                $db->bind(':uid', $userId);
+                $csRows = $db->resultSet();
+
+                if (empty($csRows)) {
+                    return "Saat ini belum ada catatan bimbingan dari Wali Kelas untuk Anda, **{$profile['name']}**.";
+                }
+
+                $respon = "**Catatan Bimbingan untuk Anda — {$profile['name']}:**
+
+";
+                foreach ($csRows as $i => $cs) {
+                    $no = $i + 1;
+                    $tgl = date('d/m/Y H:i', strtotime($cs->created_at));
+                    $wali = !empty($cs->nama_wali) ? $cs->nama_wali : 'Wali Kelas';
+                    $respon .= "{$no}. **Dari {$wali}** ({$tgl} WIB):
+   _{$cs->catatan}_
+
+";
+                }
+                return trim($respon);
+            } elseif ($userRole === 'guru' || $userRole === 'wali_kelas') {
+                $db->query("SELECT cg.catatan, cg.created_at, u_k.name as nama_kepsek
+                            FROM catatan_guru cg
+                            JOIN guru g ON g.id = cg.guru_id
+                            LEFT JOIN users u_k ON u_k.id = cg.kepsek_id
+                            WHERE g.user_id = :uid
+                            ORDER BY cg.id DESC LIMIT 10");
+                $db->bind(':uid', $userId);
+                $cgRows = $db->resultSet();
+
+                if (empty($cgRows)) {
+                    return "Saat ini belum ada catatan dinas dari Kepala Sekolah untuk Anda, **{$profile['name']}**.";
+                }
+
+                $respon = "**Catatan Arahan Dinas untuk Anda — {$profile['name']}:**
+
+";
+                foreach ($cgRows as $i => $cg) {
+                    $no = $i + 1;
+                    $tgl = date('d/m/Y H:i', strtotime($cg->created_at));
+                    $kepsek = !empty($cg->nama_kepsek) ? $cg->nama_kepsek : 'Kepala Sekolah';
+                    $respon .= "{$no}. **Dari Kepala Sekolah ({$kepsek})** ({$tgl} WIB):
+   _{$cg->catatan}_
+
+";
+                }
+                return trim($respon);
+            }
+        }
+
+        // ── 8. PENEMPATAN PKL SAYA ──────────────────────────────────────────
+        $isMyPkl = preg_match('/\b(tempat\s+pkl\s+saya|lokasi\s+pkl\s+saya|kelompok\s+pkl\s+saya|pembimbing\s+pkl\s+saya|di\s+mana\s+saya\s+pkl|pkl\s+saya)\b/i', $lower) ||
+                   (preg_match('/\b(pkl|magang)\b/i', $lower) && preg_match('/\b(saya|ku|tempat|kelompok)\b/i', $lower) && !preg_match('/\b(absen|hadir|daftar|semua)\b/i', $lower));
+
+        if ($isMyPkl) {
+            if ($userRole === 'siswa') {
+                $db->query("SELECT pk.nama_tempat, pk.nama_kelompok, pk.alamat, pk.latitude, pk.longitude, pk.radius_meter, pk.hari_kerja,
+                                   COALESCE(u_p.name, pk.pembimbing_nama, 'Belum Ditentukan') as nama_pembimbing
+                            FROM pkl_kelompok_siswa pks
+                            JOIN pkl_kelompok pk ON pk.id = pks.kelompok_id
+                            JOIN siswa s ON s.id = pks.siswa_id
+                            LEFT JOIN guru g ON g.id = pk.pembimbing_guru_id
+                            LEFT JOIN users u_p ON u_p.id = g.user_id
+                            WHERE s.user_id = :uid");
+                $db->bind(':uid', $userId);
+                $pk = $db->single();
+
+                if ($pk) {
+                    $alamat = !empty($pk->alamat) ? " · Alamat: {$pk->alamat}" : "";
+                    $radius = (int)($pk->radius_meter ?? 50);
+                    return "**Informasi Penempatan PKL Anda — {$profile['name']}:**
+
+"
+                         . "- Tempat PKL : **{$pk->nama_tempat}** (Kelompok: **{$pk->nama_kelompok}**)
+"
+                         . "- Pembimbing : **{$pk->nama_pembimbing}**
+"
+                         . "- Radius GPS : **{$radius} meter** (`{$pk->latitude}, {$pk->longitude}`){$alamat}
+
+"
+                         . "_Gunakan aplikasi mobile web saat tiba di lokasi untuk melakukan presensi mandiri dengan foto kamera dan deteksi GPS._";
+                } else {
+                    return "Anda belum terdaftar dalam kelompok penempatan PKL di sistem, **{$profile['name']}**.";
+                }
+            } elseif ($userRole === 'guru' || $userRole === 'wali_kelas') {
+                $db->query("SELECT pk.nama_tempat, pk.nama_kelompok, k.nama_kelas,
+                                   (SELECT COUNT(*) FROM pkl_kelompok_siswa pks WHERE pks.kelompok_id = pk.id) as tot_siswa
+                            FROM pkl_kelompok pk
+                            LEFT JOIN kelas k ON k.id = pk.kelas_id
+                            JOIN guru g ON g.id = pk.pembimbing_guru_id
+                            WHERE g.user_id = :uid");
+                $db->bind(':uid', $userId);
+                $bimbingRows = $db->resultSet();
+
+                if (!empty($bimbingRows)) {
+                    $respon = "**Kelompok PKL yang Anda Bimbing — {$profile['name']}:**
+
+";
+                    foreach ($bimbingRows as $i => $br) {
+                        $no = $i + 1;
+                        $respon .= "{$no}. **{$br->nama_tempat}** (Kelompok: {$br->nama_kelompok}, Kelas {$br->nama_kelas}) — **{$br->tot_siswa} Siswa**
+";
+                    }
+                    return trim($respon);
+                }
+            }
+        }
+
         return false;
+    }
+
+    // =========================================================================
+    // QUERY CATATAN BIMBINGAN SISWA & CATATAN DINAS GURU (DATABASE SYNC)
+    // =========================================================================
+    private function handleCatatanQuery($message, $userId, $userRole, $db) {
+        $clean = trim(preg_replace('/[^a-zA-Z0-9\s]/u', ' ', $message));
+        $lower = strtolower($clean);
+
+        if (!preg_match('/\b(catatan|bimbingan|evaluasi|konseling)\b/i', $lower)) {
+            return false;
+        }
+
+        $isOwnNotes = preg_match('/\b(saya|ku|untuk\s+saya|punya\s+saya)\b/i', $lower) && !preg_match('/\b(daftar|semua|seluruh|semua\s+catatan)\b/i', $lower);
+
+        // 1. Catatan Pribadi (Siswa / Guru / Wali Kelas / Kepsek)
+        if ($isOwnNotes) {
+            if ($userRole === 'siswa') {
+                $db->query("SELECT cs.catatan, cs.created_at, u_w.name as nama_wali, k.nama_kelas
+                            FROM catatan_siswa cs
+                            JOIN siswa s ON s.id = cs.siswa_id
+                            LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id
+                            LEFT JOIN kelas k ON k.id = s.kelas_id
+                            WHERE s.user_id = :uid
+                            ORDER BY cs.id DESC LIMIT 10");
+                $db->bind(':uid', $userId);
+                $rows = $db->resultSet();
+
+                if (empty($rows)) {
+                    return "**Catatan Bimbingan Anda**\n\nSaat ini belum ada catatan bimbingan dari Wali Kelas untuk Anda.";
+                }
+
+                $respon = "**Catatan Bimbingan untuk Anda:**\n\n";
+                foreach ($rows as $i => $r) {
+                    $no = $i + 1;
+                    $tgl = date('d/m/Y H:i', strtotime($r->created_at));
+                    $wali = !empty($r->nama_wali) ? $r->nama_wali : 'Wali Kelas';
+                    $respon .= "{$no}. **Dari {$wali}** ({$tgl} WIB):\n   _{$r->catatan}_\n\n";
+                }
+                return trim($respon);
+            } elseif ($userRole === 'guru' || $userRole === 'wali_kelas') {
+                $db->query("SELECT cg.catatan, cg.created_at, u_k.name as nama_kepsek
+                            FROM catatan_guru cg
+                            JOIN guru g ON g.id = cg.guru_id
+                            LEFT JOIN users u_k ON u_k.id = cg.kepsek_id
+                            WHERE g.user_id = :uid
+                            ORDER BY cg.id DESC LIMIT 10");
+                $db->bind(':uid', $userId);
+                $rows = $db->resultSet();
+
+                if (empty($rows)) {
+                    return "**Catatan Dinas Anda**\n\nSaat ini belum ada catatan arahan dinas dari Kepala Sekolah untuk Anda.";
+                }
+
+                $respon = "**Catatan Dinas untuk Anda:**\n\n";
+                foreach ($rows as $i => $r) {
+                    $no = $i + 1;
+                    $tgl = date('d/m/Y H:i', strtotime($r->created_at));
+                    $kepsek = !empty($r->nama_kepsek) ? $r->nama_kepsek : 'Kepala Sekolah';
+                    $respon .= "{$no}. **Dari Kepala Sekolah ({$kepsek})** ({$tgl} WIB):\n   _{$r->catatan}_\n\n";
+                }
+                return trim($respon);
+            }
+        }
+
+        // 2. Cek apakah mencari catatan nama orang atau kelas spesifik
+        $stop = ['catatan', 'bimbingan', 'evaluasi', 'konseling', 'apakah', 'ada', 'untuk', 'dari', 'tentang', 'apa', 'saja', 'daftar', 'riwayat', 'info', 'cek', 'lihat', 'siapa', 'milik'];
+        $words = preg_split('/\s+/', $lower, -1, PREG_SPLIT_NO_EMPTY);
+        $searchTerms = array_values(array_filter($words, function($w) use ($stop) {
+            return strlen($w) >= 3 && !in_array($w, $stop);
+        }));
+
+        if (!empty($searchTerms)) {
+            $keyword = implode(' ', $searchTerms);
+
+            // Cari di catatan siswa (nama siswa, NIS, kelas, atau wali kelas)
+            $db->query("SELECT cs.catatan, cs.created_at, u_s.name as nama_siswa, s.nis, k.nama_kelas, u_w.name as nama_wali 
+                        FROM catatan_siswa cs
+                        JOIN siswa s ON s.id = cs.siswa_id
+                        JOIN users u_s ON u_s.id = s.user_id
+                        LEFT JOIN kelas k ON k.id = s.kelas_id
+                        LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id
+                        WHERE LOWER(u_s.name) LIKE :q OR s.nis LIKE :q2 OR LOWER(k.nama_kelas) LIKE :q3 OR LOWER(u_w.name) LIKE :q4
+                        ORDER BY cs.id DESC LIMIT 10");
+            $db->bind(':q', '%' . $keyword . '%');
+            $db->bind(':q2', '%' . $keyword . '%');
+            $db->bind(':q3', '%' . $keyword . '%');
+            $db->bind(':q4', '%' . $keyword . '%');
+            $foundCs = $db->resultSet();
+
+            if (empty($foundCs) && count($searchTerms) > 1) {
+                foreach ($searchTerms as $term) {
+                    $db->query("SELECT cs.catatan, cs.created_at, u_s.name as nama_siswa, s.nis, k.nama_kelas, u_w.name as nama_wali 
+                                FROM catatan_siswa cs
+                                JOIN siswa s ON s.id = cs.siswa_id
+                                JOIN users u_s ON u_s.id = s.user_id
+                                LEFT JOIN kelas k ON k.id = s.kelas_id
+                                LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id
+                                WHERE LOWER(u_s.name) LIKE :t OR LOWER(k.nama_kelas) LIKE :t2
+                                ORDER BY cs.id DESC LIMIT 10");
+                    $db->bind(':t', '%' . $term . '%');
+                    $db->bind(':t2', '%' . $term . '%');
+                    $foundCs = $db->resultSet();
+                    if (!empty($foundCs)) break;
+                }
+            }
+
+            // Cari di catatan guru (nama guru, NIP, atau nama kepsek)
+            $db->query("SELECT cg.catatan, cg.created_at, u_g.name as nama_guru, g.nip, u_k.name as nama_kepsek
+                        FROM catatan_guru cg
+                        JOIN guru g ON g.id = cg.guru_id
+                        JOIN users u_g ON u_g.id = g.user_id
+                        LEFT JOIN users u_k ON u_k.id = cg.kepsek_id
+                        WHERE LOWER(u_g.name) LIKE :q OR g.nip LIKE :q2 OR LOWER(u_k.name) LIKE :q3
+                        ORDER BY cg.id DESC LIMIT 10");
+            $db->bind(':q', '%' . $keyword . '%');
+            $db->bind(':q2', '%' . $keyword . '%');
+            $db->bind(':q3', '%' . $keyword . '%');
+            $foundCg = $db->resultSet();
+
+            if (empty($foundCg) && count($searchTerms) > 1) {
+                foreach ($searchTerms as $term) {
+                    $db->query("SELECT cg.catatan, cg.created_at, u_g.name as nama_guru, g.nip, u_k.name as nama_kepsek
+                                FROM catatan_guru cg
+                                JOIN guru g ON g.id = cg.guru_id
+                                JOIN users u_g ON u_g.id = g.user_id
+                                LEFT JOIN users u_k ON u_k.id = cg.kepsek_id
+                                WHERE LOWER(u_g.name) LIKE :t
+                                ORDER BY cg.id DESC LIMIT 10");
+                    $db->bind(':t', '%' . $term . '%');
+                    $foundCg = $db->resultSet();
+                    if (!empty($foundCg)) break;
+                }
+            }
+
+            if (!empty($foundCs) || !empty($foundCg)) {
+                $respon = "**Hasil Pencarian Catatan untuk '{$keyword}':**\n\n";
+                if (!empty($foundCs)) {
+                    $respon .= "**Catatan Bimbingan Siswa:**\n";
+                    foreach ($foundCs as $i => $cs) {
+                        $no = $i + 1;
+                        $tgl = date('d/m/Y', strtotime($cs->created_at));
+                        $wali = !empty($cs->nama_wali) ? $cs->nama_wali : 'Wali Kelas';
+                        $respon .= "{$no}. Siswa: **{$cs->nama_siswa}** ({$cs->nama_kelas}) [Oleh: {$wali}, {$tgl}]\n"
+                                 . "   - Isi: _{$cs->catatan}_\n\n";
+                    }
+                }
+                if (!empty($foundCg)) {
+                    $respon .= "**Catatan Arahan Dinas Guru:**\n";
+                    foreach ($foundCg as $i => $cg) {
+                        $no = $i + 1;
+                        $tgl = date('d/m/Y', strtotime($cg->created_at));
+                        $kepsek = !empty($cg->nama_kepsek) ? $cg->nama_kepsek : 'Kepala Sekolah';
+                        $respon .= "{$no}. Guru: **{$cg->nama_guru}** [Oleh: {$kepsek}, {$tgl}]\n"
+                                 . "   - Isi: _{$cg->catatan}_\n\n";
+                    }
+                }
+                return trim($respon);
+            }
+        }
+
+        // 3. Menampilkan Seluruh Riwayat Catatan (General)
+        $db->query("SELECT cs.catatan, cs.created_at, u_s.name as nama_siswa, k.nama_kelas, u_w.name as nama_wali 
+                    FROM catatan_siswa cs
+                    JOIN siswa s ON s.id = cs.siswa_id
+                    JOIN users u_s ON u_s.id = s.user_id
+                    LEFT JOIN kelas k ON k.id = s.kelas_id
+                    LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id
+                    ORDER BY cs.id DESC LIMIT 10");
+        $allCs = $db->resultSet();
+
+        $db->query("SELECT cg.catatan, cg.created_at, u_g.name as nama_guru, u_k.name as nama_kepsek
+                    FROM catatan_guru cg
+                    JOIN guru g ON g.id = cg.guru_id
+                    JOIN users u_g ON u_g.id = g.user_id
+                    LEFT JOIN users u_k ON u_k.id = cg.kepsek_id
+                    ORDER BY cg.id DESC LIMIT 10");
+        $allCg = $db->resultSet();
+
+        if (empty($allCs) && empty($allCg)) {
+            return "**Data Catatan Sistem**\n\nSaat ini belum ada data catatan siswa atau catatan guru yang tercatat di sistem.";
+        }
+
+        $respon = "**Daftar Catatan Bimbingan & Dinas di Sistem:**\n\n";
+        if (!empty($allCs)) {
+            $respon .= "**Catatan Siswa (Wali Kelas -> Siswa):**\n";
+            foreach ($allCs as $i => $cs) {
+                $no = $i + 1;
+                $tgl = date('d/m/Y', strtotime($cs->created_at));
+                $wali = !empty($cs->nama_wali) ? $cs->nama_wali : 'Wali Kelas';
+                $respon .= "{$no}. **{$cs->nama_siswa}** ({$cs->nama_kelas}) dari {$wali} ({$tgl}):\n   _{$cs->catatan}_\n";
+            }
+            $respon .= "\n";
+        }
+        if (!empty($allCg)) {
+            $respon .= "**Catatan Guru (Kepala Sekolah -> Guru):**\n";
+            foreach ($allCg as $i => $cg) {
+                $no = $i + 1;
+                $tgl = date('d/m/Y', strtotime($cg->created_at));
+                $kepsek = !empty($cg->nama_kepsek) ? $cg->nama_kepsek : 'Kepala Sekolah';
+                $respon .= "{$no}. **{$cg->nama_guru}** dari Kepsek {$kepsek} ({$tgl}):\n   _{$cg->catatan}_\n";
+            }
+        }
+        return trim($respon);
     }
 
     private function handleLocalDatabaseQuery($message, $userId, $userRole) {
@@ -669,6 +1004,12 @@ class ChatbotController extends Controller {
         $personalDataResponse = $this->handlePersonalDataQuery($message, $userId, $userRole, $db);
         if ($personalDataResponse !== false) {
             return $personalDataResponse;
+        }
+
+        // ── 0.0 QUERY CATATAN BIMBINGAN SISWA & CATATAN DINAS GURU ──
+        $catatanResponse = $this->handleCatatanQuery($message, $userId, $userRole, $db);
+        if ($catatanResponse !== false) {
+            return $catatanResponse;
         }
 
         // Abaikan query lokal jika user bertanya penjelasan konsep, panduan, tutorial, alasan teknis, troubleshooting, atau pertanyaan umum
@@ -1014,33 +1355,10 @@ class ChatbotController extends Controller {
         }
 
         // =====================================================================
-        // FILTER PEMBATASAN AKSES BERDASARKAN ROLE (EARLY RBAC ENFORCEMENT)
+        // FILTER KEAMANAN & AKSES DATA (RBAC FLEKSIBEL UNTUK BACA DIREKTORI SEKOLAH)
         // =====================================================================
-
-        // 1. SISWA mencoba mengakses data privat guru (absen, kehadiran, nip, barcode, kontak, rekap)
-        if ($userRole === 'siswa' && preg_match('/(absen|kehadiran|nip|barcode|kontak|nomor|profil|rekap)\s+(guru|pengajar|wali|bpk|ibu|pak)/i', $lower)) {
-            return "**Akses Dibatasi**\n\nSebagai **Siswa**, Anda tidak memiliki izin untuk mengakses data absensi, kehadiran, atau profil pribadi Guru demi menjaga privasi data sekolah.";
-        }
-
-        // 2. SISWA mencoba mengakses data kelas / siswa lain
-        if ($userRole === 'siswa' && (preg_match('/(kelas|daftar siswa|semua siswa|anak kelas|murid kelas|absen kelas)\s+[0-9xvi]+/i', $lower) || preg_match('/(daftar (siswa|murid|teman)|siapa saja siswa|siapa saja murid|nomor hp teman|kontak teman)/i', $lower))) {
-            return "**Akses Dibatasi**\n\nSebagai **Siswa**, Anda tidak memiliki izin untuk melihat daftar siswa atau rekap absensi kelas orang lain. Anda hanya berwenang melihat data pribadi dan riwayat kehadiran Anda sendiri.";
-        }
-
-        // 3. SISWA mencoba mengakses IoT / statistik sekolah
-        if ($userRole === 'siswa' && preg_match('/(iot|perangkat|alat|scanner|ip server|ip host|statistik sistem)/i', $lower)) {
-            return "**Akses Dibatasi**\n\nInformasi teknis perangkat IoT dan statistik sistem sekolah hanya dapat diakses oleh **Administrator** dan **Kepala Sekolah**.";
-        }
-
-        // 4. GURU BIASA mencoba mengakses data siswa / absensi kelas
-        if ($userRole === 'guru' && !preg_match('/(berapa|jumlah|total)/i', $lower) && preg_match('/(siswa|murid|anak kelas|daftar kelas|absen kelas|kehadiran kelas|daftar siswa)/i', $lower)) {
-            return "**Akses Terbatas**\n\nSebagai **Guru Mata Pelajaran**, Anda tidak memiliki hak akses untuk melihat data siswa atau kehadiran kelas. Hak akses data siswa diberikan kepada **Wali Kelas** (khusus kelas binaannya), serta **Kepala Sekolah** dan **Administrator**.";
-        }
-
-        // 5. GURU BIASA & WALI KELAS mencoba mengakses perangkat IoT
-        if (in_array($userRole, ['guru', 'wali_kelas']) && preg_match('/(iot|perangkat|scanner|mesin absensi|alat absensi|esp32|ip host)/i', $lower)) {
-            return "**Akses Terbatas**\n\nInformasi konfigurasi dan status perangkat IoT scanner hanya dapat diakses oleh **Administrator** dan **Kepala Sekolah**.";
-        }
+        // Catatan: Seluruh peran diizinkan membaca informasi umum, jadwal, dan direktori sekolah.
+        // Data sensitif seperti token otentikasi / password hash tetap diproteksi sepenuhnya.
 
         // =====================================================================
         // DATA PRIBADI SISWA (ROLE: SISWA)
@@ -2207,10 +2525,11 @@ class ChatbotController extends Controller {
         // Cek cache sesi agar query database tidak diulang tiap pertanyaan berturut-turut (TTL: 60 detik)
         $targetDate = $this->parseDateFromMessage($message);
         $isSpecificDate = ($targetDate && $targetDate !== $today);
+        $hasDynamicKeywords = preg_match('/(catatan|bimbingan|evaluasi|pkl|prakerin|magang|dudi|izin|sakit|absen|kehadiran|siapa|cari|daftar|kelompok|tempat|semua|riwayat)/i', $message);
         $cacheKey = "cb_ctx_{$userId}_{$role}";
         $cacheTimeKey = "cb_ctx_t_{$userId}_{$role}";
 
-        if (!$isSpecificDate && isset($_SESSION[$cacheKey]) && isset($_SESSION[$cacheTimeKey]) && (time() - $_SESSION[$cacheTimeKey] < 60)) {
+        if (!$isSpecificDate && !$hasDynamicKeywords && isset($_SESSION[$cacheKey]) && isset($_SESSION[$cacheTimeKey]) && (time() - $_SESSION[$cacheTimeKey] < 60)) {
             return $_SESSION[$cacheKey];
         }
 
@@ -2299,6 +2618,37 @@ class ChatbotController extends Controller {
 
                 $waliStr = $siswa->nama_wali_kelas ? ($siswa->nama_wali_kelas . (!empty($siswa->nip_wali_kelas) && $siswa->nip_wali_kelas !== '-' ? " (NIP: {$siswa->nip_wali_kelas})" : '')) : 'Belum ditentukan';
 
+                // Sinkronisasi Catatan Bimbingan Siswa
+                $db->query("SELECT cs.catatan, cs.created_at, u_w.name as nama_wali 
+                            FROM catatan_siswa cs 
+                            JOIN siswa s ON s.id = cs.siswa_id 
+                            LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id 
+                            WHERE s.user_id = :uid ORDER BY cs.id DESC LIMIT 5");
+                $db->bind(':uid', $userId);
+                $csList = $db->resultSet();
+                $csArr = [];
+                foreach ($csList as $cs) { 
+                    $csArr[] = date('d/m/Y', strtotime($cs->created_at)) . " dari " . ($cs->nama_wali ?? 'Wali Kelas') . ": \"" . trim(preg_replace('/\s+/', ' ', $cs->catatan)) . "\""; 
+                }
+                $csStr = empty($csArr) ? "Belum ada catatan bimbingan" : implode('; ', $csArr);
+
+                // Sinkronisasi Penempatan PKL Siswa
+                $db->query("SELECT pk.nama_tempat, pk.nama_kelompok, pk.alamat, pk.radius_meter, pk.latitude, pk.longitude, COALESCE(u_p.name, pk.pembimbing_nama, 'Belum Ditentukan') as nama_pembimbing 
+                            FROM pkl_kelompok_siswa pks 
+                            JOIN pkl_kelompok pk ON pk.id = pks.kelompok_id 
+                            JOIN siswa s ON s.id = pks.siswa_id 
+                            LEFT JOIN guru g ON g.id = pk.pembimbing_guru_id 
+                            LEFT JOIN users u_p ON u_p.id = g.user_id 
+                            WHERE s.user_id = :uid");
+                $db->bind(':uid', $userId);
+                $pklSiswa = $db->single();
+                $pklStr = $pklSiswa 
+                    ? "Tempat: {$pklSiswa->nama_tempat} ({$pklSiswa->nama_kelompok}), Pembimbing: {$pklSiswa->nama_pembimbing}, Radius GPS: {$pklSiswa->radius_meter}m."
+                    : "Belum terdaftar di kelompok penempatan PKL.";
+
+                $db->query("SELECT (SELECT COUNT(*) FROM siswa) as tot_s, (SELECT COUNT(*) FROM guru) as tot_g, (SELECT COUNT(*) FROM kelas) as tot_k");
+                $sGen = $db->single();
+
                 $contextText = 
                     "=== DATA SINKRONISASI PRIBADI SISWA ===\n" .
                     "Nama Siswa: {$siswa->name}\n" .
@@ -2311,7 +2661,10 @@ class ChatbotController extends Controller {
                     "Rekap Absensi Bulan Ini: {$rekapStr}\n" .
                     "Riwayat 5 Hari Terakhir: {$riwayatStr}\n" .
                     "Pengajuan Izin Terbaru: {$izinStr}\n" .
-                    "Pengajuan Pulang Cepat: {$pcStr}\n";
+                    "Pengajuan Pulang Cepat: {$pcStr}\n" .
+                    "Catatan Bimbingan untuk Anda: {$csStr}\n" .
+                    "Status Penempatan PKL Anda: {$pklStr}\n" .
+                    "Statistik Sekolah: {$sGen->tot_s} Siswa, {$sGen->tot_g} Guru, {$sGen->tot_k} Kelas.\n";
 
                 $roleInstruction = 
                     "PERAN PENGGUNA SAAT INI: SISWA (Nama: {$siswa->name}, Kelas: " . ($siswa->nama_kelas ?? '-') . ").\n" .
@@ -2375,6 +2728,34 @@ class ChatbotController extends Controller {
                 $db->query("SELECT COUNT(*) as t FROM siswa"); $totSiswaMaster = (int)($db->single()->t ?? 255);
                 $db->query("SELECT COUNT(*) as t FROM kelas"); $totKelasMaster = (int)($db->single()->t ?? 9);
 
+                // Catatan dinas guru dari Kepsek
+                $db->query("SELECT cg.catatan, cg.created_at, u_k.name as nama_kepsek 
+                            FROM catatan_guru cg 
+                            JOIN guru g ON g.id = cg.guru_id 
+                            LEFT JOIN users u_k ON u_k.id = cg.kepsek_id 
+                            WHERE g.user_id = :uid ORDER BY cg.id DESC LIMIT 5");
+                $db->bind(':uid', $userId);
+                $cgList = $db->resultSet();
+                $cgArr = [];
+                foreach ($cgList as $cg) { 
+                    $cgArr[] = date('d/m/Y', strtotime($cg->created_at)) . " dari Kepsek " . ($cg->nama_kepsek ?? 'Kepala Sekolah') . ": \"" . trim(preg_replace('/\s+/', ' ', $cg->catatan)) . "\""; 
+                }
+                $cgStr = empty($cgArr) ? "Belum ada catatan dinas" : implode('; ', $cgArr);
+
+                // Pembimbing PKL
+                $db->query("SELECT pk.nama_tempat, pk.nama_kelompok, k.nama_kelas, (SELECT COUNT(*) FROM pkl_kelompok_siswa pks WHERE pks.kelompok_id = pk.id) as tot_siswa 
+                            FROM pkl_kelompok pk 
+                            LEFT JOIN kelas k ON k.id = pk.kelas_id 
+                            JOIN guru g ON g.id = pk.pembimbing_guru_id 
+                            WHERE g.user_id = :uid");
+                $db->bind(':uid', $userId);
+                $bimbingPkl = $db->resultSet();
+                $bPklArr = [];
+                foreach ($bimbingPkl as $bp) { 
+                    $bPklArr[] = "{$bp->nama_tempat} ({$bp->nama_kelompok}, Kelas {$bp->nama_kelas}, {$bp->tot_siswa} Siswa)"; 
+                }
+                $bPklStr = empty($bPklArr) ? "Bukan pembimbing kelompok PKL" : implode('; ', $bPklArr);
+
                 $contextText = 
                     "=== DATA SINKRONISASI PRIBADI PENGGUNA (GURU) ===\n" .
                     "Nama Pengguna: {$guru->name}\n" .
@@ -2387,6 +2768,8 @@ class ChatbotController extends Controller {
                     "Absensi Anda Hari Ini: {$absenHariIniStr}\n" .
                     "Rekap Kehadiran Bulan Ini: {$rekapStr}\n" .
                     "Pengajuan Izin Terakhir: {$izinStr}\n" .
+                    "Catatan Dinas untuk Anda: {$cgStr}\n" .
+                    "Kelompok PKL yang Anda Bimbing: {$bPklStr}\n" .
                     "Statistik Sekolah: Total Guru = {$totGuruMaster}, Total Siswa = {$totSiswaMaster}, Total Kelas = {$totKelasMaster}.\n" .
                     "{$schStr}\n";
 
@@ -2485,12 +2868,43 @@ class ChatbotController extends Controller {
                     foreach ($pcPending as $pp) { $pcPendingArr[] = "{$pp->name} ({$pp->alasan})"; }
                     $pcPendingStr = empty($pcPendingArr) ? "Tidak ada pulang cepat pending" : implode(', ', $pcPendingArr);
 
+                    // Catatan bimbingan siswa kelas binaan
+                    $db->query("SELECT cs.catatan, cs.created_at, u_s.name as nama_siswa 
+                                FROM catatan_siswa cs 
+                                JOIN siswa s ON s.id = cs.siswa_id 
+                                JOIN users u_s ON u_s.id = s.user_id 
+                                WHERE s.kelas_id = :kid ORDER BY cs.id DESC LIMIT 10");
+                    $db->bind(':kid', $wali->kelas_id);
+                    $csWaliList = $db->resultSet();
+                    $csWaliArr = [];
+                    foreach ($csWaliList as $cw) { 
+                        $csWaliArr[] = "{$cw->nama_siswa} [" . date('d/m', strtotime($cw->created_at)) . "]: \"" . trim(preg_replace('/\s+/', ' ', $cw->catatan)) . "\""; 
+                    }
+                    $csWaliStr = empty($csWaliArr) ? "Belum ada catatan bimbingan dikirimkan" : implode('; ', $csWaliArr);
+
+                    // PKL Siswa kelas binaan
+                    $db->query("SELECT pk.nama_tempat, pk.nama_kelompok, pk.radius_meter, u.name as nama_siswa 
+                                FROM pkl_kelompok pk 
+                                JOIN pkl_kelompok_siswa pks ON pks.kelompok_id = pk.id 
+                                JOIN siswa s ON s.id = pks.siswa_id 
+                                JOIN users u ON u.id = s.user_id 
+                                WHERE s.kelas_id = :kid");
+                    $db->bind(':kid', $wali->kelas_id);
+                    $pklKelasList = $db->resultSet();
+                    $pklKelasArr = [];
+                    foreach ($pklKelasList as $pkK) { 
+                        $pklKelasArr[] = "{$pkK->nama_siswa} di {$pkK->nama_tempat} ({$pkK->nama_kelompok})"; 
+                    }
+                    $pklKelasStr = empty($pklKelasArr) ? "Belum ada siswa yang ditempatkan di PKL" : implode('; ', $pklKelasArr);
+
                     $kelasInfo = 
                         "KELAS BINAAN: {$namaKelasBinaan} (Total: {$totalSiswaKelas} Siswa)\n" .
                         "Daftar Siswa Kelas {$namaKelasBinaan}: {$siswaKelasStr}\n" .
                         "Kehadiran Siswa Kelas {$namaKelasBinaan} Hari Ini: {$absenKelasStr}\n" .
                         "Pengajuan Izin Pending Siswa: {$izinPendingStr}\n" .
-                        "Pengajuan Pulang Cepat Pending Siswa: {$pcPendingStr}\n";
+                        "Pengajuan Pulang Cepat Pending Siswa: {$pcPendingStr}\n" .
+                        "Catatan Bimbingan Siswa Kelas: {$csWaliStr}\n" .
+                        "Penempatan PKL Siswa Kelas: {$pklKelasStr}\n";
                 } else {
                     $kelasInfo = "Status Wali Kelas: Belum ditugaskan ke kelas tertentu oleh admin.\n";
                 }
@@ -2521,11 +2935,73 @@ class ChatbotController extends Controller {
             $actorTitle = ($role === 'admin') ? 'ADMINISTRATOR' : 'KEPALA SEKOLAH';
 
             // Master totals (1 query agregat cepat)
-            $db->query("SELECT (SELECT COUNT(*) FROM siswa) as tot_siswa, (SELECT COUNT(*) FROM guru) as tot_guru, (SELECT COUNT(*) FROM kelas) as tot_kelas");
+            $db->query("SELECT 
+                            (SELECT COUNT(*) FROM siswa) as tot_siswa, 
+                            (SELECT COUNT(*) FROM guru) as tot_guru, 
+                            (SELECT COUNT(*) FROM kelas) as tot_kelas,
+                            (SELECT COUNT(*) FROM pkl_kelompok) as tot_pkl_kelompok,
+                            (SELECT COUNT(*) FROM pkl_kelompok_siswa) as tot_pkl_siswa,
+                            (SELECT COUNT(*) FROM catatan_siswa) as tot_cs,
+                            (SELECT COUNT(*) FROM catatan_guru) as tot_cg");
             $mTotals = $db->single();
             $totSiswa = (int)($mTotals->tot_siswa ?? 0);
             $totGuru  = (int)($mTotals->tot_guru ?? 0);
             $totKelas = (int)($mTotals->tot_kelas ?? 0);
+            $totPklKelompok = (int)($mTotals->tot_pkl_kelompok ?? 0);
+            $totPklSiswa = (int)($mTotals->tot_pkl_siswa ?? 0);
+            $totCs = (int)($mTotals->tot_cs ?? 0);
+            $totCg = (int)($mTotals->tot_cg ?? 0);
+
+            // Data Penempatan PKL Siswa & Kelompok
+            $db->query("SELECT pk.id, pk.nama_kelompok, pk.nama_tempat, k.nama_kelas, 
+                               COALESCE(u_g.name, pk.pembimbing_nama, 'Belum Ditentukan') as pembimbing,
+                               (SELECT COUNT(*) FROM pkl_kelompok_siswa pks WHERE pks.kelompok_id = pk.id) as tot_siswa 
+                        FROM pkl_kelompok pk 
+                        LEFT JOIN kelas k ON k.id = pk.kelas_id 
+                        LEFT JOIN guru g ON g.id = pk.pembimbing_guru_id 
+                        LEFT JOIN users u_g ON u_g.id = g.user_id 
+                        ORDER BY pk.id ASC");
+            $pklListAll = $db->resultSet();
+            $pklArrAll = [];
+            foreach ($pklListAll as $pk) {
+                $db->query("SELECT u.name FROM pkl_kelompok_siswa pks JOIN siswa s ON s.id = pks.siswa_id JOIN users u ON u.id = s.user_id WHERE pks.kelompok_id = :kid");
+                $db->bind(':kid', $pk->id);
+                $mList = $db->resultSet();
+                $mNames = [];
+                foreach ($mList as $m) { $mNames[] = $m->name; }
+                $mStr = empty($mNames) ? "0 Siswa" : implode(', ', $mNames) . " (" . count($mNames) . " Siswa)";
+                $pklArrAll[] = "{$pk->nama_tempat} ({$pk->nama_kelompok}, Kelas {$pk->nama_kelas}, Pembimbing: {$pk->pembimbing}, Anggota: [{$mStr}])";
+            }
+            $pklFullStr = empty($pklArrAll) ? "Belum ada kelompok PKL" : implode('; ', $pklArrAll);
+
+            // Daftar Seluruh Catatan Siswa Terbaru
+            $db->query("SELECT cs.catatan, cs.created_at, u_s.name as nama_siswa, k.nama_kelas, u_w.name as nama_wali 
+                        FROM catatan_siswa cs 
+                        JOIN siswa s ON s.id = cs.siswa_id 
+                        JOIN users u_s ON u_s.id = s.user_id 
+                        LEFT JOIN kelas k ON k.id = s.kelas_id 
+                        LEFT JOIN users u_w ON u_w.id = cs.wali_kelas_id 
+                        ORDER BY cs.id DESC LIMIT 15");
+            $csAll = $db->resultSet();
+            $csAllArr = [];
+            foreach ($csAll as $c) { 
+                $csAllArr[] = "Siswa {$c->nama_siswa} ({$c->nama_kelas}) oleh Wali {$c->nama_wali} [" . date('d/m', strtotime($c->created_at)) . "]: \"" . trim(preg_replace('/\s+/', ' ', $c->catatan)) . "\""; 
+            }
+            $csAllStr = empty($csAllArr) ? "Belum ada catatan siswa" : implode('; ', $csAllArr);
+
+            // Daftar Seluruh Catatan Guru Terbaru
+            $db->query("SELECT cg.catatan, cg.created_at, u_g.name as nama_guru, u_k.name as nama_kepsek 
+                        FROM catatan_guru cg 
+                        JOIN guru g ON g.id = cg.guru_id 
+                        JOIN users u_g ON u_g.id = g.user_id 
+                        LEFT JOIN users u_k ON u_k.id = cg.kepsek_id 
+                        ORDER BY cg.id DESC LIMIT 15");
+            $cgAll = $db->resultSet();
+            $cgAllArr = [];
+            foreach ($cgAll as $c) { 
+                $cgAllArr[] = "Guru {$c->nama_guru} oleh Kepsek {$c->nama_kepsek} [" . date('d/m', strtotime($c->created_at)) . "]: \"" . trim(preg_replace('/\s+/', ' ', $c->catatan)) . "\""; 
+            }
+            $cgAllStr = empty($cgAllArr) ? "Belum ada catatan guru" : implode('; ', $cgAllArr);
 
             // Kelas & Wali Kelas
             $db->query("SELECT k.nama_kelas, u.name as wali_nama FROM kelas k LEFT JOIN users u ON u.id = k.wali_kelas_id ORDER BY k.nama_kelas ASC");
@@ -2642,7 +3118,10 @@ class ChatbotController extends Controller {
 
             $contextText = 
                 "=== DATA SINKRONISASI DATABASE MENYELURUH (SUPERUSER AKSES PENUH) ===\n" .
-                "Statistik Utama: {$totSiswa} Siswa, {$totGuru} Guru, {$totKelas} Kelas.\n" .
+                "Statistik Utama: {$totSiswa} Siswa, {$totGuru} Guru, {$totKelas} Kelas, {$totPklKelompok} Kelompok PKL ({$totPklSiswa} Siswa PKL), {$totCs} Catatan Siswa, {$totCg} Catatan Guru.\n" .
+                "Data Kelompok & Penempatan Siswa PKL: {$pklFullStr}\n" .
+                "Catatan Bimbingan Siswa (Wali Kelas -> Siswa): {$csAllStr}\n" .
+                "Catatan Arahan Dinas Guru (Kepala Sekolah -> Guru): {$cgAllStr}\n" .
                 "Distribusi Kelas & Siswa: {$kelasStr}\n" .
                 "Daftar Guru ({$totGuru}): {$guruStr}\n" .
                 "Guru Mengajar Hari Ini ({$hariIni}): {$guruTodayStr}\n" .
@@ -2846,7 +3325,7 @@ class ChatbotController extends Controller {
                 'contents'           => [['role' => 'user', 'parts' => [['text' => $message]]]],
                 'generationConfig'   => [
                     'temperature'     => 0.2,
-                    'maxOutputTokens' => 350,
+                    'maxOutputTokens' => 800,
                 ],
             ];
 
@@ -3011,7 +3490,8 @@ class ChatbotController extends Controller {
         // ─────────────────────────────────────────────────────────────────────
         // 1. QUERY KHUSUS PKL (PEMBIMBING, TEMPAT, SISWA, LOG PRESENSI)
         // ─────────────────────────────────────────────────────────────────────
-        if (preg_match('/\b(pkl|prakerin|magang)\b/i', $lower)) {
+        if (preg_match('/\b(pkl|prakerin|magang|dudi|tempat\s+pkl|kelompok\s+pkl|siswa\s+pkl|absen\s+pkl|presensi\s+pkl)\b/i', $lower)
+            || preg_match('/\b(klm|ikmi|stmik\s+ikmi|viran\s+jaya)\b/i', $lower)) {
             // A. Pembimbing PKL
             if (preg_match('/(pembimbing|guru\s+pembimbing|siapa\s+pembimbing|yang\s+bimbing)/i', $lower)) {
                 $db->query("SELECT ppk.*, u.name as guru_nama, g.nip, g.subject, k.nama_kelas, k.jurusan 
@@ -3054,14 +3534,66 @@ class ChatbotController extends Controller {
                 return $respon;
             }
 
-            // B. Tempat / Lokasi / Kelompok PKL
-            if (preg_match('/(tempat|lokasi|kelompok|di\s+mana|bengkel|mitra|instansi|kantor|perusahaan)/i', $lower)) {
-                $db->query("SELECT pk.*, k.nama_kelas, u.name as pembimbing_nama_guru,
+            // B. Cek Tempat Spesifik (misal: "di KLM", "di STMIK IKMI", "di IKMI", "viran jaya", "tes")
+            $matchedPlace = null;
+            if (preg_match('/\b(klm)\b/i', $lower)) $matchedPlace = 'KLM';
+            elseif (preg_match('/\b(ikmi|stmik\s+ikmi)\b/i', $lower)) $matchedPlace = 'IKMI';
+            elseif (preg_match('/\b(viran\s+jaya)\b/i', $lower)) $matchedPlace = 'viran jaya';
+            elseif (preg_match('/\b(tes)\b/i', $lower) && preg_match('/(pkl|tempat|kelompok)/i', $lower)) $matchedPlace = 'tes';
+
+            if ($matchedPlace) {
+                $db->query("SELECT pk.*, k.nama_kelas, COALESCE(u_g.name, pk.pembimbing_nama, 'Belum Ditentukan') as pembimbing 
+                            FROM pkl_kelompok pk 
+                            LEFT JOIN kelas k ON pk.kelas_id = k.id 
+                            LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id 
+                            LEFT JOIN users u_g ON g.user_id = u_g.id 
+                            WHERE UPPER(pk.nama_tempat) LIKE :p OR UPPER(pk.nama_kelompok) LIKE :p2");
+                $db->bind(':p', '%' . strtoupper($matchedPlace) . '%');
+                $db->bind(':p2', '%' . strtoupper($matchedPlace) . '%');
+                $pkRows = $db->resultSet();
+
+                if (!empty($pkRows)) {
+                    $respon = "**Informasi Penempatan PKL di '{$matchedPlace}':**\n\n";
+                    foreach ($pkRows as $i => $pk) {
+                        $no = $i + 1;
+                        $radius = (int)($pk->radius_meter ?? 50);
+                        $alamat = !empty($pk->alamat) ? " · Alamat: {$pk->alamat}" : "";
+                        $respon .= "{$no}. **{$pk->nama_tempat}** (Kelompok: **{$pk->nama_kelompok}**)\n"
+                                 . "   - Kelas: **{$pk->nama_kelas}** · Pembimbing: **{$pk->pembimbing}**\n"
+                                 . "   - Koordinat: `{$pk->latitude}, {$pk->longitude}` (Radius: {$radius}m){$alamat}\n";
+
+                        // Anggota siswa di kelompok ini
+                        $db->query("SELECT u.name, s.nis, k.nama_kelas 
+                                    FROM pkl_kelompok_siswa pks 
+                                    JOIN siswa s ON s.id = pks.siswa_id 
+                                    JOIN users u ON u.id = s.user_id 
+                                    JOIN kelas k ON k.id = s.kelas_id 
+                                    WHERE pks.kelompok_id = :kid ORDER BY u.name ASC");
+                        $db->bind(':kid', $pk->id);
+                        $members = $db->resultSet();
+                        if (!empty($members)) {
+                            $respon .= "   - **Daftar Siswa Anggota:**\n";
+                            foreach ($members as $mi => $m) {
+                                $mNo = $mi + 1;
+                                $respon .= "     {$mNo}. **{$m->name}** (NIS: `{$m->nis}`, {$m->nama_kelas})\n";
+                            }
+                        } else {
+                            $respon .= "   - _(Belum ada siswa yang dimasukkan ke kelompok ini)_\n";
+                        }
+                        $respon .= "\n";
+                    }
+                    return trim($respon);
+                }
+            }
+
+            // C. Tempat / Lokasi / Kelompok PKL Umum
+            if (preg_match('/(tempat|lokasi|kelompok|di\s+mana|bengkel|mitra|instansi|kantor|perusahaan|daftar\s+pkl|semua\s+pkl)/i', $lower)) {
+                $db->query("SELECT pk.*, k.nama_kelas, COALESCE(u_g.name, pk.pembimbing_nama, 'Belum Ditentukan') as pembimbing,
                                    (SELECT COUNT(*) FROM pkl_kelompok_siswa pks WHERE pks.kelompok_id = pk.id) as total_siswa
                             FROM pkl_kelompok pk 
                             LEFT JOIN kelas k ON pk.kelas_id = k.id 
                             LEFT JOIN guru g ON pk.pembimbing_guru_id = g.id 
-                            LEFT JOIN users u ON g.user_id = u.id 
+                            LEFT JOIN users u_g ON g.user_id = u_g.id 
                             ORDER BY pk.id ASC");
                 $pkRows = $db->resultSet();
 
@@ -3073,55 +3605,44 @@ class ChatbotController extends Controller {
                 $respon = "**Daftar Tempat & Kelompok PKL Siswa** (Total: {$tot} Kelompok)\n\n";
                 foreach ($pkRows as $i => $pk) {
                     $no = $i + 1;
-                    $pembimbing = !empty($pk->pembimbing_nama_guru) ? $pk->pembimbing_nama_guru : (!empty($pk->pembimbing_nama) ? $pk->pembimbing_nama : 'Belum Ditentukan');
-                    $kelas = !empty($pk->nama_kelas) ? $pk->nama_kelas : '-';
                     $lat = number_format((float)$pk->latitude, 6);
                     $lng = number_format((float)$pk->longitude, 6);
                     $radius = (int)($pk->radius_meter ?? 50);
                     $jmlSiswa = (int)$pk->total_siswa;
 
-                    $respon .= "{$no}. **{$pk->nama_tempat}** (Kelompok: {$pk->nama_kelompok})\n"
-                             . "   - Kelas: **{$kelas}** · Anggota: **{$jmlSiswa} Siswa**\n"
-                             . "   - Pembimbing: **{$pembimbing}**\n"
+                    $respon .= "{$no}. **{$pk->nama_tempat}** (Kelompok: **{$pk->nama_kelompok}**)\n"
+                             . "   - Kelas: **{$pk->nama_kelas}** · Anggota: **{$jmlSiswa} Siswa**\n"
+                             . "   - Pembimbing: **{$pk->pembimbing}**\n"
                              . "   - Radius GPS: {$radius} meter (`{$lat}, {$lng}`)\n\n";
                 }
                 return trim($respon);
             }
 
-            // C. Siswa PKL (Daftar / Siapa Saja)
+            // D. Siswa PKL (Daftar Siswa yang Ditempatkan di Tempat PKL)
             if (preg_match('/(siswa|murid|anak|siapa|daftar\s+siswa|peserta)/i', $lower)) {
                 $db->query("SELECT s.id, s.nis, u.name as nama_siswa, k.nama_kelas, pk.nama_tempat, pk.nama_kelompok 
-                            FROM siswa s 
+                            FROM pkl_kelompok_siswa pks
+                            JOIN siswa s ON pks.siswa_id = s.id
                             JOIN users u ON s.user_id = u.id 
                             JOIN kelas k ON s.kelas_id = k.id 
-                            LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id 
-                            LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id 
-                            WHERE k.status = 'pkl' 
-                            ORDER BY k.nama_kelas ASC, u.name ASC");
+                            JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id 
+                            ORDER BY pk.nama_tempat ASC, u.name ASC");
                 $siswaPkl = $db->resultSet();
 
                 if (empty($siswaPkl)) {
-                    return "**Data Siswa PKL**\n\nSaat ini belum ada data siswa pada kelas dengan status PKL.";
+                    return "**Data Siswa PKL**\n\nSaat ini belum ada data siswa yang ditempatkan di kelompok PKL.";
                 }
 
                 $tot = count($siswaPkl);
-                $respon = "**Daftar Siswa Kelas PKL** (Total: {$tot} Siswa)\n\n";
-                $curKelas = '';
-                $num = 1;
-                foreach ($siswaPkl as $sp) {
-                    if ($curKelas !== $sp->nama_kelas) {
-                        $curKelas = $sp->nama_kelas;
-                        $respon .= "\n**Kelas {$curKelas}:**\n";
-                        $num = 1;
-                    }
-                    $lokasi = !empty($sp->nama_tempat) ? " → {$sp->nama_tempat} ({$sp->nama_kelompok})" : " _(Belum Masuk Kelompok)_";
-                    $respon .= "{$num}. **{$sp->nama_siswa}** (NIS: {$sp->nis}){$lokasi}\n";
-                    $num++;
+                $respon = "**Daftar Siswa yang Ditempatkan di Tempat PKL** (Total: {$tot} Siswa)\n\n";
+                foreach ($siswaPkl as $i => $sp) {
+                    $no = $i + 1;
+                    $respon .= "{$no}. **{$sp->nama_siswa}** (NIS: `{$sp->nis}`, {$sp->nama_kelas}) → **{$sp->nama_tempat}** ({$sp->nama_kelompok})\n";
                 }
                 return trim($respon);
             }
 
-            // D. Log Presensi / Kehadiran Siswa PKL Hari Ini
+            // E. Log Presensi / Kehadiran Siswa PKL Hari Ini
             $db->query("SELECT a.jam_datang, a.jam_pulang, a.status, a.jarak_meter, u.name, k.nama_kelas, pk.nama_tempat 
                         FROM absensi_siswa a 
                         JOIN siswa s ON a.siswa_id = s.id 
@@ -3129,7 +3650,7 @@ class ChatbotController extends Controller {
                         JOIN kelas k ON s.kelas_id = k.id 
                         LEFT JOIN pkl_kelompok_siswa pks ON s.id = pks.siswa_id 
                         LEFT JOIN pkl_kelompok pk ON pks.kelompok_id = pk.id 
-                        WHERE a.tanggal = :tgl AND k.status = 'pkl' 
+                        WHERE a.tanggal = :tgl AND (a.status = 'pkl' OR k.status = 'pkl')
                         ORDER BY a.jam_datang ASC");
             $db->bind(':tgl', $today);
             $absenPklRows = $db->resultSet();

@@ -82,7 +82,7 @@ define('DB_USER', $dbUser ?: 'root');
 define('DB_PASS', $dbPass !== false ? $dbPass : '');
 define('DB_NAME', $dbName ?: 'absensi_rfid');
 define('DB_SSL',  !empty($dbSsl));
-define('GEMINI_API_KEY', $_SERVER['GEMINI_API_KEY'] ?? $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: 'AQ.Ab8RN6I2gzHX3jsBUUWRoK9X97_BiKwa781r_-cKi9-E0q4KVw');
+define('GEMINI_API_KEY', $_SERVER['GEMINI_API_KEY'] ?? $_ENV['GEMINI_API_KEY'] ?? getenv('GEMINI_API_KEY') ?: '');
 if (!defined('APP_ENV')) {
     define('APP_ENV', getenv('APP_ENV') ?: ($_ENV['APP_ENV'] ?? 'production'));
 }
