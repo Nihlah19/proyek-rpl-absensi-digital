@@ -54,9 +54,8 @@
 | Tahap Video | Fokus Pembahasan | Tautan Video |
 |:---|:---|:---:|
 | **Video Progres 1** | Penjelasan dokumen PRD (Product Requirements Document) dan konsep aplikasi. | [▶ Tonton Video](https://drive.google.com/file/d/1t4sgarKW0ysnsM1cFPyfAmIA9JgS4kCS/view?usp=drivesdk) |
-| **Video Progres 2** | Pemodelan UML (Use Case Diagram, ERD, Activity Diagram, Sequence Diagram) serta perancangan UI/UX menggunakan Figma. | [▶ Tonton Video](https://drive.google.com/file/d/1kUxihPTVF08A_vORSql-qtrM3tZ5MHnD/view?usp=drivesdk) |
-| **Video Final Demo** | Demonstrasi sistem secara keseluruhan, integrasi IoT, absensi PKL berbasis Geofencing, AI Chatbot, dan implementasi CI/CD. | [▶ Tonton Video](https://drive.google.com/file/d/1kKbsjo8MVNCe3_7ZAmXv-skAznLZkiFR/view?usp=drivesdk) |
-| **Video Final YouTube** | Dokumentasi lengkap proses pengembangan aplikasi, mulai dari penyusunan PRD hingga demonstrasi website. | [▶ Tonton di YouTube](https://youtu.be/cIJETr3XTMA) |
+| **Video Progres 2** | Pemodelan UML (Use Case Diagram, ERD, Activity Diagram, Sequence Diagram) serta perancangan UI/UX menggunakan Figma. | [▶ Tonton Video](https://drive.google.com/file/d/1tSNjuRMDqJC_rwFSB4jZR8-hDYmBJ2al/view?usp=drivesdk) |
+| **Video Final YouTube** | Dokumentasi lengkap proses pengembangan aplikasi, mulai dari penyusunan PRD hingga demonstrasi website. | [▶ Tonton di YouTube](https://youtu.be/k_BmWTOSBfY?si=F8dMjoXEesSqyyW9) |
 
 ---
 > *Berkas Referensi Terkait di Repositori:*
